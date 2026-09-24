@@ -16,7 +16,7 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 
 ```bash
 .venv/bin/python run.py        # http://localhost:8000, auto-reloads on edits to app/
-.venv/bin/python -m pytest -q  # 78 tests, all should pass
+.venv/bin/python -m pytest -q  # 81 tests, all should pass
 .venv/bin/python -m app.ingest # fetch feeds once, from the shell
 .venv/bin/python -m app.topics # print the current topics per scope and group
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
@@ -56,6 +56,12 @@ fix wrong labels or noisy topics — prefer them over changing code.
   rules in `lexicon/rules_*.txt` for headlines where single words mislead
   ("Euribor ultrapassa 3%" is bad news; "desemprego desce" is good news). A rule
   silences the words it names. Contradictory rules on the same anchor cancel.
+- **One dictionary word is not enough for "positive".** A base-lexicon hit
+  (SentiLex/VADER) counts 1, a custom word or rule counts 2, and positive needs
+  2 (`sentiment.min_evidence`). 19% of positives rested on one generic word in
+  the summary ("protocolos adequados" under a hacking headline). Negative is
+  not gated: the slider only splits positive from the rest, and gating
+  negative lost as many right labels as wrong ones.
 - **Outlet names are never sentiment and never topics.** SentiLex scores
   "observador" positive and VADER scores "guardian" positive, which tinted every
   article carrying the byline. Names come from `sources.yaml` automatically.

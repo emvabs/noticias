@@ -20,6 +20,10 @@ TOKEN_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 APOSTROPHES = str.maketrans("", "", "'’ʼ")
 # VADER rates words from -4 to +4; ignore the weak ones, which are mostly noise in news.
 VADER_MIN_STRENGTH = 0.5
+# How much a hit counts as evidence for a label. The base lexicons are general
+# dictionaries ("avançado", "autónoma" are positive there); the custom lists and
+# rules were written for news, so one of their hits is worth two.
+EVIDENCE = {"base": 1, "custom": 2, "rule": 2}
 
 
 def normalize(text):
@@ -150,7 +154,7 @@ def load_rules(path):
 class Scorer:
     def __init__(self, base=None, custom_exact=None, custom_prefixes=None, rules=None,
                  negation_words=("nao", "nunca", "sem"), negation_window=3,
-                 positive_threshold=0.2, negative_threshold=-0.2):
+                 positive_threshold=0.2, negative_threshold=-0.2, min_evidence=2):
         self.base = base or {}
         self.rules = rules or []
         self.custom_exact = custom_exact or {}
@@ -159,6 +163,7 @@ class Scorer:
         self.negation_window = negation_window
         self.pos_th = positive_threshold
         self.neg_th = negative_threshold
+        self.min_evidence = min_evidence
 
     def polarity(self, token):
         """Return (weight, source) for one token, or (0, None)."""
@@ -175,9 +180,23 @@ class Scorer:
                 return self.base[t], "base"
         return 0, None
 
-    def label_for(self, score):
+    def label_for(self, score, matched=None):
+        """Label from the score; "positive" also needs enough evidence behind it.
+
+        A single base-lexicon word is not enough: 19% of positive articles were
+        positive because of one dictionary word in the summary ("protocolos
+        adequados") under a headline that was bad news. With `matched` given,
+        the positive hits must add up to `min_evidence` (see EVIDENCE).
+
+        Only positive is gated: the slider promises positive news, while
+        negative and neutral both land on the same side of it, and gating
+        negative lost as many right labels ("banidos", "ilegal") as wrong ones.
+        """
         if score > self.pos_th:
-            return "positive"
+            if matched is None or sum(EVIDENCE.get(m["source"], 1) for m in matched
+                                      if m["polarity"] > 0) >= self.min_evidence:
+                return "positive"
+            return "neutral"
         if score < self.neg_th:
             return "negative"
         return "neutral"
@@ -239,7 +258,7 @@ class Scorer:
         pos = sum(1 for m in matched if m["polarity"] > 0)
         neg = sum(1 for m in matched if m["polarity"] < 0)
         score = (pos - neg) / (pos + neg + 1)
-        return round(score, 4), self.label_for(score), matched
+        return round(score, 4), self.label_for(score, matched), matched
 
 
 DEFAULT_LANGUAGE = "pt"
@@ -288,6 +307,7 @@ def get_scorer(language=DEFAULT_LANGUAGE):
         negation_window=cfg.get("negation_window", 3),
         positive_threshold=cfg.get("positive_threshold", 0.2),
         negative_threshold=cfg.get("negative_threshold", -0.2),
+        min_evidence=cfg.get("min_evidence", 2),
     )
     _cache[language] = {"key": key, "scorer": scorer}
     return scorer

@@ -56,6 +56,20 @@ rendas, aumentam -1
 rendas, descem 1
 combustiveis, sobem -1
 combustiveis, descem 1
+petroleo, dispara -1
+petroleo, disparou -1
+petroleo, sobe -1
+petroleo, subiu -1
+petroleo, subida -1
+petroleo, desce 1
+petroleo, cai 1
+petroleo, recua 1
+brent, dispara -1
+brent, sobe -1
+brent, subida -1
+brent, desce 1
+brent, cai 1
+brent, recua 1
 custo, vida -1
 
 # ---------- emprego ----------
@@ -94,6 +108,9 @@ criminalidade, desce 1
 criminalidade, aumenta -1
 incendios, diminuem 1
 area, ardida, diminuiu 1
+
+# ---------- segurança e instituições ----------
+sem, autorizacao -1      # "acedeu sem autorização"
 
 # ---------- economia ----------
 divida, desce 1

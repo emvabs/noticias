@@ -101,7 +101,13 @@ condenad* -1
 arguid* -1
 suspeit* -1
 escandalo* -1
+# ataques informáticos
+pirat* -1          # pirateou, pirataria, piratas
+ciberataque* -1
+hacker* -1
+vulnerabilidade* -1
 # economia e sociedade
+desilus* -1
 crise* -1
 recess* -1
 inflac* -1
@@ -419,6 +425,8 @@ distante 0
 atletas 0
 cautelosa 0
 atento 0
+autonom* 0         # "região autónoma", "condução autónoma", "agente ... de forma autónoma"
+adequad* 0         # "protocolos adequados": procedimento, não boa notícia
 
 # ---------- CORREÇÕES de polaridade do SentiLex para contexto noticioso ----------
 ataca -1

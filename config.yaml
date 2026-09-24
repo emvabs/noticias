@@ -32,6 +32,9 @@ sentiment:
   positive_threshold: 0.2   # score > isto  -> positiva
   negative_threshold: -0.2  # score < isto  -> negativa
   negation_window: 3        # nº de palavras antes da palavra de sentimento
+  min_evidence: 2           # prova mínima para "positiva": palavra do dicionário geral
+                            # vale 1, palavra das listas personalizadas ou regra vale 2
+                            # (uma palavra solta do dicionário não chega; 1 = desligar)
 
   # Um conjunto de léxicos por idioma (o idioma vem da fonte em sources.yaml).
   languages:

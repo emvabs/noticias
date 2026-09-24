@@ -92,7 +92,8 @@ def rule_scorer():
                   rules=[{"terms": ["euribor", "ultrapassa"], "weight": -1,
                           "label": "euribor + ultrapassa"},
                          {"terms": ["desemprego", "desce"], "weight": 1,
-                          "label": "desemprego + desce"}])
+                          "label": "desemprego + desce"}],
+                  min_evidence=1)
 
 
 def test_rule_overrides_the_words_it_names():
@@ -153,7 +154,8 @@ def test_contradictory_rules_cancel_each_other():
 
 def test_negation_words_are_not_sentiment_themselves():
     """VADER scores "no" negative; as a negation word it must not count twice."""
-    scorer = Scorer(base={"no": -1, "deal": 1}, negation_words=["no", "not"])
+    scorer = Scorer(base={"no": -1, "deal": 1}, negation_words=["no", "not"],
+                    min_evidence=1)
     score, label, matched = scorer.score("Deal reached")
     assert [m["word"] for m in matched] == ["deal"] and label == "positive"
     # as an operator it still flips what follows
@@ -166,3 +168,27 @@ def test_outlet_names_are_not_sentiment():
     """SentiLex has "observador" as positive; the byline must not tint the score."""
     assert get_scorer("pt").score("Observador explica o que mudou nas notícias")[1] == "neutral"
     assert get_scorer("pt").polarity("observador") == (0, "custom")
+
+
+def test_one_dictionary_word_is_not_enough_for_positive():
+    # "Primeiro-ministro ... pirateou site": the only hit was "adequados" in the
+    # summary, and that alone labelled bad news as positive.
+    s = make_scorer()
+    score, label, _ = s.score("Protocolos em vigor, tudo bom")
+    assert score > 0.2 and label == "neutral"
+    assert s.score("Um bom e bom resultado")[1] == "positive"     # two dictionary words
+    assert s.score("Vitória no Mundial")[1] == "positive"         # one curated word
+    assert s.score("Morte na estrada")[1] == "negative"           # negative is not gated
+
+
+def test_min_evidence_one_restores_old_behaviour():
+    s = Scorer(base={"bom": 1}, min_evidence=1)
+    assert s.score("Um resultado bom")[1] == "positive"
+
+
+def test_news_words_for_hacking_and_oil():
+    pt = get_scorer("pt")
+    assert pt.score("Primeiro-ministro diz que agente da OpenAI pirateou site do Governo. "
+                    "Pediu protocolos adequados.")[1] == "negative"
+    assert pt.score("Petróleo dispara pelo segundo dia consecutivo")[1] == "negative"
+    assert pt.score("Agente acedeu sem autorização a portal de saúde")[1] == "negative"
