@@ -1,0 +1,14 @@
+# ambiente virtual (cada pessoa cria o seu)
+.venv/
+venv/
+
+# base de dados: é recriada na primeira atualização
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# macOS
+.DS_Store

@@ -1,0 +1,106 @@
+# Regras de combinação (português).
+#
+# Há títulos em que a polaridade só se percebe pela combinação de palavras:
+#   "Euribor ultrapassa 3%"   -> mau, apesar de "ultrapassa" ser palavra positiva
+#   "Desemprego desce"        -> bom, apesar de "desemprego" e "desce" serem negativas
+#
+# Formato:  palavra, outra palavra   <+1|-1>
+#   Todas as palavras da regra têm de aparecer no texto (por qualquer ordem).
+#   "palavra*" = prefixo (sobe* apanha sobe, sobem, subida não — ver formas abaixo).
+#   Quando uma regra dispara, as palavras que ela nomeia deixam de contar
+#   individualmente, por isso a regra manda sobre o léxico.
+#
+# Depois de editar, clique em "Atualizar" ou corra:  python scripts/evaluate.py
+
+# ---------- juros e crédito (subir = mau para quem paga) ----------
+euribor, sobe -1
+euribor, sobem -1
+euribor, subiu -1
+euribor, subida -1
+euribor, aumenta -1
+euribor, ultrapassa -1
+euribor, ultrapassou -1
+euribor, maximo -1
+euribor, agrava -1
+euribor, desce 1
+euribor, descem 1
+euribor, desceu 1
+euribor, baixa 1
+euribor, recua 1
+euribor, minimo 1
+juros, sobem -1
+juros, subida -1
+juros, aumento -1
+juros, descem 1
+juros, descida 1
+prestacao, sobe -1
+prestacao, aumenta -1
+prestacao, desce 1
+
+# ---------- preços e inflação ----------
+inflacao, sobe -1
+inflacao, subiu -1
+inflacao, acelera -1
+inflacao, agrava -1
+inflacao, desce 1
+inflacao, desceu 1
+inflacao, abranda 1
+inflacao, recua 1
+precos, sobem -1
+precos, subiram -1
+precos, aumentam -1
+precos, descem 1
+precos, baixam 1
+rendas, sobem -1
+rendas, aumentam -1
+rendas, descem 1
+combustiveis, sobem -1
+combustiveis, descem 1
+custo, vida -1
+
+# ---------- emprego ----------
+desemprego, desce 1
+desemprego, desceu 1
+desemprego, cai 1
+desemprego, caiu 1
+desemprego, recua 1
+desemprego, baixo 1
+desemprego, minimo 1
+desemprego, sobe -1
+desemprego, subiu -1
+desemprego, aumenta -1
+desemprego, aumentou -1
+desemprego, maximo -1
+salarios, sobem 1
+salarios, aumentam 1
+salarios, aumento 1
+salarios, descem -1
+
+# ---------- saúde e segurança (menos é melhor) ----------
+mortes, descem 1
+mortes, desceu 1
+mortes, diminuem 1
+mortes, sobem -1
+mortes, aumentam -1
+casos, descem 1
+casos, diminuem 1
+casos, aumentam -1
+casos, disparam -1
+acidentes, descem 1
+acidentes, aumentam -1
+crimes, descem 1
+crimes, aumentam -1
+criminalidade, desce 1
+criminalidade, aumenta -1
+incendios, diminuem 1
+area, ardida, diminuiu 1
+
+# ---------- economia ----------
+divida, desce 1
+divida, aumenta -1
+defice, desce 1
+defice, agrava -1
+pobreza, desce 1
+pobreza, aumenta -1
+excedente, orcamental 1
+recessao, evitada 1

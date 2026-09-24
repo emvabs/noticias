@@ -1,0 +1,73 @@
+# Combination rules (English). See lexicon/rules_pt.txt for the format.
+#   word, other word   <+1|-1>
+# All the words must appear (in any order); when a rule fires, the words it
+# names stop counting on their own, so the rule wins over the word list.
+
+# ---------- rates and prices ----------
+inflation, rises -1
+inflation, rose -1
+inflation, climbs -1
+inflation, accelerates -1
+inflation, falls 1
+inflation, fell 1
+inflation, eases 1
+inflation, slows 1
+rates, rise -1
+rates, rose -1
+rates, climb -1
+rates, cut 1
+rates, fall 1
+prices, rise -1
+prices, rose -1
+prices, soar -1
+prices, surge -1
+prices, fall 1
+prices, drop 1
+rents, rise -1
+rents, fall 1
+cost, living -1
+
+# ---------- jobs ----------
+unemployment, falls 1
+unemployment, fell 1
+unemployment, drops 1
+unemployment, lowest 1
+unemployment, rises -1
+unemployment, rose -1
+unemployment, climbs -1
+unemployment, highest -1
+wages, rise 1
+wages, grow 1
+wages, fall -1
+
+# ---------- health and safety (fewer is better) ----------
+deaths, fall 1
+deaths, fell 1
+deaths, drop 1
+deaths, decline 1
+deaths, rise -1
+deaths, rose -1
+deaths, climb -1
+cases, fall 1
+cases, drop 1
+cases, rise -1
+cases, surge -1
+crime, falls 1
+crime, drops 1
+crime, rises -1
+emissions, fall 1
+emissions, rise -1
+poverty, falls 1
+poverty, rises -1
+
+# ---------- economy ----------
+debt, falls 1
+debt, rises -1
+deficit, narrows 1
+deficit, widens -1
+recession, avoided 1
+deaths, cuts 1
+deaths, cut 1
+deaths, reduce 1
+deaths, prevent 1
+deaths, halve 1

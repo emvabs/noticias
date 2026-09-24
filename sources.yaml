@@ -1,0 +1,193 @@
+# Fontes de notícias (RSS oficiais). Para desativar uma fonte: enabled: false.
+# O "id" é usado na API (?sources=publico,rtp).
+#   scope:    portugal | world   -> separador Portugal / Mundo
+#   language: pt | en            -> escolhe o léxico usado na análise
+sources:
+  # ---------------- PORTUGAL ----------------
+  - id: publico
+    name: Público
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://feeds.feedburner.com/PublicoRSS   # ligado a partir de publico.pt (só ~10 itens por pedido)
+
+  - id: expresso
+    name: Expresso
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://feeds.feedburner.com/expresso-geral
+
+  - id: observador
+    name: Observador
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://observador.pt/feed/
+
+  - id: rtp
+    name: RTP Notícias
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://www.rtp.pt/noticias/rss
+
+  - id: cnn
+    name: CNN Portugal
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://cnnportugal.iol.pt/rss.xml   # anunciado no <head> do site
+
+  - id: dn
+    name: Diário de Notícias
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://www.dn.pt/stories.rss   # destino de dn.pt/feed (sem resumos)
+
+  # Sem RSS a funcionar (verificado em 2026-09-21):
+  # SIC Notícias: site protegido por DataDome (403 a pedidos automáticos), sem feed conhecido.
+  - id: sic
+    name: SIC Notícias
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: false
+    feeds: []
+
+  # Jornal de Notícias: feeds.jn.pt/JN-Ultimas parou em 2023; jn.pt/feed entra em
+  # ciclo de redirecionamentos; o site atual não anuncia RSS.
+  - id: jn
+    name: Jornal de Notícias
+    scope: portugal
+    language: pt
+    group: mainstream
+    enabled: false
+    feeds: []
+
+  # ---------------- INDEPENDENTES (Portugal) ----------------
+  # Publicam poucas peças por semana — ver "groups.independent" em config.yaml.
+  - id: fumaca
+    name: Fumaça
+    scope: portugal
+    language: pt
+    group: independent
+    enabled: true
+    feeds:
+      - https://fumaca.pt/feed/          # feed de podcast: resumos longos, cortados a 300 caracteres
+
+  - id: divergente
+    name: Divergente
+    scope: portugal
+    language: pt
+    group: independent
+    enabled: true
+    feeds:
+      # O feed principal (divergente.pt/feed/) só tem o artigo "Olá, mundo!" por
+      # omissão do WordPress; as reportagens estão no tipo de conteúdo "trabalho".
+      - https://divergente.pt/feed/?post_type=trabalho
+
+  - id: shifter
+    name: Shifter
+    scope: portugal
+    language: pt
+    group: independent
+    enabled: true
+    feeds:
+      - https://shifter.pt/feed/
+
+  - id: lpp
+    name: Lisboa Para Pessoas
+    scope: portugal
+    language: pt
+    group: independent
+    enabled: true
+    feeds:
+      - https://lisboaparapessoas.pt/feed/
+
+  - id: oregioes
+    name: oRegiões
+    scope: portugal
+    language: pt
+    group: independent
+    enabled: true
+    feeds:
+      - https://oregioes.pt/feed/
+
+  # ---------------- MUNDO ----------------
+  - id: bbc
+    name: BBC News
+    scope: world
+    language: en
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://feeds.bbci.co.uk/news/world/rss.xml
+
+  - id: guardian
+    name: The Guardian
+    scope: world
+    language: en
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://www.theguardian.com/world/rss
+
+  - id: dw
+    name: Deutsche Welle
+    scope: world
+    language: en
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://rss.dw.com/rdf/rss-en-world
+
+  - id: euronews
+    name: Euronews
+    scope: world
+    language: en
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://www.euronews.com/rss?level=theme&name=news
+
+  - id: aljazeera
+    name: Al Jazeera
+    scope: world
+    language: en
+    group: mainstream
+    enabled: true
+    feeds:
+      - https://www.aljazeera.com/xml/rss/all.xml
+
+  # Sem RSS a funcionar (verificado em 2026-09-23):
+  # Reuters: feeds.reuters.com foi desativado e reuters.com devolve 401 a pedidos automáticos.
+  - id: reuters
+    name: Reuters
+    scope: world
+    language: en
+    group: mainstream
+    enabled: false
+    feeds: []
+
+  # Associated Press: todos os caminhos .rss devolvem 403 (proteção anti-robôs); sem feed público.
+  - id: ap
+    name: Associated Press
+    scope: world
+    language: en
+    group: mainstream
+    enabled: false
+    feeds: []

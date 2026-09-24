@@ -1,0 +1,32 @@
+# Grupos de sinónimos para a caixa de pesquisa.
+# Um grupo por linha, termos separados por vírgula. Procurar por qualquer um
+# dos termos encontra notícias com QUALQUER um dos outros.
+# Acentos são ignorados. # inicia um comentário.
+#
+# Termos escritos em MAIÚSCULAS são tratados como siglas: só encontram a sigla
+# tal como aparece no artigo, em maiúsculas. É isso que impede "IA" de apanhar
+# a palavra "aí". Termos em minúsculas encontram a palavra em qualquer caixa.
+#
+# Exemplo:  IA, AI, inteligência artificial
+#   procurar "IA" (ou "ia") encontra também "Inteligência Artificial" e "AI".
+
+IA, AI, inteligência artificial, artificial intelligence, machine learning, aprendizagem automática, chatgpt, openai
+UE, união europeia, european union, bruxelas, brussels
+EUA, USA, estados unidos, united states, washington
+ONU, UN, nações unidas, united nations
+OTAN, NATO
+BCE, ECB, banco central europeu, european central bank
+PIB, GDP, produto interno bruto
+SNS, serviço nacional de saúde
+PJ, polícia judiciária
+GNR, Guarda Nacional Republicana
+PSP, polícia de segurança pública
+TAP, transportes aéreos portugueses
+CP, Comboios de Portugal
+IPMA, Instituto Português do Mar e da Atmosfera
+INEM, Instituto Nacional de Emergência Médica
+covid, covid 19, coronavirus, pandemia
+clima, alterações climáticas, aquecimento global, climate change, global warming
+habitação, casas, arrendamento, rendas, housing
+imigração, imigrantes, migração, migration, immigration
+futebol, football, soccer

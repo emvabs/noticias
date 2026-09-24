@@ -1,0 +1,51 @@
+# Configuração geral. Reinicie o servidor depois de editar.
+server:
+  host: 127.0.0.1
+  port: 8000
+  reload: true    # reinicia sozinho quando edita o código (ponha false se preferir)
+
+fetch:
+  interval_minutes: 20      # atualização automática
+  timeout_seconds: 20
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
+
+storage:
+  database: data/news.db
+  retention_days: 14        # artigos mais antigos são apagados
+  summary_max_chars: 300    # resumos são cortados a este tamanho (feeds de podcast são longos)
+
+# Definições por grupo de fontes. O que não estiver aqui usa os valores gerais.
+groups:
+  independent:
+    retention_days: 120     # publicam poucas peças; 14 dias deixaria a secção quase vazia
+    ingest_window_days: 0   # 0 = sem corte por data, aceita os itens mais recentes do feed
+    topics:
+      window_hours: 336     # 14 dias (em vez de 48h) para haver temas suficientes
+      max_topics: 8
+      min_articles: 2
+
+feed:
+  default_limit: 50
+  max_limit: 200
+
+sentiment:
+  positive_threshold: 0.2   # score > isto  -> positiva
+  negative_threshold: -0.2  # score < isto  -> negativa
+  negation_window: 3        # nº de palavras antes da palavra de sentimento
+
+  # Um conjunto de léxicos por idioma (o idioma vem da fonte em sources.yaml).
+  languages:
+    pt:
+      base_lexicon: lexicon/SentiLex-flex-PT02.txt
+      base_format: sentilex
+      custom: lexicon/custom_pt.txt       # tem prioridade sobre o léxico base
+      rules: lexicon/rules_pt.txt         # combinações ("euribor + sobe" = negativa)
+      negation_words: [nao, nunca, sem]   # sem acentos
+    en:
+      base_lexicon: lexicon/vader_lexicon.txt
+      base_format: vader
+      custom: lexicon/custom_en.txt
+      rules: lexicon/rules_en.txt
+      negation_words: [no, not, without, never, nor,
+                       dont, doesnt, didnt, isnt, wasnt, arent, werent,
+                       cant, cannot, wont, hasnt, havent]

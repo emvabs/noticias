@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Notícias</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📰</text></svg>">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+   <div class="topbar-main">
+    <div class="bar bar-top">
+      <h1 class="brand">Notícias</h1>
+
+      <div class="scope" role="group" aria-label="Âmbito">
+        <button type="button" class="scope-btn" data-scope="portugal" aria-pressed="true">Portugal</button>
+        <button type="button" class="scope-btn" data-scope="world" aria-pressed="false">Mundo</button>
+      </div>
+
+      <div class="actions">
+        <label class="limit">
+          <span class="sr-only">Número de notícias</span>
+          <select id="limit">
+            <option value="25">25 notícias</option>
+            <option value="50" selected>50 notícias</option>
+            <option value="100">100 notícias</option>
+          </select>
+        </label>
+        <button id="refresh" class="btn" type="button">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+          <span class="btn-text">Atualizar</span>
+        </button>
+        <span id="updated" class="updated" title="">—</span>
+      </div>
+    </div>
+
+    <div class="bar mixbar">
+      <div class="mix">
+        <label for="pct" class="mix-label">
+          <span class="pos">Positivas</span><span class="vs">vs</span><span class="neg">Negativas</span>
+        </label>
+        <div class="slider-wrap">
+          <input id="pct" type="range" min="0" max="100" step="5" value="50"
+                 aria-label="Percentagem de notícias positivas" aria-describedby="pct-value">
+        </div>
+        <output id="pct-value" for="pct" class="pct-value" aria-live="polite">
+          <strong>50%</strong><span>positivas</span>
+        </output>
+      </div>
+
+      <div class="composition" id="composition" hidden>
+        <div class="meter" role="img" id="meter-img" aria-label="">
+          <span class="seg seg-pos" id="seg-pos"></span>
+          <span class="seg seg-neu" id="seg-neu"></span>
+          <span class="seg seg-neg" id="seg-neg"></span>
+        </div>
+        <p class="legend" id="legend"></p>
+        <p class="shortfall" id="pct-actual" hidden></p>
+      </div>
+    </div>
+   </div>
+  </header>
+
+  <!-- filters scroll away with the page; the header above stays pinned -->
+  <div class="filters">
+    <nav id="sources" class="bar chips sources" aria-label="Filtrar por jornal"></nav>
+    <p id="sources-note" class="bar sources-note" hidden></p>
+    <div class="bar topicbar">
+      <form class="search" role="search" id="search-form">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M16.5 16.5 21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input id="search" type="search" name="q" autocomplete="off"
+               placeholder="Pesquisar notícias…" aria-label="Pesquisar notícias">
+        <button type="button" id="search-clear" class="search-clear" aria-label="Limpar pesquisa" hidden>&times;</button>
+      </form>
+
+      <nav id="topics" class="chips topics" aria-label="Temas em destaque">
+        <span class="topics-title">Em destaque</span>
+      </nav>
+
+      <p id="search-hint" class="search-hint" aria-live="polite" hidden></p>
+    </div>
+  </div>
+
+  <main>
+    <p id="message" class="message" hidden></p>
+    <ol id="feed" class="feed" aria-live="polite" aria-busy="false"></ol>
+  </main>
+
+  <template id="card-tpl">
+    <li class="card">
+      <div class="card-meta">
+        <span class="card-source"><span class="source-dot" aria-hidden="true"></span><span class="source-name"></span></span>
+        <span class="sep" aria-hidden="true">·</span>
+        <time class="card-time"></time>
+        <span class="badge" tabindex="0">
+          <span class="badge-text"></span>
+          <span class="tip" role="tooltip"></span>
+        </span>
+      </div>
+      <h2 class="card-title"><a target="_blank" rel="noopener noreferrer"></a></h2>
+      <p class="card-summary"></p>
+      <ul class="card-topics"></ul>
+    </li>
+  </template>
+
+  <template id="skeleton-tpl">
+    <li class="card skeleton" aria-hidden="true">
+      <div class="sk sk-meta"></div>
+      <div class="sk sk-title"></div>
+      <div class="sk sk-title short"></div>
+      <div class="sk sk-text"></div>
+    </li>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
