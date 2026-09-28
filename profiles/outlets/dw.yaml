@@ -1,0 +1,26 @@
+name: Deutsche Welle
+type: Emissora pública internacional da Alemanha
+owner: Estado alemão (instituição de direito público regida pela Lei da Deutsche Welle)
+summary: >
+  Emissora internacional alemã em 30+ línguas. É paga pelo orçamento federal,
+  não pela taxa de TV, e a lei obriga-a a ser independente do Governo.
+funding:
+  - text: Financiada por impostos, através do orçamento federal alemão, sob a tutela do Comissário do Governo para a Cultura e os Media; quase sem publicidade.
+    source: https://en.wikipedia.org/wiki/Deutsche_Welle
+political_links:
+  official:
+    - text: O orçamento é aprovado pelo parlamento federal; o conselho de supervisão inclui representantes do Bundestag, do Bundesrat e do Governo.
+      source: https://en.wikipedia.org/wiki/Deutsche_Welle
+  reported: []
+narrative:
+  - text: Em 2022 despediu cinco jornalistas do serviço árabe depois de uma investigação externa sobre antissemitismo; os visados e alguns meios árabes contestaram o processo.
+    source:
+      - https://www.timesofisrael.com/german-broadcaster-dw-fires-5-staffers-after-probe-on-workplace-antisemitism/
+      - https://www.aljazeera.com/news/2022/2/11/career-assassination-dws-scapegoating-of-arab-employees
+owners:
+  - name: Estado alemão
+    share: 100
+    kind: state
+    source: https://www.gesetze-im-internet.de/dwg/BJNR309410997.html
+owner_keywords: [Deutsche Welle Act, Barbara Massing]
+last_checked: 2026-09-27

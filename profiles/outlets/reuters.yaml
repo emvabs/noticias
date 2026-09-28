@@ -1,0 +1,26 @@
+name: Reuters
+type: Agência noticiosa internacional (privada)
+owner: Thomson Reuters, cotada em bolsa; a família Thomson (Woodbridge) controla ~70%
+summary: >
+  Agência britânico-canadiana. Os "Princípios de Confiança" (Trust Principles)
+  são protegidos por uma empresa própria com uma ação especial que pode travar
+  compras hostis ou ameaças à independência.
+funding:
+  - text: A agência de notícias é uma parte pequena da Thomson Reuters, que vive sobretudo de dados e serviços para profissionais (jurídico, fiscal, financeiro).
+    source: https://www.stratrix.com/business-model/thomson-reuters-data-subscription-model
+  - text: A Woodbridge, holding da família Thomson, tinha 67,9% em março de 2026 (70,6% com o resto da família) e comprometeu-se a votar de acordo com os Princípios de Confiança.
+    source:
+      - https://www.stocktitan.net/sec-filings/TRI/schedule-13d-a-thomson-reuters-corp-can-amended-major-shareholder-rep-9ade70af18cf.html
+      - https://www.thomsonreuters.com/content/dam/ewp-m/documents/thomsonreuters/en/pdf/corporate-responsibility/thomson-reuters-founders-share-company-limited.pdf
+political_links:
+  official: []
+  reported: []
+narrative: []
+owners:
+  - name: Família Thomson
+    share: 67.91
+    kind: person
+    via: Woodbridge → Thomson Reuters
+    source: https://www.stocktitan.net/sec-filings/TRI/schedule-13d-a-thomson-reuters-corp-can-amended-major-shareholder-rep-9ade70af18cf.html
+owner_keywords: []
+last_checked: 2026-09-27

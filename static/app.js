@@ -348,7 +348,277 @@ function tooltipFor(article) {
   return tip;
 }
 
+// ---------- "who is behind this": outlet and journalist profiles ----------
+// Hover a card (mouse) for a moment, or press its "i" button (touch, keyboard).
+const whois = (() => {
+  const box = $("#whois");
+  const body = box.querySelector(".whois-body");
+  const OPEN_DELAY = 400;    // ms: scrolling past cards must not flash the box
+  const CLOSE_DELAY = 250;   // ms: time to move the pointer from the card onto the box
+  const cache = new Map();
+  let openTimer = 0;
+  let closeTimer = 0;
+  let current = null;        // the card the box belongs to
+
+  function profile(kind, id) {
+    const key = `${kind}:${id}`;
+    if (!cache.has(key)) {
+      cache.set(key, fetch(`/api/profile/${kind}/${encodeURIComponent(id)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => { cache.delete(key); return null; }));
+    }
+    return cache.get(key);
+  }
+
+  function pct(n, total) { return total ? Math.round((100 * n) / total) : 0; }
+
+  function statsLine(stats, { outlets = false } = {}) {
+    if (!stats || !stats.articles) return null;
+    const { positive, negative } = stats.labels;
+    let text = `Nesta app: ${stats.articles} ${stats.articles === 1 ? "notícia" : "notícias"}`
+      + ` · ${pct(positive, stats.articles)}% positivas · ${pct(negative, stats.articles)}% negativas`;
+    if (outlets && stats.outlets.length) text += ` · em ${stats.outlets.join(", ")}`;
+    return el("p", { className: "whois-stats" }, text);
+  }
+
+  function host(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return "fonte"; }
+  }
+
+  // One claim with its source link: {text, source} (source may be a list).
+  function claim(item) {
+    const li = el("li");
+    const text = typeof item === "string" ? item : item.text;
+    li.append(text || "");
+    const sources = typeof item === "string" ? [] : [].concat(item.source || []);
+    for (const url of sources) {
+      li.append(" ", el("a", { href: url, target: "_blank", rel: "noopener noreferrer",
+        className: "whois-src", title: url }, host(url)));
+    }
+    return li;
+  }
+
+  function list(title, items, empty) {
+    const frag = document.createDocumentFragment();
+    if (!items?.length && !empty) return frag;
+    frag.append(el("h4", {}, title));
+    if (!items?.length) {
+      frag.append(el("p", { className: "whois-none" }, empty));
+      return frag;
+    }
+    const ul = el("ul");
+    items.forEach((i) => ul.append(claim(i)));
+    frag.append(ul);
+    return frag;
+  }
+
+  function politics(p, empty) {
+    const official = p?.official || [];
+    const reported = p?.reported || [];
+    const frag = document.createDocumentFragment();
+    frag.append(el("h4", {}, "Ligações políticas"));
+    if (!official.length && !reported.length) {
+      frag.append(el("p", { className: "whois-none" }, empty));
+      return frag;
+    }
+    const ul = el("ul");
+    official.forEach((i) => { const li = claim(i); li.prepend(el("b", {}, "Oficial: ")); ul.append(li); });
+    reported.forEach((i) => { const li = claim(i); li.prepend(el("b", {}, "Reportado: ")); ul.append(li); });
+    frag.append(ul);
+    return frag;
+  }
+
+  function checked(data) {
+    const p = data?.profile;
+    if (!p?.last_checked) return null;
+    const when = new Date(`${p.last_checked}T12:00`).toLocaleDateString("pt-PT",
+      { day: "numeric", month: "long", year: "numeric" });
+    // An old profile is still shown, but says it may be out of date.
+    return el("p", { className: `whois-checked${data.stale ? " stale" : ""}` },
+      data.stale ? `Verificado em ${when} — pode estar desatualizado` : `Verificado em ${when}`);
+  }
+
+  function deepDiveLink(tab, id) {
+    const a = el("a", { href: `#deep-dive/${tab}/${id}`, className: "whois-dd" }, "Ver deep dive →");
+    a.addEventListener("click", () => close());
+    return a;
+  }
+
+  function outletSection(data, heading) {
+    const sec = el("section", { className: "whois-sec" });
+    sec.append(el("h3", {}, heading), el("p", { className: "whois-name" }, data.name || data.id));
+    if (data.id) sec.append(deepDiveLink("jornais", data.id));
+    const p = data.profile;
+    if (!p) {
+      sec.append(el("p", { className: "whois-none" }, "Perfil ainda não investigado."));
+    } else {
+      if (p.type) sec.append(el("p", { className: "whois-type" }, p.type));
+      if (p.owner) {
+        const owner = el("p", {}, "Proprietário: ");
+        owner.append(el("strong", {}, p.owner));
+        sec.append(owner);
+      }
+      if (p.summary) sec.append(el("p", {}, p.summary));
+      sec.append(list("Financiamento", p.funding, "Sem informação pública."));
+      sec.append(politics(p.political_links, "Sem ligações conhecidas documentadas."));
+      sec.append(list("Narrativa e críticas", p.narrative, "Sem padrões documentados."));
+    }
+    const line = statsLine(data.stats, { outlets: !data.profile?.owner && data.stats?.outlets?.length > 1 });
+    if (line) sec.append(line);
+    const c = checked(data);
+    if (c) sec.append(c);
+    return sec;
+  }
+
+  function journalistSection(data, name) {
+    const sec = el("section", { className: "whois-sec" });
+    sec.append(el("p", { className: "whois-name" }, data?.name || name));
+    if (data?.id) sec.append(deepDiveLink("jornalistas", data.id));
+    const p = data?.profile;
+    if (!p) {
+      sec.append(el("p", { className: "whois-none" }, "Perfil ainda não investigado."));
+    } else {
+      if (p.role) sec.append(el("p", { className: "whois-type" }, p.role));
+      if (p.summary) sec.append(el("p", {}, p.summary));
+      if (p.career?.length) sec.append(list("Percurso", p.career));
+      sec.append(politics(p.political_links, "Sem ligações públicas conhecidas."));
+      sec.append(list("Narrativa e críticas", p.narrative, "Sem padrões documentados."));
+    }
+    const line = statsLine(data?.stats, { outlets: true });
+    if (line) sec.append(line);
+    const c = checked(data);
+    if (c) sec.append(c);
+    return sec;
+  }
+
+  async function fill(article) {
+    body.replaceChildren(el("p", { className: "whois-loading" }, "A carregar…"));
+    const authors = (article.authors || []).filter((a) => !(a.kind === "outlet" && a.id === article.source));
+    const [outletData, ...authorData] = await Promise.all([
+      profile("outlet", article.source),
+      ...authors.slice(0, 3).map((a) => (a.kind === "other" ? null : profile(a.kind, a.id))),
+    ]);
+    if (current?.article !== article) return;    // the pointer moved on meanwhile
+
+    const frag = document.createDocumentFragment();
+    frag.append(outletSection(outletData || { id: article.source, name: article.source_name }, "Jornal"));
+
+    // A heading for the people; an agency byline brings its own "Agência" heading.
+    const persons = authors.filter((a) => a.kind !== "outlet");
+    const people = el("section", { className: "whois-sec" });
+    if (persons.length || !authors.length) {
+      people.append(el("h3", {}, persons.length > 1 ? "Autoria" : "Jornalista"));
+      frag.append(people);
+    }
+    if (!authors.length) {
+      people.append(el("p", { className: "whois-none" }, "A notícia não indica o jornalista."));
+    }
+    authors.slice(0, 3).forEach((a, i) => {
+      if (a.kind === "outlet") {
+        frag.append(outletSection(authorData[i] || { id: a.id, name: a.name }, "Agência / redação"));
+      } else if (a.kind === "other") {
+        people.append(el("p", { className: "whois-name" }, a.name));
+      } else {
+        const sec = journalistSection(authorData[i], a.name);
+        sec.classList.add("whois-sub");
+        frag.append(sec);
+      }
+    });
+    frag.append(el("p", { className: "whois-note" },
+      "Compilado de fontes públicas, citadas em cada linha. Não é uma avaliação da notícia."));
+    body.replaceChildren(frag);
+    place();
+  }
+
+  function place() {
+    if (!current) return;
+    const narrow = window.innerWidth < 720;
+    box.classList.toggle("sheet", narrow);
+    if (narrow) { box.style.left = box.style.top = ""; return; }
+    const r = current.card.getBoundingClientRect();
+    const w = box.offsetWidth;
+    const h = box.offsetHeight;
+    const gap = 12;
+    const fit = (y) => Math.max(gap, Math.min(y, window.innerHeight - h - gap));
+    let left;
+    let top;
+    if (window.innerWidth - r.right >= w + gap * 2) {          // beside the card, right
+      left = r.right + gap;
+      top = fit(r.top);
+    } else if (r.left >= w + gap * 2) {                        // beside the card, left
+      left = r.left - w - gap;
+      top = fit(r.top);
+    } else {                                                   // no room beside: below or above it
+      left = Math.max(gap, Math.min(r.left, window.innerWidth - w - gap));
+      if (window.innerHeight - r.bottom >= h + gap) top = r.bottom + gap / 2;
+      else if (r.top >= h + gap) top = r.top - h - gap / 2;
+      else top = fit(r.bottom + gap / 2);
+    }
+    box.style.left = `${left + window.scrollX}px`;
+    box.style.top = `${top + window.scrollY}px`;
+  }
+
+  function open(card, article) {
+    clearTimeout(closeTimer);
+    if (current?.card === card && !box.hidden) return;
+    current?.button.setAttribute("aria-expanded", "false");
+    current = { card, article, button: card.querySelector(".whois-btn") };
+    current.button.setAttribute("aria-expanded", "true");
+    box.hidden = false;
+    fill(article);
+    place();
+  }
+
+  function close() {
+    clearTimeout(openTimer);
+    clearTimeout(closeTimer);
+    if (!current) return;
+    current.button.setAttribute("aria-expanded", "false");
+    current = null;
+    box.hidden = true;
+  }
+
+  const later = (fn, ms) => { clearTimeout(closeTimer); closeTimer = setTimeout(fn, ms); };
+
+  box.addEventListener("pointerenter", () => clearTimeout(closeTimer));
+  box.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") later(close, CLOSE_DELAY); });
+  box.querySelector(".whois-close").addEventListener("click", () => {
+    const button = current?.button;
+    close();
+    button?.focus();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && current) { const b = current.button; close(); b.focus(); }
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (current && !box.contains(e.target) && !current.card.contains(e.target)) close();
+  });
+  window.addEventListener("resize", place);
+
+  function attach(card, article) {
+    card.addEventListener("pointerenter", (e) => {
+      if (e.pointerType !== "mouse") return;
+      clearTimeout(openTimer);
+      clearTimeout(closeTimer);
+      openTimer = setTimeout(() => open(card, article), current ? 0 : OPEN_DELAY);
+    });
+    card.addEventListener("pointerleave", (e) => {
+      if (e.pointerType !== "mouse") return;
+      clearTimeout(openTimer);
+      if (current?.card === card) later(close, CLOSE_DELAY);
+    });
+    card.querySelector(".whois-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (current?.card === card && !box.hidden) close();
+      else { open(card, article); box.querySelector(".whois-close").focus({ preventScroll: true }); }
+    });
+  }
+
+  return { attach, close };
+})();
+
 function renderFeed(data) {
+  whois.close();              // its card is about to be replaced
   feedList.replaceChildren();
   for (const a of data.articles) {
     const card = tpl.content.firstElementChild.cloneNode(true);
@@ -373,6 +643,25 @@ function renderFeed(data) {
     link.href = a.url;
     link.textContent = a.title;
     card.querySelector(".card-summary").textContent = a.summary;
+    const byline = card.querySelector(".card-byline");
+    const people = (a.authors || []).filter((p) => !(p.kind === "outlet" && p.id === a.source));
+    if (people.length) {
+      byline.textContent = "por " + people.map((p) => p.name).join(", ");
+      byline.hidden = false;
+    }
+    const flag = card.querySelector(".owner-flag");
+    if (a.owner_mentions?.length) {
+      // The piece names the outlet's own owner, group or a sister company.
+      const owners = state.sources.find((s) => s.id === a.source)?.owners || [];
+      const named = a.owner_mentions.join(", ");
+      // No article before the outlet name: "do Público" but "da CNN Portugal".
+      const text = `Esta notícia menciona ${named}, ligado a quem detém ${a.source_name}`
+        + (owners.length ? ` (${owners.join("; ")}).` : ".");
+      flag.querySelector(".tip").textContent = `${text} Leia sabendo desta relação.`;
+      flag.setAttribute("aria-label", `Possível conflito de interesses: ${text}`);
+      flag.hidden = false;
+    }
+    whois.attach(card, a);
     const tags = card.querySelector(".card-topics");
     const labels = new Map(state.topics.map((t) => [t.slug, t.label]));
     for (const slug of a.topics || []) {
@@ -508,6 +797,7 @@ async function refresh() {
   } catch { /* shown by loadFeed below if the server is down */ }
   await Promise.all([loadSources(), loadTopics()]);
   await loadFeed();
+  loadProfilesStatus();
   refreshBtn.disabled = false;
   refreshBtn.classList.remove("spinning");
 }
@@ -528,11 +818,62 @@ async function poll() {
     if (s.last_updated && s.last_updated !== state.lastUpdated && !s.running) {
       await Promise.all([loadSources(), loadTopics()]);
       await loadFeed();
+      loadProfilesStatus();
     } else {
       setUpdated(state.lastUpdated);
       document.querySelectorAll(".card-time").forEach((t) => { t.textContent = timeAgo(t.dateTime); });
     }
   } catch { /* server stopped; try again later */ }
+}
+
+// ---------- research to do: journalists without a profile, old profiles ----------
+const profilesStatus = $("#profiles-status");
+
+function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
+
+async function loadProfilesStatus() {
+  let data;
+  try { data = await (await fetch("/api/profiles/status")).json(); } catch { return; }
+  const { pending, stale } = data;
+  profilesStatus.hidden = !pending.length && !stale.length;
+  if (profilesStatus.hidden) return;
+
+  const parts = [];
+  if (pending.length) parts.push(plural(pending.length, "jornalista sem perfil", "jornalistas sem perfil"));
+  if (stale.length) parts.push(plural(stale.length, "perfil a rever", "perfis a rever"));
+  profilesStatus.querySelector("summary").textContent = parts.join(" · ");
+
+  const body = profilesStatus.querySelector(".ps-body");
+  body.replaceChildren();
+  if (pending.length) {
+    body.append(el("h3", {}, `Sem perfil, com ${data.min_articles} ou mais notícias`));
+    const ul = el("ul");
+    for (const p of pending) {
+      const li = el("li");
+      li.append(el("strong", {}, p.name), ` — ${plural(p.articles, "notícia", "notícias")}`
+        + ` (${p.outlets.join(", ")})`);
+      if (p.suspect) {
+        li.append(" ", el("span", { className: "ps-suspect" },
+          `${p.suspect}: talvez não seja uma pessoa (aliases.txt)`));
+      }
+      ul.append(li);
+    }
+    body.append(ul);
+  }
+  if (stale.length) {
+    body.append(el("h3", {}, `Verificados há mais de ${data.stale_after_days} dias`));
+    const ul = el("ul");
+    for (const p of stale) {
+      const li = el("li");
+      li.append(el("strong", {}, p.name), ` — ${p.last_checked || "sem data"} `,
+        el("code", {}, `profiles/${p.kind === "outlet" ? "outlets" : "journalists"}/${p.id}.yaml`));
+      ul.append(li);
+    }
+    body.append(ul);
+  }
+  const how = el("p", { className: "ps-how" }, "Para ver esta lista no terminal: ");
+  how.append(el("code", {}, ".venv/bin/python -m app.profiles"), " — como investigar está no README.");
+  body.append(how);
 }
 
 // ---------- start ----------
@@ -547,5 +888,6 @@ setQuery(state.query, { render: true });
   showSkeletons();
   try { await Promise.all([loadSources(), loadTopics()]); } catch { /* loadFeed will report */ }
   await loadFeed();
+  loadProfilesStatus();
   setInterval(poll, 15_000);
 })();

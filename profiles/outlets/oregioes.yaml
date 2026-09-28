@@ -1,0 +1,21 @@
+name: oRegiões
+type: Jornal regional digital e impresso (privado), sediado em Castelo Branco
+owner: Lápis Épico Jornalismo Comunicação e Imagem, Unipessoal, Lda — 100% de Fernando Jesus Pires, também diretor e editor
+summary: >
+  Jornal regional com um único dono, que é também o diretor. Cobre sobretudo o
+  interior e o poder local.
+funding:
+  - text: Assinaturas, publicidade e donativos.
+    source: https://oregioes.pt/ficha-tecnica/
+political_links:
+  official: []
+  reported: []
+narrative: []
+owners:
+  - name: Fernando Jesus Pires
+    share: 100
+    kind: person
+    via: Lápis Épico
+    source: https://oregioes.pt/ficha-tecnica/
+owner_keywords: [Lápis Épico]
+last_checked: 2026-09-27

@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS articles (
     matched_words TEXT,                   -- JSON list, for debugging
     topics        TEXT NOT NULL DEFAULT '[]', -- JSON list of topic slugs
     search_text   TEXT NOT NULL DEFAULT '',  -- title + summary, lowercase, no accents
-    raw_text      TEXT NOT NULL DEFAULT ''   -- same text with capitals/accents (acronyms)
+    raw_text      TEXT NOT NULL DEFAULT '',  -- same text with capitals/accents (acronyms)
+    authors       TEXT                    -- JSON list of bylines; NULL = not looked up yet
 );
 
 CREATE TABLE IF NOT EXISTS topics_cache (   -- current top topics per scope and group
@@ -58,7 +59,8 @@ def migrate(conn):
                                 ("topics", "TEXT NOT NULL DEFAULT '[]'"),
                                 ("search_text", "TEXT NOT NULL DEFAULT ''"),
                                 ("raw_text", "TEXT NOT NULL DEFAULT ''"),
-                                ('"group"', "TEXT NOT NULL DEFAULT 'mainstream'")):
+                                ('"group"', "TEXT NOT NULL DEFAULT 'mainstream'"),
+                                ("authors", "TEXT")):
         if column.strip('"') not in existing:
             conn.execute(f"ALTER TABLE articles ADD COLUMN {column} {declaration}")
             added.append(column)
@@ -85,6 +87,12 @@ def migrate(conn):
                          (searchable(text), raw_searchable(text), row["id"]))
     conn.executescript(INDEXES)
     conn.commit()
+    # The archive is filled from the articles already stored (first start after
+    # the upgrade) and kept in step on every fetch; see app/archive.py.
+    from . import archive                 # late: archive -> ownership -> profiles -> config
+    conn.executescript(archive.SCHEMA)
+    if not conn.execute("SELECT 1 FROM article_archive LIMIT 1").fetchone():
+        archive.sync(conn)   # only the first time: every fetch keeps it in step afterwards
 
 
 def connect(db_path=None):

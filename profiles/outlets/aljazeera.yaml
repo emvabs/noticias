@@ -1,0 +1,29 @@
+name: Al Jazeera
+type: Rede internacional de televisão e notícias, sediada em Doha (Catar)
+owner: Al Jazeera Media Network, entidade de utilidade pública do Catar
+summary: >
+  Criada em 1996 pelo emir do Catar. Diz ser editorialmente independente, mas é
+  financiada pelo Estado catari e presidida por um membro da família reinante.
+funding:
+  - text: A maior parte do financiamento vem do Governo do Catar; as contas não são públicas.
+    source:
+      - https://statemediamonitor.com/2026/06/al-jazeera-media-network-ajmn/
+      - https://www.allsides.com/blog/al-jazeera-state-funded
+political_links:
+  official:
+    - text: O presidente do conselho é um membro sénior da família Al Thani, que também preside à Qatar Media Corporation.
+      source: https://statemediamonitor.com/2026/06/al-jazeera-media-network-ajmn/
+  reported: []
+narrative:
+  - text: Em 2013 um ex-correspondente disse que a cobertura estava "alinhada com a política externa do Catar", e críticos apontaram proximidade à Irmandade Muçulmana na cobertura da Síria e do Egito; a rede negou.
+    source: https://www.wnycstudios.org/podcasts/otm/segments/262087-al-jazeera-and-qatari-governments-editorial-influence
+  - text: Proibida de emitir em Israel desde maio de 2024, ao abrigo de uma lei renovada em dezembro de 2025.
+    source: https://www.voanews.com/a/what-led-up-to-israel-shuttering-al-jazeera/7598870.html
+owners:
+  - name: Estado do Catar
+    share: 100
+    kind: state
+    via: Al Jazeera Media Network
+    source: https://statemediamonitor.com/2026/06/al-jazeera-media-network-ajmn/
+owner_keywords: [Al Thani, Tamim bin Hamad, Qatar Media Corporation]
+last_checked: 2026-09-27

@@ -195,6 +195,84 @@ python scripts/evaluate.py --all    # also lists correct ones
 
 The test headlines are in `eval/headlines.csv` (Portuguese, 43) and `eval/headlines_en.csv` (English, 37), and you can add your own. Current accuracy: **98%** and **100%** — optimistic, since both lists were tuned against those same headlines. Clicking **Atualizar** (or restarting) re-scores every stored article with the current lists.
 
+### Who is behind the news
+
+Hover a card for a moment (or press its **i** button on a phone or with the keyboard) to see who owns and funds the outlet and, when the byline is known, who the journalist is. Each line cites its source, and every profile shows the date it was checked. The box also shows what this app has seen: how many articles by that outlet or journalist, and how many were positive or negative.
+
+**Where the bylines come from.** Each outlet in `sources.yaml` has an `author_from`:
+
+| `author_from` | Meaning | Outlets |
+|---|---|---|
+| `feed` (default) | the RSS item carries the byline | Expresso, Observador, DN, Guardian and the independents |
+| `page` | read once from the article page (JSON-LD or `<meta name="author">`) | Público, CNN Portugal, BBC, DW, Euronews, Al Jazeera |
+| `none` | no byline anywhere | RTP |
+
+Page bylines are read in the background, `fetch.author_pages_per_run` pages per update (60), newest first, so after the first start the backlog clears over a few updates.
+
+**The profiles** are plain YAML files you can edit:
+
+```
+profiles/outlets/<id>.yaml         # one per outlet or agency (lusa, afp, efe, ap, reuters)
+profiles/journalists/<slug>.yaml   # one per journalist, slug = name without accents: hugo-franco
+profiles/aliases.txt               # bylines that are not people: "Agência Lusa = outlet:lusa"
+```
+
+Each claim is a `text` with its `source` (a URL or a list of them). Outlets have `owner`, `funding`, `political_links` (`official` / `reported`) and `narrative`; journalists have `role`, `career`, `political_links` and `narrative`. See any existing file for the layout. The rules the current files follow:
+
+- no claim without a source; opinions and criticism are attributed ("segundo…", "artigo de opinião de…");
+- journalists: professional record only; a political link only when documented (a party post, a candidacy, a government job, a public statement), never inferred from what they write;
+- `last_checked` is updated whenever a file is reviewed.
+
+#### Keeping the profiles up to date
+
+Each update brings new articles. What happens on its own:
+
+- bylines of new articles are stored (page bylines: 60 per update, newest first);
+- a journalist or agency that already has a profile gets it on new articles at once;
+- the "Nesta app" numbers are counted live;
+- bylines that name an outlet ("Redação CNN Portugal", "BBC Africa") go to that outlet, and ones with words like "Redação", "Staff", "Agências", "Equipa" are treated as not a person — no `aliases.txt` line needed.
+
+What is left for you, shown at the foot of the page ("N jornalistas sem perfil · N perfis a rever") and in the terminal:
+
+```bash
+.venv/bin/python -m app.profiles          # journalists with 3+ articles and no profile, then old profiles
+.venv/bin/python -m app.profiles --min 1  # every journalist without a profile
+```
+
+It only reads the database, so it is safe while the server runs. For each line:
+
+1. **Not a person** (flagged "uma só palavra" / "tudo em maiúsculas": a section, a brand, a username like `mdalmeida`) → add a line to `profiles/aliases.txt`: `Azul = -`, or `mdalmeida = journalist:maria-almeida` once you know who it is.
+2. **A person** → research and create `profiles/journalists/<slug>.yaml` (the slug is printed in the list), copying the layout of an existing file. Every claim needs a `source`; `last_checked` is today.
+3. **Profiles to review** (checked more than `profiles.stale_after_days` ago, 180 by default) → re-check the claims, fix what changed, update `last_checked`. Until then the box says "pode estar desatualizado".
+4. Run `.venv/bin/python -m pytest -q` — it fails on any claim without a source or a file whose name does not match its slug.
+
+No restart is needed: profiles and aliases are read on every request. The thresholds live under `profiles:` in `config.yaml`.
+
+### Deep Dive
+
+The **Deep Dive** button in the header (or "Ver deep dive →" in the hover box) opens a view with four tabs. The address follows the tab (`#deep-dive/jornais/publico`), so the browser's back button and bookmarks work.
+
+- **Propriedade** — who owns each outlet and agency, as a two-column map (owners → outlets, with the share on each line). Shared owners are one node: the Portuguese State links RTP and Lusa. Click an outlet for its Deep Dive, an owner for what it holds and the sources.
+- **Jornais / Jornalistas** — pick one; you get a short summary, the **findings**, and a radial map with the selection in the centre, the findings around it and, around each finding, the articles (coloured by tone) or research sources behind it. Drag to pan, wheel or +/− to zoom, click a finding to highlight it, click an article to open it. Each finding card also lists its articles, which is the view to use on a phone.
+- **Silêncios** — trending topics × mainstream outlets: how much each outlet published on a topic compared with what its volume predicts. 🔇 marks far less than expected; click a cell to see what was (and was not) published. A silence can come from the RSS feed rather than the outlet — Público's feed shows ~10 items per request — so it is a lead, not proof. Independent outlets are left out: not covering a national story is their editorial choice.
+
+**Findings** are of two kinds, never mixed:
+
+| | Kind | From |
+|---|---|---|
+| 📋 | Researched: ownership, funding, political links, documented criticism, career | the profile files, each with its source link |
+| 📊 | Tone compared with the other outlets (or, for a journalist, with the rest of their outlet) | the archive |
+| 📊 | Terms in the headlines far more frequent than in the comparison | the archive |
+| 📊 | Share of agency copy among articles with a known byline | the archive |
+| ⚠️ | Articles that mention the outlet's own owner, group or sister company | `owner_keywords` |
+| 🔇 | Widely covered topics the outlet barely covered | the archive |
+
+Data findings need at least 15 articles in the last 90 days; below that the summary says there are too few. They describe **tendencies in the data** — the tone is measured with word lists, and a frequent term says what an outlet covers, not what it thinks. All thresholds are under `deepdive:` in `config.yaml`. Noisy terms ("Palavras Cruzadas", a recurring section) are silenced in `config/stoplist.txt`.
+
+**⚠️ Dono on a card** means the piece names the outlet's own owner, group or a sister company (Público on Sonae, Expresso on SIC, CNN Portugal on TVI). The names are `owner_keywords` in each outlet's profile, matched as whole words with exact capitals: proper names only, never a generic word like "Governo", and never the outlet's own name ("disse ao Observador" is attribution, not a conflict).
+
+**The archive.** The feed keeps 14 days; the Deep Dive needs months. Every article is also copied to `article_archive` (title, bylines, tone, topics, owner mentions — no summary; roughly 50 MB a year), which is never cleaned up. Topics are accumulated there, since the feed only keeps the ones trending now. The archive was filled from the articles already stored on the first start, so trends about journalists will grow more reliable over the coming weeks.
+
 ### Screen sizes and devices
 
 Checked from a 280px foldable cover screen up to a 2560px monitor, in portrait and landscape, with no horizontal scrolling anywhere.
@@ -248,4 +326,4 @@ Articles belong to their respective outlets. Only title, summary and link are st
 
 ## Upgrading an existing database
 
-These features add six columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`) and a `topics_cache` table. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.
+These features add seven columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`) and the `topics_cache`, `article_archive` and `topic_labels` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.

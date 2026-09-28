@@ -27,6 +27,10 @@
             <option value="100">100 notícias</option>
           </select>
         </label>
+        <a id="dd-toggle" class="btn dd-toggle" href="#deep-dive" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="4" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="20" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="21" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.6 7.2 9.6 10.4M18.4 7.2 14.4 10.4M12 15v4" stroke="currentColor" stroke-width="1.8"/></svg>
+          <span class="btn-text">Deep Dive</span>
+        </a>
         <button id="refresh" class="btn" type="button">
           <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
           <span class="btn-text">Atualizar</span>
@@ -90,12 +94,73 @@
     <ol id="feed" class="feed" aria-live="polite" aria-busy="false"></ol>
   </main>
 
+  <!-- Deep Dive: who owns what, findings per outlet/journalist, silences -->
+  <section id="dd" class="dd" hidden aria-label="Deep Dive">
+    <nav class="dd-tabs" role="tablist" aria-label="Deep Dive">
+      <a role="tab" class="dd-tab" href="#deep-dive/propriedade" data-tab="propriedade">Propriedade</a>
+      <a role="tab" class="dd-tab" href="#deep-dive/jornais" data-tab="jornais">Jornais</a>
+      <a role="tab" class="dd-tab" href="#deep-dive/jornalistas" data-tab="jornalistas">Jornalistas</a>
+      <a role="tab" class="dd-tab" href="#deep-dive/silencios" data-tab="silencios">Silêncios</a>
+    </nav>
+
+    <div class="dd-panel" id="dd-propriedade" hidden>
+      <p class="dd-intro">Quem é dono de cada jornal e agência. Clique num jornal para ver o seu
+        Deep Dive, ou num dono para ver o que detém.</p>
+      <div class="dd-legend" id="own-legend"></div>
+      <div class="dd-graph dd-graph-own"><svg id="own-svg" role="img" aria-label="Mapa de propriedade"></svg></div>
+      <div class="dd-detail" id="own-detail" hidden></div>
+    </div>
+
+    <div class="dd-panel" id="dd-entidade" hidden>
+      <div class="dd-picker">
+        <input id="dd-search" type="search" autocomplete="off" aria-label="Procurar">
+        <ul id="dd-list" class="dd-list"></ul>
+      </div>
+      <article id="dd-result" class="dd-result" aria-live="polite"></article>
+    </div>
+
+    <div class="dd-panel" id="dd-silencios" hidden>
+      <div class="dd-silence-head">
+        <div class="scope" role="group" aria-label="Âmbito dos silêncios">
+          <button type="button" class="scope-btn" data-silence-scope="portugal" aria-pressed="true">Portugal</button>
+          <button type="button" class="scope-btn" data-silence-scope="world" aria-pressed="false">Mundo</button>
+        </div>
+        <p class="dd-intro">Temas em destaque que quase todos os jornais cobriram, e quanto cada um
+          publicou face ao que o seu volume faria esperar. <strong>🔇</strong> = muito abaixo.</p>
+      </div>
+      <p class="dd-caveat">Um silêncio pode vir do feed RSS e não do jornal: o do Público só mostra
+        ~10 notícias por pedido e o do DN não traz resumos. Leia-o como uma pista, não como prova.</p>
+      <div class="dd-table-wrap"><table id="silence-table" class="silence-table"></table></div>
+      <div class="dd-detail" id="silence-detail" hidden></div>
+    </div>
+  </section>
+
+  <!-- research still to do on the "who is behind the news" profiles -->
+  <footer id="profiles-status" class="profiles-status" hidden>
+    <details>
+      <summary></summary>
+      <div class="ps-body"></div>
+    </details>
+  </footer>
+
+  <aside id="whois" class="whois" role="dialog" aria-label="Quem está por trás desta notícia" hidden>
+    <button type="button" class="whois-close" aria-label="Fechar">×</button>
+    <div class="whois-body"></div>
+  </aside>
+
   <template id="card-tpl">
     <li class="card">
       <div class="card-meta">
         <span class="card-source"><span class="source-dot" aria-hidden="true"></span><span class="source-name"></span></span>
+        <span class="card-byline" hidden></span>
         <span class="sep" aria-hidden="true">·</span>
         <time class="card-time"></time>
+        <span class="owner-flag" tabindex="0" hidden>
+          <span aria-hidden="true">⚠️</span> Dono
+          <span class="tip" role="tooltip"></span>
+        </span>
+        <button type="button" class="whois-btn" aria-label="Quem está por trás desta notícia"
+                aria-haspopup="dialog" aria-expanded="false">i</button>
         <span class="badge" tabindex="0">
           <span class="badge-text"></span>
           <span class="tip" role="tooltip"></span>
@@ -117,5 +182,6 @@
   </template>
 
   <script src="/static/app.js"></script>
+  <script src="/static/deepdive.js"></script>
 </body>
 </html>

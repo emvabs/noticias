@@ -1,0 +1,31 @@
+name: RTP – Rádio e Televisão de Portugal
+type: Serviço público de rádio e televisão (empresa do Estado)
+owner: Estado português (100%)
+summary: >
+  Empresa pública. A administração é escolhida pelo Conselho Geral Independente
+  (CGI), um órgão criado para afastar o Governo da escolha direta. Os diretores
+  de informação precisam de parecer vinculativo da ERC.
+funding:
+  - text: Cerca de 80% do financiamento vem da Contribuição Audiovisual (3,02 €/mês na fatura da eletricidade); o resto é publicidade e receitas comerciais. Não recebe indemnização compensatória do Orçamento do Estado desde 2013.
+    source: https://www.rtp.pt/noticias/economia/cgi-da-rtp-sugere-subvencao-no-oe-caso-contribuicao-audiovisual-nao-aumente_n1708262
+  - text: O CGI classificou de "erro crasso" as contas do Governo sobre o fim da publicidade na RTP.
+    source: https://observador.pt/2024/10/17/erro-crasso-conselho-geral-independente-da-rtp-diz-que-governo-fez-mal-as-contas-ao-fim-da-publicidade/
+political_links:
+  official:
+    - text: O Governo nomeia membros do Conselho Geral Independente e aprova o administrador financeiro; o CGI escolhe o presidente. Em 2026 o CGI tinha quatro candidaturas à administração para 2027–2029.
+      source: https://eco.sapo.pt/2026/09/17/quem-vai-escolher-a-nova-administracao-da-rtp/
+  reported:
+    - text: Em 2026 Alberto Arons de Carvalho queixou-se à ERC de ter sido substituído no CGI antes do fim do mandato, o que considerou uma intervenção do Governo; a ERC arquivou a queixa.
+      source: https://eco.sapo.pt/2026/03/26/erc-arquiva-queixa-de-arons-de-carvalho-por-afastamento-do-cgi-da-rtp/
+narrative:
+  - text: Em 2025 a mudança na direção de informação levou a administração ao parlamento; o presidente, Nicolau Santos, negou "qualquer interferência política", e a ERC lembrou que era obrigatório ouvir o Conselho de Redação.
+    source:
+      - https://www.publico.pt/2025/07/22/politica/noticia/nicolau-santos-afasta-qualquer-interferencia-politica-pressao-reorganizacao-rtp-2141275
+      - https://eco.sapo.pt/2025/07/08/erc-diz-que-rtp-tem-de-pedir-parecer-do-conselho-de-redacao-para-destituicao-na-direcao-de-informacao/
+owners:
+  - name: Estado português
+    share: 100
+    kind: state
+    source: https://eco.sapo.pt/2026/09/17/quem-vai-escolher-a-nova-administracao-da-rtp/
+owner_keywords: [Conselho Geral Independente, Nicolau Santos, contribuição audiovisual]
+last_checked: 2026-09-27

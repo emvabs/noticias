@@ -1,0 +1,25 @@
+name: Público
+type: Diário generalista nacional (privado), fundado em 1990
+owner: Sonae, através da Sonaecom (Público – Comunicação Social, SA)
+summary: >
+  Jornal de referência criado pela Sonae de Belmiro de Azevedo. Dá prejuízo
+  todos os anos e sobrevive porque o acionista cobre as perdas.
+funding:
+  - text: A Sonae injetou 10,7 milhões de euros entre 2024 e 2025 para cobrir prejuízos; no total investiu cerca de 52,6 milhões, já considerados perdidos nas contas da Sonaecom.
+    source: https://paginaum.pt/2026/07/17/sonae-ja-enterrou-no-jornal-publico-quase-53-milhoes-de-euros-sem-esperanca-de-recuperar
+  - text: Prejuízo de 5,1 milhões de euros em 2024, o pior da série recente.
+    source: https://eco.sapo.pt/2025/07/31/publico-fecha-2024-com-prejuizo-de-51-milhoes-cristina-soares-justifica-resultados-com-a-reestruturacao/
+political_links:
+  official: []
+  reported: []
+narrative:
+  - text: No lançamento (1990) a administração e a direção de Vicente Jorge Silva assinaram um "pacto" que garante a independência da redação face ao acionista.
+    source: https://www.publico.pt/2017/11/29/economia/noticia/o-pacto-de-belmiro-com-publico-de-marco-de-1990-1794366
+owners:
+  - name: Sonae
+    share: 100
+    kind: company
+    via: Sonaecom
+    source: https://paginaum.pt/2026/07/17/sonae-ja-enterrou-no-jornal-publico-quase-53-milhoes-de-euros-sem-esperanca-de-recuperar
+owner_keywords: [Sonae, Sonaecom, Belmiro de Azevedo, Paulo Azevedo, Cláudia Azevedo, NOS, Worten]
+last_checked: 2026-09-27

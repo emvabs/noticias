@@ -7,6 +7,8 @@ server:
 fetch:
   interval_minutes: 20      # atualização automática
   timeout_seconds: 20
+  author_pages_per_run: 60  # páginas de artigos lidas por atualização para saber o autor
+                            # (fontes com author_from: page em sources.yaml)
   user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 
 storage:
@@ -23,6 +25,25 @@ groups:
       window_hours: 336     # 14 dias (em vez de 48h) para haver temas suficientes
       max_topics: 8
       min_articles: 2
+
+# Perfis de jornais e jornalistas (profiles/). Ver: python -m app.profiles
+profiles:
+  pending_min_articles: 3   # avisar de jornalistas sem perfil a partir de N notícias
+  stale_after_days: 180     # perfis verificados há mais tempo aparecem como "a rever"
+
+# Deep Dive: tendências por jornal e jornalista, calculadas sobre o arquivo.
+deepdive:
+  window_days: 90             # período analisado
+  min_articles: 15            # abaixo disto: "poucas notícias para tendências"
+  tone_diff_pp: 10            # diferença de tom (pontos percentuais) para ser um finding
+  topic_lift: 2.0             # um termo tem de aparecer 2× mais que na comparação
+  topic_min_articles: 5       # ... e em pelo menos 5 títulos
+  max_topics: 3
+  articles_per_finding: 50
+  silence_min_outlet_articles: 30   # jornais com menos notícias ficam fora dos silêncios
+  silence_min_coverage: 0.6         # tema coberto por pelo menos 60% dos jornais
+  silence_max_ratio: 0.25           # silêncio: menos de 25% do que o volume faria esperar
+  silence_min_expected: 3           # ... e esperar-se-iam pelo menos 3 notícias
 
 feed:
   default_limit: 50

@@ -1,0 +1,25 @@
+name: Agencia EFE
+type: Agência noticiosa espanhola (empresa pública)
+owner: Estado espanhol, através da SEPI (Sociedad Estatal de Participaciones Industriales)
+summary: >
+  A maior agência noticiosa em língua espanhola, fundada em 1939. É do Estado e
+  o presidente é proposto pelo Governo.
+funding:
+  - text: Contrato de serviço público com o Estado espanhol mais a venda de serviços noticiosos.
+    source: https://www.sepi.es/en/sectores/agencia-efe
+political_links:
+  official:
+    - text: O presidente, Miguel Ángel Oliver (desde dezembro de 2023), foi proposto pelo Governo; antes foi secretário de Estado da Comunicação de Pedro Sánchez (2018–2021). PP e Vox votaram contra e chamaram-lhe "comissário político".
+      source:
+        - https://www.apmadrid.es/el-gobierno-propondra-a-miguel-angel-oliver-como-nuevo-presidente-de-la-agencia-efe/
+        - https://www.elespanol.com/invertia/medios/20240926/pp-condiciona-renovacion-rtve-salida-miguel-angel-oliver-presidente-efe/888661422_0.html
+  reported: []
+narrative: []
+owners:
+  - name: Estado espanhol
+    share: 100
+    kind: state
+    via: SEPI
+    source: https://www.sepi.es/en/sectores/agencia-efe
+owner_keywords: []
+last_checked: 2026-09-27

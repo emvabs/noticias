@@ -1,0 +1,37 @@
+name: Observador
+type: Jornal digital e rádio (privado), fundado em 2014
+owner: Observador On Time, SA; maior acionista Luís Amaral (Amaral y Hijas Holding, ~47%)
+summary: >
+  Jornal online fundado por um grupo de investidores e jornalistas liderado por
+  José Manuel Fernandes. Declara-se defensor da liberdade e de uma sociedade
+  aberta.
+funding:
+  - text: Capital de cerca de duas dezenas de acionistas privados, sem recurso a crédito bancário (segundo o próprio jornal). O maior é o empresário Luís Amaral; entre os outros estão António Carrapatoso e António Champalimaud.
+    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
+  - text: Em outubro de 2024 a Jerónimo Martins (dona do Pingo Doce), através da Recheio SGPS, ficou com 4,99% do capital.
+    source: https://www.esquerda.net/artigo/dono-do-pingo-doce-entra-no-capital-do-observador/92712
+political_links:
+  official: []
+  reported: []
+narrative:
+  - text: No texto de apresentação o jornal diz defender "uma sociedade aberta" e os princípios da civilização ocidental, e diz que não segue nenhum programa político.
+    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
+  - text: Críticos à esquerda descrevem-no como veículo de campanhas da direita (por exemplo, a favor da revisão constitucional) e sublinham que entre os investidores iniciais havia gestores e ativistas do PSD do movimento "Compromisso Portugal" (artigo de opinião de Adriano Campos no esquerda.net, portal do Bloco de Esquerda, 2015).
+    source: https://www.esquerda.net/opiniao/observador-o-jornal-da-direita-aflita/36687
+owners:
+  - name: Luís Amaral
+    share: 47.65
+    kind: person
+    via: Amaral y Hijas Holding
+    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
+  - name: Jerónimo Martins
+    share: 4.99
+    kind: company
+    via: Recheio SGPS
+    source: https://www.esquerda.net/artigo/dono-do-pingo-doce-entra-no-capital-do-observador/92712
+  - name: António Carrapatoso
+    share: null
+    kind: person
+    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
+owner_keywords: [Luís Amaral, Jerónimo Martins, Pingo Doce, Recheio, Soares dos Santos, Carrapatoso]
+last_checked: 2026-09-27

@@ -1,0 +1,37 @@
+# Assinaturas que não são o nome de um jornalista, ou que têm outra grafia.
+#   Assinatura = outlet:<id>        -> é uma fonte ou agência (profiles/outlets/<id>.yaml)
+#   Assinatura = journalist:<slug>  -> é um jornalista (profiles/journalists/<slug>.yaml)
+#   Assinatura = -                  -> não é uma pessoa nem tem perfil (secção, marca, "vários")
+# Maiúsculas e acentos não contam. Os nomes das fontes em sources.yaml já são
+# reconhecidos sozinhos (Expresso, oRegiões, The Guardian, …).
+# Veja as assinaturas por resolver com:  .venv/bin/python -m app.profiles
+
+# ---- agências ----
+Agência Lusa = outlet:lusa
+Lusa = outlet:lusa
+DN/Lusa = outlet:lusa
+Agencia EFE = outlet:efe
+Agência EFE = outlet:efe
+EFE = outlet:efe
+AP = outlet:ap
+Agence France-Presse = outlet:afp
+AFP = outlet:afp
+
+# ---- redações e rádios das próprias fontes ----
+Rádio Observador = outlet:observador
+Redação CNN Portugal = outlet:cnn
+CNN = outlet:cnn
+Rádio e Televisão de Portugal = outlet:rtp
+Al Jazeera Staff = outlet:aljazeera
+LPP = outlet:lpp
+SIC = outlet:sic
+BBC = outlet:bbc
+DW = outlet:dw
+
+# ---- marcas e secções, sem perfil ----
+BLITZ = -
+Boa Cama Boa Mesa = -
+Inimigo Público = -
+CNN Brasil = -
+Azul = -                  # secção de clima do Público
+Vários autores = -

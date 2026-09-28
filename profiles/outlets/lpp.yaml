@@ -1,0 +1,24 @@
+name: Lisboa Para Pessoas (LPP)
+type: Jornal local da Área Metropolitana de Lisboa (digital e 3 edições impressas por ano)
+owner: Shifter Generation, Lda; diretor e editor Mário Rui André
+summary: >
+  Jornalismo de proximidade sobre Lisboa, com foco na mobilidade sustentável e
+  em comunidades pouco representadas. Pertence à mesma empresa que o Shifter.
+funding:
+  - text: Assinaturas, donativos, vendas da edição impressa e publicidade; começou com investimento pessoal e um crowdfunding em 2022.
+    source:
+      - https://lisboaparapessoas.pt/sobre/
+      - https://lisboaparapessoas.pt/2022/03/14/lisboa-para-pessoas-crowdfunding-manifesto/
+political_links:
+  official: []
+  reported: []
+narrative:
+  - text: Declara não ter ligação à Câmara Municipal, a partidos ou a qualquer instituição. Tem como parceira a MUBi, associação pela mobilidade em bicicleta.
+    source: https://lisboaparapessoas.pt/sobre/
+owners:
+  - name: Shifter Generation
+    share: 100
+    kind: company
+    source: https://lisboaparapessoas.pt/sobre/
+owner_keywords: [Shifter Generation, Shifter]
+last_checked: 2026-09-27

@@ -1,0 +1,30 @@
+name: The Guardian
+type: Diário britânico (privado, sem acionistas com fins lucrativos), fundado em 1821
+owner: Guardian Media Group, detido a 100% pelo Scott Trust Limited
+summary: >
+  O Scott Trust existe para garantir "para sempre" a independência financeira e
+  editorial do jornal. Não tem dono que receba lucros. Segundo a Press Gazette, é o diário nacional
+  britânico mais consistentemente de centro-esquerda.
+funding:
+  - text: Contribuições e assinaturas dos leitores (receita digital de 126 milhões de libras em 2025/26; 1,4 milhões de apoiantes regulares), publicidade e um fundo de dotação de ~1,2 mil milhões de libras que cobre os prejuízos operacionais.
+    source:
+      - https://www.aol.co.uk/articles/guardian-media-group-publishes-2025-100403000.html
+      - https://tomorrowspublisher.today/monetisation/the-guardian-halves-losses-and-hits-record-275m-revenue/
+political_links:
+  official: []
+  reported:
+    - text: Apoiou o Partido Trabalhista nas eleições gerais de 2024 (e, com reservas, em 2019).
+      source: https://pressgazette.co.uk/publishers/nationals/general-election-2024-press-endorsements/
+narrative:
+  - text: Linha editorial de centro-esquerda assumida nos editoriais.
+    source: https://pressgazette.co.uk/publishers/nationals/general-election-2024-press-endorsements/
+  - text: Em 2023 o Scott Trust pediu desculpa pelas ligações dos fundadores ao comércio de algodão produzido por escravos e anunciou um programa de 10 milhões de libras de "justiça reparadora".
+    source: https://www.hull.ac.uk/research/projects/the-scott-trust-legacies-of-enslavement-report
+owners:
+  - name: Scott Trust
+    share: 100
+    kind: trust
+    via: Guardian Media Group
+    source: https://en.wikipedia.org/wiki/Guardian_Media_Group
+owner_keywords: [Scott Trust, Guardian Media Group]
+last_checked: 2026-09-27

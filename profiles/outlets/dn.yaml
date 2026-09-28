@@ -1,0 +1,38 @@
+name: Diário de Notícias
+type: Diário generalista nacional (privado), fundado em 1864
+owner: Global Media Group (Marco Galinha, via Páginas Civilizadas; KNJ de Kevin Ho; José Pedro Soeiro)
+summary: >
+  Um dos jornais mais antigos do país. Continuou na Global Media quando o grupo
+  vendeu o JN, a TSF e O Jogo em 2024, depois de uma crise com salários em
+  atraso e um acionista de identidade pouco clara.
+funding:
+  - text: Estrutura da Global Media referida em 2024 — Páginas Civilizadas (Marco Galinha) 50,25%, KNJ (Kevin Ho, empresário de Macau) 29,35%, José Pedro Soeiro 20,4%.
+    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
+  - text: Em 2023–2024 o grupo foi controlado pelo World Opportunity Fund, das Bahamas; a ERC não conseguiu identificar os beneficiários efetivos do fundo e ameaçou suspender-lhe os direitos de voto.
+    source: https://observador.pt/2024/02/15/erc-perto-de-suspender-direitos-do-fundo-das-bahamas-na-global-media/
+  - text: Desde janeiro de 2025 não tem edição impressa ao fim de semana.
+    source: https://pt.wikipedia.org/wiki/Di%C3%A1rio_de_Not%C3%ADcias_(Portugal)
+political_links:
+  official: []
+  reported: []
+narrative:
+  - text: O estatuto editorial promete autonomia face a quaisquer forças políticas ou económicas e defesa da justiça social.
+    source: https://www.dn.pt/estatuto-editorial
+owners:
+  - name: Marco Galinha
+    share: 50.25
+    kind: person
+    via: Páginas Civilizadas → Global Media
+    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
+  - name: Kevin Ho
+    share: 29.35
+    kind: person
+    via: KNJ → Global Media
+    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
+  - name: José Pedro Soeiro
+    share: 20.4
+    kind: person
+    via: Global Media
+    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
+owner_keywords: [Global Media, Marco Galinha, Kevin Ho, José Pedro Soeiro, Páginas Civilizadas, World Opportunity Fund]
+last_checked: 2026-09-27

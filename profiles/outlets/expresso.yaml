@@ -1,0 +1,38 @@
+name: Expresso
+type: Semanário e site de notícias (privado), fundado em 1973
+owner: Impresa (família Balsemão, via Impreger, ~33,7%; MFE – Media For Europe, ~32,9%)
+summary: >
+  Fundado por Francisco Pinto Balsemão, cofundador e militante n.º 1 do PSD e
+  primeiro-ministro entre 1981 e 1983. A Impresa, dona do Expresso e da SIC, é
+  cotada em bolsa. Em 2026 entrou no capital a MFE, o grupo de media da família
+  Berlusconi.
+funding:
+  - text: A MFE (família Berlusconi) entrou com 17,3 milhões de euros num aumento de capital e ficou com 32,9% da Impresa; a Impreger, da família Balsemão, mantém 33,7% e o controlo. Operação concluída em março de 2026.
+    source:
+      - https://eco.sapo.pt/2025/11/26/e-oficial-mfe-entra-no-capital-da-impresa-com-participacao-de-32934-por-173-milhoes/
+      - https://meiosepublicidade.pt/2026/03/10/impresa-concretiza-entrada-da-mfe
+  - text: O acordo parassocial entre as duas famílias prevê a distribuição de 50% dos lucros.
+    source: https://eco.sapo.pt/2026/03/27/impresa-revela-acordo-parassocial-com-os-italianos-da-mfe/
+political_links:
+  official: []
+  reported:
+    - text: O fundador, Francisco Pinto Balsemão (1937–2025), cofundou o PPD/PSD em 1974 (militante n.º 1) e foi primeiro-ministro entre 1981 e 1983.
+      source: https://eco.sapo.pt/2025/10/21/pinto-balsemao-a-historia-politica-do-militante-no-1-do-psd-1937-2025/
+    - text: A MFE é maioritariamente detida pela Fininvest, holding da família de Silvio Berlusconi, o fundador do partido italiano Forza Italia.
+      source:
+        - https://en.wikipedia.org/wiki/MFE_-_MediaForEurope
+        - https://en.wikipedia.org/wiki/Forza_Italia
+narrative: []
+owners:
+  - name: Família Balsemão
+    share: 33.7
+    kind: person
+    via: Impreger → Impresa
+    source: https://eco.sapo.pt/2025/11/26/e-oficial-mfe-entra-no-capital-da-impresa-com-participacao-de-32934-por-173-milhoes/
+  - name: MFE – MediaForEurope (família Berlusconi)
+    share: 32.9
+    kind: company
+    via: Impresa
+    source: https://eco.sapo.pt/2025/11/26/e-oficial-mfe-entra-no-capital-da-impresa-com-participacao-de-32934-por-173-milhoes/
+owner_keywords: [Impresa, Impreger, SIC, SIC Notícias, Balsemão, MFE, MediaForEurope, Mediaset, Berlusconi]
+last_checked: 2026-09-27

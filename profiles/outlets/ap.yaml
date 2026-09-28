@@ -1,0 +1,24 @@
+name: Associated Press
+type: Agência noticiosa norte-americana (cooperativa sem fins lucrativos), fundada em 1846
+owner: Cooperativa detida pelos jornais e emissoras norte-americanos seus membros
+summary: >
+  Uma das maiores agências do mundo. É uma cooperativa sem fins lucrativos e o
+  seu livro de estilo é usado por muitas redações.
+funding:
+  - text: Venda de notícias, fotos e vídeo aos clientes e membros, licenciamento de conteúdos e donativos filantrópicos.
+    source: https://en.wikipedia.org/wiki/Associated_Press
+political_links:
+  official: []
+  reported: []
+narrative:
+  - text: Em fevereiro de 2025 a Casa Branca de Donald Trump barrou-lhe o acesso à Sala Oval e ao Air Force One por continuar a escrever "Golfo do México" em vez de "Golfo da América"; a AP levou o caso a tribunal.
+    source:
+      - https://www.npr.org/2025/02/24/nx-s1-5307243/ap-trump-lawsuit-gulf-of-america-mexico
+      - https://www.washingtonpost.com/business/2025/11/24/ap-white-house-gulf-of-america/
+owners:
+  - name: Cooperativa de membros da AP
+    share: 100
+    kind: cooperative
+    source: https://en.wikipedia.org/wiki/Associated_Press
+owner_keywords: []
+last_checked: 2026-09-27

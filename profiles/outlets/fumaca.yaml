@@ -1,0 +1,32 @@
+name: Fumaça
+type: Projeto independente de jornalismo de investigação (podcast e site), fundado em 2016
+owner: Organização sem fins lucrativos; redação horizontal, sem diretor
+summary: >
+  Coletivo de jornalismo de investigação sem publicidade. Diz que investiga
+  "sistemas de opressão": imigração, racismo estrutural, policiamento,
+  Palestina, clima, trabalho. Publica os orçamentos todos os anos
+  ("transparência radical").
+funding:
+  - text: Comunidade de ~1800 contribuidores — cerca de 244 mil euros em 2025, ~78% das receitas previstas.
+    source: https://fumaca.pt/transparencia/
+  - text: Bolsas de fundações — Limelight Foundation (300 mil €, 2026), Open Society Foundations (80 mil € em 2018; 170–175 mil € em 2019 e 2021), Fred Foundation (75 mil €, 2025), Comissão Europeia (60 mil €, 2023).
+    source:
+      - https://fumaca.pt/transparencia/
+      - https://fumaca.pt/fumaca-bolsa-jornalismo-independente-sustentabilidade/
+political_links:
+  official: []
+  reported:
+    - text: Recebeu apoios da Rosa-Luxemburg-Stiftung (6–10,5 mil € por ano, 2020–2024), fundação alemã próxima do partido Die Linke.
+      source: https://fumaca.pt/transparencia/
+narrative:
+  - text: Assume uma agenda editorial explícita contra desigualdades e "sistemas de opressão"; um estudo académico sobre a cobertura do Chega inclui-o entre os meios de investigação com postura adversativa face à extrema-direita.
+    source:
+      - https://fumaca.pt/sobre/
+      - https://impactum-journals.uc.pt/mj/article/view/11476
+owners:
+  - name: Organização sem fins lucrativos do Fumaça
+    share: 100
+    kind: nonprofit
+    source: https://fumaca.pt/transparencia/
+owner_keywords: [Open Society Foundations, Open Society, Limelight Foundation, Rosa-Luxemburg-Stiftung]
+last_checked: 2026-09-27

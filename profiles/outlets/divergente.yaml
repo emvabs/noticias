@@ -1,0 +1,23 @@
+name: Divergente
+type: Revista digital de jornalismo narrativo e de investigação, fundada em 2014
+owner: Bagabaga Studios (cooperativa); diretor Diogo Cardoso, editora-executiva Sofia da Palma Rodrigues
+summary: >
+  Revista sem fins lucrativos e sem publicidade. Faz reportagens longas sobre
+  temas de interesse público pouco cobertos e explica em cada peça como foi
+  financiada.
+funding:
+  - text: Contributos dos leitores, bolsas de investigação e fundações — Civitates, European Cultural Foundation, Free Press Unlimited, IJ4EU, Journalismfund Europe e instituições públicas portuguesas.
+    source: https://divergente.pt/sobre-nos/
+political_links:
+  official: []
+  reported:
+    - text: Entre os apoiantes estão a Friedrich-Ebert-Stiftung e a Rosa-Luxemburg-Stiftung, fundações alemãs próximas, respetivamente, do SPD e do Die Linke.
+      source: https://divergente.pt/sobre-nos/
+narrative: []
+owners:
+  - name: Bagabaga Studios
+    share: 100
+    kind: cooperative
+    source: https://divergente.pt/sobre-nos/
+owner_keywords: [Bagabaga, Civitates]
+last_checked: 2026-09-27

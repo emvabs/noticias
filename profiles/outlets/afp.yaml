@@ -1,0 +1,24 @@
+name: Agence France-Presse (AFP)
+type: Agência noticiosa internacional francesa (entidade pública autónoma)
+owner: Estatuto próprio definido pela lei de 10 de janeiro de 1957; não tem acionistas
+summary: >
+  Uma das três grandes agências mundiais. A lei de 1957 garante-lhe
+  independência; cerca de um terço das receitas vem do Estado francês.
+funding:
+  - text: Cerca de dois terços das receitas são comerciais; o resto vem do Estado francês como compensação pelas missões de interesse geral (113,3 milhões de euros em 2022) e como assinante.
+    source: https://en.wikipedia.org/wiki/Agence_France-Presse
+  - text: A Comissão Europeia aceitou o financiamento público como serviço de interesse geral, mas obrigou a separar essa compensação das receitas comerciais (lei de 2015).
+    source: https://pressgazette.co.uk/news/european-commission-backs-state-funding-news-agencies-after-complaint-against-afp/
+political_links:
+  official:
+    - text: Dos 15 membros do conselho de administração, três representam o Governo (primeiro-ministro, Finanças e Negócios Estrangeiros); os restantes representam a imprensa francesa (8), a rádio e televisão públicas (2) e os trabalhadores (2).
+      source: https://en.wikipedia.org/wiki/Agence_France-Presse
+  reported: []
+narrative: []
+owners:
+  - name: Estatuto próprio (lei de 1957, sem acionistas)
+    share: 100
+    kind: public
+    source: https://en.wikipedia.org/wiki/Agence_France-Presse
+owner_keywords: []
+last_checked: 2026-09-27

@@ -1,0 +1,32 @@
+name: Euronews
+type: Canal de notícias pan-europeu (privado), sediado em Bruxelas
+owner: Alpac Capital (gestora portuguesa de Pedro Vargas David), com 97,6% desde 2023 (maioria desde 2022)
+summary: >
+  Canal europeu comprado em 2022 por um fundo português. Investigações
+  jornalísticas ligaram parte do dinheiro da compra ao Estado húngaro e a
+  pessoas próximas de Viktor Orbán. A Alpac e a Euronews negam ingerência
+  editorial.
+funding:
+  - text: Recebeu ao longo dos anos subvenções e contratos da Comissão Europeia (por exemplo, para o serviço em árabe).
+    source: https://en.wikipedia.org/wiki/Euronews
+  - text: Segundo a Direkt36, o Le Monde e o Expresso, cerca de 45 milhões de euros da compra vieram de fundos Széchenyi, controlados pelo Estado húngaro.
+    source: https://www.direkt36.hu/en/bizalmas-iratok-leplezik-le-hogy-orbanek-titokban-finansziroztak-az-egyik-legnagyobb-europai-tevecsatorna-megvasarlasat/
+political_links:
+  official: []
+  reported:
+    - text: Pedro Vargas David é filho de Mário David, antigo eurodeputado português e vice-presidente do PPE, que foi conselheiro de Viktor Orbán para assuntos europeus até 2021.
+      source: https://www.rferl.org/a/hungary-euronews-orban-david/31619957.html
+    - text: Documentos revelados indicam que a New Land Media, agência que geriu campanhas do Governo de Orbán, participou no financiamento da compra.
+      source: https://vsquare.org/euronews-viktor-orban-media-money-hungary-portugal/
+narrative:
+  - text: Em 2026 a Alpac comprou também meios de comunicação independentes na Sérvia e nos Balcãs (Adria News Network), o que levou a Federação Europeia de Jornalistas a pedir escrutínio.
+    source: https://europeanjournalists.org/blog/2026/08/18/western-balkans-proposed-sale-of-the-ann-to-alpac-capital-european-future-media-investment-requires-urgent-regulatory-scrutiny/
+  - text: Os sindicatos de jornalistas franceses pediram em 2024 um inquérito parlamentar à compra da Euronews.
+    source: https://europeanjournalists.org/blog/2024/04/17/french-journalists-union-calls-for-the-opening-of-a-parliamentary-inquiry-into-euronews-takeover/
+owners:
+  - name: Alpac Capital
+    share: 97.6
+    kind: fund
+    source: https://en.wikipedia.org/wiki/Euronews
+owner_keywords: [Alpac Capital, Alpac, Pedro Vargas David, Mário David]
+last_checked: 2026-09-27

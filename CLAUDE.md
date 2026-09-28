@@ -16,9 +16,10 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 
 ```bash
 .venv/bin/python run.py        # http://localhost:8000, auto-reloads on edits to app/
-.venv/bin/python -m pytest -q  # 81 tests, all should pass
+.venv/bin/python -m pytest -q  # all should pass
 .venv/bin/python -m app.ingest # fetch feeds once, from the shell
 .venv/bin/python -m app.topics # print the current topics per scope and group
+.venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
 ```
 
@@ -35,13 +36,18 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 | Word-list scoring | `app/sentiment.py` |
 | Topic extraction (TF-IDF) | `app/topics.py` |
 | Search matching, synonyms | `app/search.py` |
+| Bylines, profile resolution, local stats | `app/profiles.py` |
+| Owners, owner keywords, ownership graph | `app/ownership.py` |
+| Never-deleted article archive | `app/archive.py` |
+| Deep Dive findings and silences | `app/deepdive.py`, `static/deepdive.js` |
 | Slider mixing | `app/mixing.py` |
 | API, scheduler, static files | `app/main.py` |
 | Schema and migrations | `app/db.py` |
 | Page | `static/` |
 
 Editable data files: `lexicon/custom_*.txt`, `lexicon/rules_*.txt`,
-`config/stoplist.txt`, `config/synonyms.txt`. They are the intended place to
+`config/stoplist.txt`, `config/synonyms.txt`, `profiles/**/*.yaml`,
+`profiles/aliases.txt`. They are the intended place to
 fix wrong labels or noisy topics — prefer them over changing code.
 
 ## Decisions worth keeping
@@ -77,6 +83,32 @@ fix wrong labels or noisy topics — prefer them over changing code.
   independent outlets publish a few pieces a month, so they get 120-day
   retention, no ingest date cutoff, and a 14-day topic window.
 
+- **Profiles are researched by hand, never fetched at run time.** Each claim
+  carries its source URL; criticism is attributed, not stated. Journalists get
+  their professional record only, and political links only when documented
+  (party post, candidacy, government job, own public statement) — never
+  inferred from their writing. No claim without a source: when in doubt, leave
+  it out and let the box say "Sem ligações públicas conhecidas".
+- **Bylines are stored as cleaned names and resolved at read time**
+  (`profiles.Resolver`), so editing `aliases.txt` or adding a profile applies
+  to stored articles. `authors` is NULL until looked up, `[]` when there is none.
+  Bylines naming an outlet, or with words such as "Redação"/"Staff"/"Agências"
+  (`NON_PERSON_WORDS`), are not people even without an alias; aliases win.
+  Guardian bylines carry places and job titles ("X in Kyiv", "X Senior
+  correspondent"); Portuguese "e" is only a separator when both sides are full
+  names ("Pedro Adão e Silva" is one person).
+
+- **The Deep Dive reads the archive, the feed reads `articles`.** `archive.sync`
+  runs twice per fetch (before cleanup, after topics) and unions topics, because
+  `articles.topics` is reset on every recompute. Findings are either researched
+  (profile + source URL) or data (archive + supporting articles); one with
+  neither is dropped. Wording is "tendência", never "viés".
+- **Graphs are hand-drawn SVG, no D3.** Both have a fixed natural shape (radial;
+  owners → outlets), which reads better than a force layout and needs no
+  dependency. Pan/zoom is `panZoom()` in `static/deepdive.js`.
+- **Silences compare mainstream outlets only**, and say the gap may be the
+  feed's (Público's feed has ~10 items).
+
 ## Gotchas
 
 - **Restart after changing `app/`** — `run.py` auto-reloads, but a server started
@@ -88,6 +120,12 @@ fix wrong labels or noisy topics — prefer them over changing code.
 - Migrations in `app/db.py` run on every startup and re-sync `scope`,
   `language` and `group` from `sources.yaml`, so editing that file applies to
   articles already stored.
+- `app.main` connects to the real database on import (tests included), and the
+  migration writes. Keep migrations cheap: the archive backfill only runs when
+  the archive is empty.
+- Never hold a SQLite write transaction across a network request: the page
+  byline lookup commits per article, otherwise it locks the database for the
+  server's own scheduler.
 - Several feeds need care: CNN Portugal double-escapes HTML, WordPress feeds
   append "O conteúdo … apareceu primeiro em …" footers, Divergente's real
   articles are only in `?post_type=trabalho`, and DN sends no summaries.

@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 import feedparser
 import httpx
 
-from . import config, db, topics
+from . import archive, config, db, profiles, topics
 from .search import raw_searchable, searchable
 from .sentiment import get_scorer, normalize
 
@@ -72,8 +72,13 @@ def entry_datetime(entry, fallback):
     return fallback
 
 
-def parse_feed(content, source_id, now, scope="portugal", language="pt", group="mainstream"):
-    """Turn raw feed bytes into article dicts (unscored)."""
+def parse_feed(content, source_id, now, scope="portugal", language="pt", group="mainstream",
+               author_from="feed"):
+    """Turn raw feed bytes into article dicts (unscored).
+
+    ``authors`` is None when the byline is still to be read from the article
+    page (``author_from: page`` in sources.yaml), otherwise a list, maybe empty.
+    """
     parsed = feedparser.parse(content)
     items = []
     for e in parsed.entries:
@@ -84,10 +89,11 @@ def parse_feed(content, source_id, now, scope="portugal", language="pt", group="
         summary = clean_text(e.get("summary") or e.get("description"))
         if normalize_title(summary) == normalize_title(title):
             summary = ""
+        names = [] if author_from == "none" else profiles.entry_authors(e)
         items.append({
             "source": source_id, "title": title, "title_norm": normalize_title(title),
             "summary": summary, "url": url, "scope": scope, "language": language,
-            "group": group,
+            "group": group, "authors": names or (None if author_from == "page" else []),
             "published_at": iso(entry_datetime(e, now)), "fetched_at": iso(now),
         })
     return items
@@ -115,19 +121,54 @@ def store(conn, articles, scorer=None):
     inserted = 0
     for a in articles:
         score, label, matched = score_article(a, scorer)
+        authors = None if a.get("authors") is None else json.dumps(a["authors"], ensure_ascii=False)
         cur = conn.execute(
             """INSERT OR IGNORE INTO articles
                (source, title, title_norm, summary, url, published_at, fetched_at,
-                scope, language, "group", score, label, matched_words, search_text, raw_text)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                scope, language, "group", score, label, matched_words, search_text, raw_text,
+                authors)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (a["source"], a["title"], a["title_norm"], a["summary"], a["url"],
              a["published_at"], a["fetched_at"], a.get("scope", "portugal"),
              a.get("language", "pt"), a.get("group", "mainstream"), score, label, matched,
              search_text(a["title"], a["summary"]),
-             raw_text(a["title"], a["summary"])))
+             raw_text(a["title"], a["summary"]), authors))
         inserted += cur.rowcount
+        if not cur.rowcount and authors is not None:
+            # Articles stored before bylines were kept get theirs the next time the feed lists them.
+            conn.execute("UPDATE articles SET authors = ? WHERE url = ? AND authors IS NULL",
+                         (authors, a["url"]))
     conn.commit()
     return inserted
+
+
+def fill_page_authors(conn, client, limit):
+    """Read bylines from the pages of articles whose feed has none (newest first).
+
+    Capped per run: the backlog after a first start is cleared over a few runs.
+    A page that answers with an error is marked as having no byline, so it is
+    not asked for again; a timeout leaves it for the next run.
+    """
+    page_sources = [s["id"] for s in config.load_sources(enabled_only=False)
+                    if s.get("author_from") == "page"]
+    if not page_sources or not limit:
+        return 0
+    rows = conn.execute(
+        f"""SELECT id, url FROM articles WHERE authors IS NULL
+            AND source IN ({','.join('?' * len(page_sources))})
+            ORDER BY published_at DESC LIMIT ?""", page_sources + [limit]).fetchall()
+    done = 0
+    for r in rows:
+        try:
+            resp = client.get(r["url"])
+            names = profiles.page_authors(resp.text) if resp.is_success else []
+        except httpx.HTTPError:
+            continue
+        conn.execute("UPDATE articles SET authors = ? WHERE id = ?",
+                     (json.dumps(names, ensure_ascii=False), r["id"]))
+        conn.commit()   # never hold the write lock across a network request
+        done += 1
+    return done
 
 
 def rescore_all(conn):
@@ -189,7 +230,8 @@ def fetch_all(conn=None):
                         now = utcnow()
                         items = [a for a in parse_feed(resp.content, src["id"], now,
                                                        src.get("scope", "portugal"),
-                                                       src.get("language", "pt"), group)
+                                                       src.get("language", "pt"), group,
+                                                       src.get("author_from", "feed"))
                                  if a["published_at"] >= cutoff]
                         if not items:
                             errors.append(f"{url}: feed vazio")
@@ -200,16 +242,19 @@ def fetch_all(conn=None):
                 results[src["id"]] = {"name": src["name"], "scope": src.get("scope", "portugal"),
                                       "group": group, "found": found, "new": new,
                                       "errors": errors, "ok": not errors}
+            bylines = fill_page_authors(conn, client, cfg["fetch"].get("author_pages_per_run", 60))
         rescored = rescore_all(conn)
+        archive.sync(conn)               # before cleanup: the archive keeps what it deletes
         deleted = cleanup(conn, retention)
         topic_counts = {f"{scope}/{group}": len(found)
                         for (scope, group), found in topics.recompute_all(conn).items()}
+        archived = archive.sync(conn)    # again, to keep the topics just computed
         total = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
         if own_conn:
             conn.close()
         status["last_run"] = iso(utcnow())
         status["sources"] = results
-        return {"sources": results, "deleted": deleted, "rescored": rescored,
+        return {"sources": results, "deleted": deleted, "rescored": rescored, "bylines": bylines, "archived": archived,
                 "topics": topic_counts, "total": total, "finished_at": status["last_run"]}
     finally:
         status["running"] = False

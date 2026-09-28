@@ -1,0 +1,31 @@
+name: CNN Portugal
+type: Canal de notícias por cabo e site (privado), lançado em 2021
+owner: Media Capital (também dona da TVI); maior acionista Pluris Investments, de Mário Ferreira (~37%)
+summary: >
+  Canal da Media Capital, que usa a marca CNN através de um acordo de licença.
+  O empresário Mário Ferreira (Douro Azul) é o maior acionista e o chairman da
+  Media Capital.
+funding:
+  - text: Pluris Investments (Mário Ferreira) ~37%, Triun 23%, Biz Partners ~12%, CIN 11,2% e Zenithodyssey 10%.
+    source: https://eco.sapo.pt/2024/04/01/pluris-de-mario-ferreira-reforca-participacao-na-media-capital/
+political_links:
+  official: []
+  reported: []
+narrative:
+  - text: Em 2023 a ERC multou a Pluris e a Prisa (3 × 350 mil euros) por Mário Ferreira ter assumido o controlo da Media Capital em 2020 antes de o regulador o autorizar.
+    source: https://observador.pt/2023/07/11/mario-ferreira-e-prisa-multadas-pela-erc-por-terem-feito-negocio-da-media-capital-antes-de-informarem-regulador/
+  - text: O presidente do FC Porto, André Villas-Boas, disse ter falado diretamente com Mário Ferreira sobre o tratamento que os comentadores do grupo davam ao clube.
+    source: https://www.record.pt/multimedia/videos/fc-porto/detalhe/villas-boas-e-o-tratamento-dos-comentadores-falei-com-mario-ferreira
+owners:
+  - name: Mário Ferreira
+    share: 37.05
+    kind: person
+    via: Pluris Investments → Media Capital
+    source: https://eco.sapo.pt/2024/04/01/pluris-de-mario-ferreira-reforca-participacao-na-media-capital/
+  - name: Triun
+    share: 23
+    kind: company
+    via: Media Capital
+    source: https://eco.sapo.pt/2024/04/01/pluris-de-mario-ferreira-reforca-participacao-na-media-capital/
+owner_keywords: [Media Capital, TVI, Mário Ferreira, Pluris, Douro Azul]
+last_checked: 2026-09-27

@@ -1,0 +1,29 @@
+name: BBC News
+type: Serviço público de rádio e televisão do Reino Unido
+owner: British Broadcasting Corporation, entidade pública criada por Carta Real (Royal Charter)
+summary: >
+  Emissora pública britânica, regida por uma Carta Real que termina no fim de
+  2027. O Governo está a rever a Carta e o modelo de financiamento. Tem
+  obrigação legal de imparcialidade e é regulada pela Ofcom.
+funding:
+  - text: Financiada sobretudo pela taxa de televisão (licence fee) paga pelos lares britânicos, mais receitas comerciais (BBC Studios). Em dezembro de 2025 o Governo abriu a revisão da Carta Real com opções para mudar o financiamento a partir de 2028.
+    source: https://commonslibrary.parliament.uk/research-briefings/cbp-10050/
+political_links:
+  official:
+    - text: A Carta Real e o valor da taxa são fixados pelo Governo britânico; o presidente do conselho da BBC é nomeado por proposta do Governo.
+      source: https://commonslibrary.parliament.uk/research-briefings/cdp-2025-0249/
+  reported: []
+narrative:
+  - text: Em novembro de 2025 o diretor-geral, Tim Davie, e a diretora de notícias, Deborah Turness, demitiram-se depois de se saber que o Panorama tinha editado um discurso de Donald Trump de forma enganadora; Trump ameaçou processar a BBC.
+    source:
+      - https://www.cnn.com/2025/11/09/uk/bbc-leaders-resign-amid-scandal-over-trump-speech-latam-intl
+      - https://www.euronews.com/2025/11/10/bbc-receives-letter-from-donald-trump-threatening-legal-action-over-edited-speech
+  - text: Em outubro de 2025 a Ofcom concluiu que o documentário "Gaza — How to Survive a Warzone" violou as regras de rigor, por não revelar que o narrador era filho de um vice-ministro do Hamas. A BBC é acusada de parcialidade pelos dois lados na cobertura de Israel e Gaza.
+    source: https://www.ofcom.org.uk/tv-radio-and-on-demand/broadcast-standards/ofcom-investigation-finds-bbc-gaza-documentary-in-breach-of-broadcasting-code
+owners:
+  - name: Estado britânico (Carta Real)
+    share: 100
+    kind: public
+    source: https://commonslibrary.parliament.uk/research-briefings/cbp-10050/
+owner_keywords: [licence fee, Tim Davie, Samir Shah, Royal Charter]
+last_checked: 2026-09-27
