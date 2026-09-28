@@ -55,6 +55,50 @@ function hueFor(id) {
   return hash;
 }
 
+// ---------- line icons (24×24, stroked with the text colour) ----------
+const ICONS = {
+  info: ["M12 11v5", "M12 7.5h.01", "circle:12,12,9"],
+  alert: ["M12 3.5 2.8 19.5h18.4Z", "M12 10v4", "M12 17h.01"],
+  doc: ["M7 3h7l4 4v14H7Z", "M14 3v4h4", "M9.5 12h5", "M9.5 16h5"],
+  gauge: ["M4 17a8 8 0 0 1 16 0", "M12 17l4-5", "M4 20h16"],
+  hash: ["M5 9h14", "M5 15h14", "M10 4 8 20", "M16 4l-2 16"],
+  wire: ["circle:12,12,2", "M8.5 8.5a5 5 0 0 0 0 7", "M15.5 8.5a5 5 0 0 1 0 7",
+         "M5.6 5.6a9 9 0 0 0 0 12.8", "M18.4 5.6a9 9 0 0 1 0 12.8"],
+  building: ["M4 21V8l8-5 8 5v13", "M9 21v-6h6v6", "M3 21h18"],
+  mute: ["M11 5 6 9H3v6h3l5 4Z", "M16 9l5 6", "M21 9l-5 6"],
+  x: ["M6 6l12 12", "M18 6 6 18"],
+  arrow: ["M5 12h14", "M13 6l6 6-6 6"],
+};
+
+/** An inline SVG icon; decorative unless the caller labels it. */
+function icon(name, size = 16) {
+  const NS = "http://www.w3.org/2000/svg";
+  const node = document.createElementNS(NS, "svg");
+  for (const [k, v] of Object.entries({ viewBox: "0 0 24 24", width: size, height: size, fill: "none",
+    stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round",
+    class: "icon", "aria-hidden": "true" })) node.setAttribute(k, v);
+  for (const d of ICONS[name] || []) {
+    if (d.startsWith("circle:")) {
+      const [cx, cy, r] = d.slice(7).split(",");
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
+      node.append(c);
+    } else {
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("d", d);
+      node.append(path);
+    }
+  }
+  return node;
+}
+
+/** "CNN Portugal" -> "CNN", "Diário de Notícias" -> "DN", "The Guardian" -> "G". */
+function initials(name) {
+  const words = (name || "").split(/\s+/).filter((w) => !/^(the|de|da|do|das|dos|para|e)$/i.test(w));
+  if (/^[A-Z]{2,4}$/.test(words[0] || "")) return words[0];
+  return words.slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+}
+
 function el(tag, attrs = {}, text) {
   const node = document.createElement(tag);
   Object.assign(node, attrs);
@@ -165,7 +209,10 @@ function renderSources() {
   }
 
   for (const s of outletChips()) {
-    const chip = el("button", { type: "button", className: "chip" }, s.name);
+    const chip = el("button", { type: "button", className: "chip" });
+    const dot = el("span", { className: "chip-dot", ariaHidden: "true" });
+    dot.style.setProperty("--hue", hueFor(s.id));
+    chip.append(dot, s.name);
     if (!s.enabled) {
       chip.disabled = true;
       chip.title = "Sem feed RSS disponível (ver sources.yaml)";
@@ -624,6 +671,7 @@ function renderFeed(data) {
     const card = tpl.content.firstElementChild.cloneNode(true);
     card.classList.add(a.label);
     card.querySelector(".source-name").textContent = a.source_name;
+    card.querySelector(".source-dot").textContent = initials(a.source_name);
     card.style.setProperty("--hue", hueFor(a.source));
     const time = card.querySelector(".card-time");
     time.dateTime = a.published_at;

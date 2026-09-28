@@ -126,7 +126,13 @@
           <button type="button" class="scope-btn" data-silence-scope="world" aria-pressed="false">Mundo</button>
         </div>
         <p class="dd-intro">Temas em destaque que quase todos os jornais cobriram, e quanto cada um
-          publicou face ao que o seu volume faria esperar. <strong>🔇</strong> = muito abaixo.</p>
+          publicou face ao que o seu volume faria esperar.</p>
+      </div>
+      <div class="dd-scale" aria-label="Legenda">
+        <span><i class="silent"></i> muito abaixo do esperado (silêncio)</span>
+        <span><i class="low"></i> abaixo</span>
+        <span><i></i> dentro do esperado</span>
+        <span><i class="high"></i> acima</span>
       </div>
       <p class="dd-caveat">Um silêncio pode vir do feed RSS e não do jornal: o do Público só mostra
         ~10 notícias por pedido e o do DN não traz resumos. Leia-o como uma pista, não como prova.</p>
@@ -144,7 +150,7 @@
   </footer>
 
   <aside id="whois" class="whois" role="dialog" aria-label="Quem está por trás desta notícia" hidden>
-    <button type="button" class="whois-close" aria-label="Fechar">×</button>
+    <button type="button" class="whois-close" aria-label="Fechar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <div class="whois-body"></div>
   </aside>
 
@@ -156,7 +162,7 @@
         <span class="sep" aria-hidden="true">·</span>
         <time class="card-time"></time>
         <span class="owner-flag" tabindex="0" hidden>
-          <span aria-hidden="true">⚠️</span> Dono
+          <svg class="icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M3 21h18"/></svg> Dono
           <span class="tip" role="tooltip"></span>
         </span>
         <button type="button" class="whois-btn" aria-label="Quem está por trás desta notícia"

@@ -109,6 +109,15 @@ fix wrong labels or noisy topics — prefer them over changing code.
 - **Silences compare mainstream outlets only**, and say the gap may be the
   feed's (Público's feed has ~10 items).
 
+- **Design: modern editorial.** Warm paper, serif headlines (system serif, no
+  web fonts: the app stays local), colour only where it carries meaning (tone,
+  warnings, selection). Everything reads from the tokens at the top of
+  `static/style.css` (surfaces, ink, meaning colours, shadows, radii, type
+  scale, motion) with a dark-mode set; add tokens rather than raw values.
+  Icons are line SVGs from `icon()` in `static/app.js` (CSS masks for
+  pseudo-elements) — no emoji in the UI. The backend's finding `icon` field is
+  ignored by the page, which maps each kind to a line icon.
+
 ## Gotchas
 
 - **Restart after changing `app/`** — `run.py` auto-reloads, but a server started

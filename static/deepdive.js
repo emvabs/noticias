@@ -11,6 +11,10 @@ const OWNER_KIND_LABELS = {
   state: "Estado", public: "Entidade pública", company: "Empresa", person: "Pessoa / família",
   fund: "Fundo", cooperative: "Cooperativa", nonprofit: "Sem fins lucrativos", trust: "Fundação / trust",
 };
+// The backend sends an emoji per finding; the page draws a line icon per kind instead.
+const FINDING_ICON = {
+  researched: "doc", tone: "gauge", topic: "hash", agency: "wire", owner: "building", silence: "mute",
+};
 const FINDING_CLASS = {
   researched: "f-researched", tone: "f-tone", topic: "f-topic", agency: "f-agency",
   owner: "f-owner", silence: "f-silence",
@@ -342,12 +346,21 @@ function renderEntity(d) {
   const head = el("header", { className: "dd-head" });
   head.append(el("h2", {}, d.name));
   if (d.role) head.append(el("p", { className: "dd-role" }, d.role));
-  const meta = el("p", { className: "dd-meta" });
+  // the key numbers as tiles
   const pct = (k) => (d.articles ? Math.round(100 * d.labels[k] / d.articles) : 0);
-  meta.append(`${d.articles} ${d.articles === 1 ? "notícia" : "notícias"} nos últimos ${d.window_days} dias`);
-  if (d.articles) meta.append(` · ${pct("positive")}% positivas · ${pct("negative")}% negativas`);
-  if (d.kind === "journalist" && d.outlets.length) meta.append(` · ${d.outlets.join(", ")}`);
-  head.append(meta);
+  const stats = el("div", { className: "dd-stats" });
+  const stat = (value, label, cls = "") => {
+    const tile = el("div", { className: `dd-stat ${cls}` });
+    tile.append(el("b", {}, value), el("span", {}, label));
+    stats.append(tile);
+  };
+  stat(String(d.articles), `${d.articles === 1 ? "notícia" : "notícias"} · ${d.window_days} dias`);
+  if (d.articles) {
+    stat(`${pct("positive")}%`, "positivas", "pos");
+    stat(`${pct("negative")}%`, "negativas", "neg");
+  }
+  if (d.kind === "journalist" && d.outlets.length) stat(d.outlets.join(", "), "escreve em", "wide");
+  head.append(stats);
   if (d.stale) head.append(el("p", { className: "whois-checked stale" }, "Perfil pode estar desatualizado."));
   ddResult.append(head, el("p", { className: "dd-summary" }, d.summary));
 
@@ -372,7 +385,11 @@ function renderEntity(d) {
   for (const f of d.findings) {
     const card = el("section", { className: `dd-card ${FINDING_CLASS[f.kind] || ""}`, tabIndex: 0 });
     card.dataset.finding = f.id;
-    card.append(el("h4", {}, `${f.icon} ${f.title}`), el("p", {}, f.text));
+    const h4 = el("h4");
+    const badge = el("span", { className: "dd-ficon" });
+    badge.append(icon(FINDING_ICON[f.kind] || "info", 16));
+    h4.append(badge, el("span", {}, f.title));
+    card.append(h4, el("p", {}, f.text));
     if (f.sources?.length) {
       const src = el("p", { className: "dd-sources" }, "Fontes: ");
       f.sources.forEach((u) => src.append(el("a", { href: u, target: "_blank", rel: "noopener noreferrer",
@@ -466,7 +483,12 @@ function drawRadial(svgEl, wrap, d, cards) {
     const anchor = Math.cos(angle) < -0.2 ? "end" : Math.cos(angle) > 0.2 ? "start" : "middle";
     const tx = anchor === "end" ? -28 : anchor === "start" ? 28 : 0;
     const ty = anchor === "middle" ? (Math.sin(angle) < 0 ? -32 : 42) : 7;
-    fn.append(svg("circle", { r: 21 }), svg("text", { y: 7, "text-anchor": "middle", class: "rad-icon" }, f.icon),
+    // the kind's line icon, centred in the circle
+    const glyph = icon(FINDING_ICON[f.kind] || "info", 22);
+    glyph.setAttribute("x", -11);
+    glyph.setAttribute("y", -11);
+    glyph.classList.add("rad-glyph");
+    fn.append(svg("circle", { r: 21 }), glyph,
       svg("text", { x: tx, y: ty, "text-anchor": anchor, class: "rad-label" }, clip(f.title, 26)));
     fn.addEventListener("click", () => focusFinding(svgEl, cards, f.id));
     fn.addEventListener("keydown", (e) => { if (e.key === "Enter") focusFinding(svgEl, cards, f.id); });
@@ -528,7 +550,8 @@ async function showSilences() {
       const ratio = c.ratio ?? 1;
       const level = c.silent ? "silent" : ratio < 0.6 ? "low" : ratio > 1.6 ? "high" : "mid";
       const td = el("td", { className: `cell ${level}`, tabIndex: 0 });
-      td.append(c.silent ? `🔇 ${c.count}` : String(c.count));
+      if (c.silent) td.append(icon("mute", 13));
+      td.append(String(c.count));
       td.title = `${o.name}: ${c.count} notícias sobre ${t.label} (esperadas ~${String(c.expected).replace(".", ",")})`;
       const open = () => showSilenceCell(t, o, c);
       td.addEventListener("click", open);
