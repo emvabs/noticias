@@ -539,22 +539,38 @@ body:not([data-view="noticias"]) .tone { display: none; }
    feed
    ============================================================ */
 main { padding-top: 4px; padding-bottom: 40px; }
-.feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+
+/* time groups: a small label on a rule */
+.group-head { grid-column: 1 / -1; margin-top: 14px; }
+.group-head:first-child { margin-top: 2px; }
+.group-head h2 {
+  display: flex; align-items: center; gap: 12px; margin: 0;
+  font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+}
+.group-head h2::first-letter { text-transform: uppercase; }
+.group-head h2::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+
+/* "N novas desde a sua última visita" */
+.news-bar {
+  display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap;
+  margin: 0 0 12px; font-size: var(--fs-sm); color: var(--text-2);
+}
+.news-bar > span::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); margin-right: 8px; vertical-align: 1px;
+}
 
 .card {
-  position: relative; overflow: hidden;
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 18px 20px 18px;
-  box-shadow: var(--shadow-xs);
+  padding: 16px 20px 18px;
   transition: box-shadow var(--slow) var(--ease), transform var(--slow) var(--ease), border-color var(--fast);
   animation: rise .32s var(--ease) both;
 }
 @media (hover: hover) {
-  .card:hover {
-    box-shadow: var(--shadow-md); transform: translateY(-2px);
-    border-color: var(--border-strong);
-  }
+  .card:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
   .card:hover .card-title a { color: var(--accent); background-size: 100% 1.5px; }
 }
 /* on touch, the headline underlines itself when tapped */
@@ -580,14 +596,28 @@ main { padding-top: 4px; padding-bottom: 40px; }
   color: hsl(var(--hue, 220) var(--dot-fg-s) var(--dot-fg-l));
   box-shadow: inset 0 0 0 1px hsl(var(--hue, 220) var(--dot-ring-s) var(--dot-ring-l));
 }
-.sep { color: var(--faint); }
 .card-time { font-variant-numeric: tabular-nums; }
-/* an older piece states its date, and says so a little louder */
-.card-time.dated {
-  font-weight: 600; color: var(--text-2);
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--radius-xs); padding: 1px 7px;
+
+/* the tools sit at the end of the meta line */
+.card-tools { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; flex: none; }
+
+/* tone: a dot (a 24px target), the matched words in its tooltip */
+.tone-dot {
+  position: relative; width: 24px; height: 24px; border-radius: 50%; flex: none; cursor: help;
+  display: inline-grid; place-items: center; outline-offset: 0;
 }
+.tone-dot::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--neu-line); }
+.tone-dot.positive::before { background: var(--pos-line); }
+.tone-dot.negative::before { background: var(--neg-line); }
+.tone-dot.neutral::before { background: transparent; box-shadow: inset 0 0 0 2px var(--neu-line); }
+
+.new-tag {
+  font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 7px;
+}
+/* already opened on this device */
+.card.is-read .card-title a { color: var(--muted); }
+.card.is-read .card-summary { color: var(--muted); }
 
 .card-title {
   font-family: var(--serif);
@@ -615,17 +645,6 @@ main { padding-top: 4px; padding-bottom: 40px; }
 }
 .card-topics li::before { content: "#"; opacity: .5; margin-right: 1px; }
 
-/* sentiment badge: a dot and a word, the matched words in its tooltip */
-.badge {
-  position: relative; margin-left: auto; flex: none; cursor: help;
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: var(--fs-xs); font-weight: 600;
-  padding: 3px 10px 3px 9px; border-radius: 999px; outline-offset: 2px;
-}
-.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.badge.positive { background: var(--pos-bg); color: var(--pos); }
-.badge.neutral  { background: var(--neu-bg); color: var(--neu); }
-.badge.negative { background: var(--neg-bg); color: var(--neg); }
 .tip {
   position: absolute; right: 0; top: calc(100% + 8px); z-index: 30;
   width: max-content; max-width: min(320px, 78vw);
@@ -635,12 +654,30 @@ main { padding-top: 4px; padding-bottom: 40px; }
   opacity: 0; pointer-events: none; transform: translateY(-4px);
   transition: opacity var(--fast), transform var(--fast) var(--ease);
 }
-.badge .tip::before { display: none; }
-.badge:hover .tip, .badge:focus .tip, .badge:focus-visible .tip,
-.badge:active .tip { opacity: 1; transform: none; }
+.tone-dot:hover .tip, .tone-dot:focus .tip, .tone-dot:focus-visible .tip,
+.tone-dot:active .tip { opacity: 1; transform: none; }
 .tip .w-pos { color: var(--tip-pos); }
 .tip .w-neg { color: var(--tip-neg); }
 .tip small { opacity: .7; }
+
+/* ---- list view: dense rows on rules, headline only ---- */
+body[data-layout="list"] .feed { display: block; max-width: 780px; }
+body[data-layout="list"] .card {
+  background: none; border: 0; border-bottom: 1px solid var(--border); border-radius: 0;
+  box-shadow: none; padding: 11px 2px 12px; animation: none;
+}
+body[data-layout="list"] .card:hover { box-shadow: none; }
+body[data-layout="list"] .card-title { font-size: 1.06rem; line-height: 1.32; margin: 4px 0 0; }
+body[data-layout="list"] .card-summary,
+body[data-layout="list"] .card-topics { display: none; }
+body[data-layout="list"] .source-dot { display: none; }
+body[data-layout="list"] .card-source { font-size: var(--fs-xs); }
+body[data-layout="list"] .group-head { margin: 22px 0 2px; }
+body[data-layout="list"] .group-head:first-child { margin-top: 2px; }
+@media (max-width: 760px) {
+  body[data-layout="list"] .card-byline { display: none; }
+}
+body[data-layout="list"] .skeleton { border-bottom: 1px solid var(--border); background: none; border-radius: 0; }
 
 /* byline */
 .card-byline {
@@ -650,27 +687,24 @@ main { padding-top: 4px; padding-bottom: 40px; }
 /* the piece mentions the outlet's own owner or group */
 .owner-flag {
   position: relative; flex: none; cursor: help; outline-offset: 2px;
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: var(--fs-xs); font-weight: 600;
-  padding: 3px 9px 3px 7px; border-radius: 999px;
-  background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-line);
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--fs-2xs); font-weight: 650;
+  padding: 1px 7px 1px 6px; border-radius: 999px;
+  background: var(--warn-bg); color: var(--warn);
 }
 .owner-flag[hidden] { display: none; }
-.owner-flag:not([hidden]) { margin-left: auto; }
-.owner-flag:not([hidden]) + .whois-btn { margin-left: 0; }
 .owner-flag:hover .tip, .owner-flag:focus .tip, .owner-flag:focus-visible .tip,
 .owner-flag:active .tip { opacity: 1; transform: none; }
 
 /* "who is behind this": a quiet icon button */
 .whois-btn {
-  margin-left: auto; flex: none;
+  flex: none;
   width: 26px; height: 26px; border-radius: 50%; padding: 0;
   display: inline-grid; place-items: center;
   border: 1px solid var(--border); background: var(--surface);
   color: var(--muted); font: italic 700 .8rem/1 var(--serif); cursor: pointer;
   transition: opacity var(--fast), color var(--fast), border-color var(--fast), background-color var(--fast);
 }
-.whois-btn + .badge { margin-left: 0; }
 .whois-btn:hover, .whois-btn:focus-visible, .whois-btn[aria-expanded="true"] {
   color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft);
 }
@@ -894,7 +928,6 @@ main { padding-top: 4px; padding-bottom: 40px; }
   .card { padding: 15px 16px; border-radius: 12px; }
   /* narrow columns need hyphenation; wide ones read better without it */
   .card-title { hyphens: auto; overflow-wrap: anywhere; }
-  .card-meta .sep { display: none; }
   .card-meta { gap: 4px 7px; }
   /* the byline takes the second line, so outlet, time and tone stay together */
   .card-byline { order: 10; flex-basis: 100%; max-width: none; }
@@ -928,7 +961,6 @@ main { padding-top: 4px; padding-bottom: 40px; }
   .chips { gap: 8px; }
   .seg-ctl button { padding: 9px 13px; }
   .outlet-row { padding: 11px 6px; }
-  .badge { padding: 5px 10px 5px 9px; }
   .whois-btn { width: 30px; height: 30px; }
 }
 
@@ -1220,7 +1252,7 @@ svg.focusing .on { opacity: 1 !important; }
 
 /* --- printing --- */
 @media print {
-  .topbar, .card-topics, .badge, .whois-btn, .whois, .profiles-status, .dd-zoom, .dd-picker { display: none !important; }
+  .topbar, .card-topics, .tone-dot, .whois-btn, .whois, .profiles-status, .dd-zoom, .dd-picker { display: none !important; }
   body { background: #fff; color: #000; }
   .card { break-inside: avoid; box-shadow: none; border-color: #ccc; }
   .card-title a { color: #000; }

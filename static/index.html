@@ -92,7 +92,7 @@
                 <button type="button" data-value="100">100</button>
               </div>
             </div>
-            <div class="menu-row" id="layout-row" hidden>
+            <div class="menu-row" id="layout-row">
               <span class="menu-label" id="layout-label">Vista</span>
               <div class="seg-ctl" role="group" aria-labelledby="layout-label" id="layout">
                 <button type="button" data-value="cards">Cartões</button>
@@ -152,6 +152,10 @@
     </div>
 
     <main class="bar">
+      <div id="news-bar" class="news-bar" hidden>
+        <span id="news-count"></span>
+        <button type="button" id="news-only" class="link-btn" aria-pressed="false">Ver só as novas</button>
+      </div>
       <p id="message" class="message" hidden></p>
       <ol id="feed" class="feed" aria-live="polite" aria-busy="false"></ol>
       <p id="feed-end" class="feed-end" hidden></p>
@@ -238,17 +242,17 @@
       <div class="card-meta">
         <span class="card-source"><span class="source-dot" aria-hidden="true"></span><span class="source-name"></span></span>
         <span class="card-byline" hidden></span>
-        <span class="sep" aria-hidden="true">·</span>
         <time class="card-time"></time>
+        <span class="new-tag" hidden>nova</span>
         <span class="owner-flag" tabindex="0" hidden>
-          <svg class="icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M3 21h18"/></svg> Dono
+          <svg class="icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M3 21h18"/></svg><span class="owner-text">Dono</span>
           <span class="tip" role="tooltip"></span>
         </span>
-        <button type="button" class="whois-btn" aria-label="Quem está por trás desta notícia"
-                aria-haspopup="dialog" aria-expanded="false">i</button>
-        <span class="badge" tabindex="0">
-          <span class="badge-text"></span>
-          <span class="tip" role="tooltip"></span>
+        <span class="card-tools">
+          <button type="button" class="whois-btn" aria-label="Quem está por trás desta notícia"
+                  aria-haspopup="dialog" aria-expanded="false">i</button>
+          <!-- tone: a dot; the words that decided it in the tooltip -->
+          <span class="tone-dot" tabindex="0"><span class="tip" role="tooltip"></span></span>
         </span>
       </div>
       <h2 class="card-title"><a target="_blank" rel="noopener noreferrer"></a></h2>

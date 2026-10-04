@@ -127,7 +127,12 @@ fix wrong labels or noisy topics — prefer them over changing code.
 - **Views are hash routes** (`#noticias`, `#resumo`, `#guardados`,
   `#silenciados`, `#investigar/<tab>/<id>`), one router in `app.js`;
   `deepdive.js` exposes `ddRoute(parts)`. "Independentes" is the third
-  position of the scope switch (scope `portugal`, group `independent`). The backend's finding `icon` field is
+  position of the scope switch (scope `portugal`, group `independent`).
+- **Per-device state stays in `localStorage`**: layout, theme, "new since"
+  (`lastSeen`, compared with `fetched_at`, not `published_at`) and read
+  articles (`readArticles`, keyed by URL, pruned after 15 days). Anything that
+  should follow the user across devices (saved articles, muted words) goes to
+  SQLite instead. The backend's finding `icon` field is
   ignored by the page, which maps each kind to a line icon.
 
 ## Gotchas
@@ -158,5 +163,5 @@ fix wrong labels or noisy topics — prefer them over changing code.
 
 - Verify feeds and claims by running them, not from memory.
 - Every behaviour change gets a test; `tests/` mirrors the modules.
-- When sentiment or topics look wrong, check `matched_words` (the badge tooltip
-  shows it) and fix the data file, not the algorithm.
+- When sentiment or topics look wrong, check `matched_words` (the tone dot's
+  tooltip shows it) and fix the data file, not the algorithm.

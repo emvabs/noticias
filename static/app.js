@@ -3,7 +3,6 @@
 const $ = (sel) => document.querySelector(sel);
 const LABELS = { positive: "Positiva", neutral: "Neutra", negative: "Negativa" };
 const FRESH_MS = 60_000;   // data newer than this counts as fresh (no refetch)
-const OLD_DAYS = 7;             // older than this, cards show the date itself
 
 // ---------- persisted settings (localStorage; safe if unavailable) ----------
 const store = {
@@ -29,6 +28,7 @@ const state = {
   group: store.get("group", "mainstream"),   // "independent" while the button is on
   sources: [],
   lastUpdated: null,
+  lastData: null,                               // the last /api/feed answer
   view: "noticias",
 };
 
@@ -786,59 +786,170 @@ const whois = (() => {
 
   return { attach, close };
 })();
-function renderFeed(data) {
+// ---------- new since the last visit, and what was already read (per device) ----------
+const seen = {
+  since: store.get("lastSeen", null),   // articles fetched after this are new
+  shownAt: Date.now(),                  // when the page was last brought into view
+  hiddenAt: 0,
+  onlyNew: false,
+};
+const AWAY_MS = 5 * 60_000;            // back after this long: a new visit
+const LOOK_MS = 20_000;                // shorter than this (a reload) does not count as a visit
+
+function markSeen() {
+  if (Date.now() - seen.shownAt >= LOOK_MS) store.set("lastSeen", new Date().toISOString());
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    markSeen();
+    seen.hiddenAt = Date.now();
+  } else {
+    if (seen.hiddenAt && Date.now() - seen.hiddenAt > AWAY_MS) {
+      seen.since = store.get("lastSeen", seen.since);
+      seen.onlyNew = false;
+      loadFeed();
+    }
+    seen.shownAt = Date.now();
+  }
+});
+window.addEventListener("pagehide", markSeen);
+
+const isNew = (a) => !!seen.since && a.fetched_at > seen.since;
+
+const read = (() => {
+  const KEEP_MS = 15 * 86400000;        // a little longer than the feed keeps articles
+  const MAX = 3000;
+  const cutoff = Date.now() - KEEP_MS;
+  let opened = Object.entries(store.get("readArticles", {}))
+    .filter(([, t]) => t > cutoff).sort((x, y) => y[1] - x[1]).slice(0, MAX);
+  const map = Object.fromEntries(opened);
+  store.set("readArticles", map);
+  opened = null;
+  return {
+    has: (url) => url in map,
+    add(url) { map[url] = Date.now(); store.set("readArticles", map); },
+  };
+})();
+
+// ---------- time groups: "Últimas horas", "Hoje", "Ontem", then dates ----------
+const RECENT_HOURS = 3;
+
+function groupLabel(iso, now = new Date()) {
+  const d = new Date(iso);
+  if ((now - d) / 3600000 < RECENT_HOURS) return "Últimas horas";
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return "Hoje";
+  if (d.toDateString() === yesterday.toDateString()) return "Ontem";
+  return d.toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" });
+}
+
+function clock(iso) {
+  return new Date(iso).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" });
+}
+
+function groupHead(label) {
+  const li = el("li", { className: "group-head" });
+  li.append(el("h2", {}, label));
+  return li;
+}
+
+function buildCard(a, group) {
+  const card = tpl.content.firstElementChild.cloneNode(true);
+  card.classList.add(a.label);
+  card.dataset.id = a.id;
+  card.querySelector(".source-name").textContent = a.source_name;
+  card.querySelector(".source-dot").textContent = initials(a.source_name);
+  card.style.setProperty("--hue", hueFor(a.source));
+  const time = card.querySelector(".card-time");
+  time.dateTime = a.published_at;
+  // the group heading carries the day: recent pieces say "há 40 min", the rest the hour
+  const recent = group === "Últimas horas";
+  time.textContent = recent ? timeAgo(a.published_at) : clock(a.published_at);
+  time.classList.toggle("rel", recent);
+  time.title = fullDate(a.published_at);
+
+  const tone = card.querySelector(".tone-dot");
+  tone.classList.add(a.label);
+  tone.querySelector(".tip").append(tooltipFor(a));
+  tone.setAttribute("aria-label", `Tom: ${(LABELS[a.label] || a.label).toLowerCase()}. `
+    + `Palavras: ${a.matched_words.map((m) => m.word).join(", ") || "nenhuma"}`);
+
+  const link = card.querySelector(".card-title a");
+  link.href = a.url;
+  link.textContent = a.title;
+  const markRead = () => { read.add(a.url); card.classList.add("is-read"); };
+  link.addEventListener("click", markRead);
+  link.addEventListener("auxclick", (e) => { if (e.button === 1) markRead(); });
+  card.classList.toggle("is-read", read.has(a.url));
+  if (isNew(a)) {
+    card.classList.add("is-new");
+    card.querySelector(".new-tag").hidden = false;
+  }
+
+  card.querySelector(".card-summary").textContent = a.summary;
+  const byline = card.querySelector(".card-byline");
+  const people = (a.authors || []).filter((p) => !(p.kind === "outlet" && p.id === a.source));
+  if (people.length) {
+    byline.textContent = "por " + people.map((p) => p.name).join(", ");
+    byline.hidden = false;
+  }
+  const flag = card.querySelector(".owner-flag");
+  if (a.owner_mentions?.length) {
+    // The piece names the outlet's own owner, group or a sister company.
+    const owners = state.sources.find((s) => s.id === a.source)?.owners || [];
+    const named = a.owner_mentions.join(", ");
+    // No article before the outlet name: "do Público" but "da CNN Portugal".
+    const text = `Esta notícia menciona ${named}, ligado a quem detém ${a.source_name}`
+      + (owners.length ? ` (${owners.join("; ")}).` : ".");
+    flag.querySelector(".tip").textContent = `${text} Leia sabendo desta relação.`;
+    flag.setAttribute("aria-label", `Possível conflito de interesses: ${text}`);
+    flag.hidden = false;
+  }
+  whois.attach(card, a);
+  const tags = card.querySelector(".card-topics");
+  const labels = new Map(state.topics.map((t) => [t.slug, t.label]));
+  for (const slug of a.topics || []) {
+    if (labels.has(slug)) tags.append(el("li", {}, labels.get(slug)));
+  }
+  return card;
+}
+
+/** The cards, under their time headings; only the new ones if asked. */
+function renderList(articles) {
   whois.close();              // its card is about to be replaced
   feedList.replaceChildren();
-  for (const a of data.articles) {
-    const card = tpl.content.firstElementChild.cloneNode(true);
-    card.classList.add(a.label);
-    card.querySelector(".source-name").textContent = a.source_name;
-    card.querySelector(".source-dot").textContent = initials(a.source_name);
-    card.style.setProperty("--hue", hueFor(a.source));
-    const time = card.querySelector(".card-time");
-    time.dateTime = a.published_at;
-    // Independent pieces can be weeks old, so show the date rather than "há 23 dias".
-    const days = (Date.now() - new Date(a.published_at).getTime()) / 86400000;
-    const old = days >= OLD_DAYS;
-    time.textContent = old ? dayMonth(a.published_at) : timeAgo(a.published_at);
-    time.classList.toggle("dated", old);
-    time.title = fullDate(a.published_at);
-    const badge = card.querySelector(".badge");
-    badge.classList.add(a.label);
-    badge.querySelector(".badge-text").textContent = LABELS[a.label] || a.label;
-    badge.querySelector(".tip").append(tooltipFor(a));
-    badge.setAttribute("aria-label",
-      `${LABELS[a.label]}. Palavras: ${a.matched_words.map((m) => m.word).join(", ") || "nenhuma"}`);
-    const link = card.querySelector(".card-title a");
-    link.href = a.url;
-    link.textContent = a.title;
-    card.querySelector(".card-summary").textContent = a.summary;
-    const byline = card.querySelector(".card-byline");
-    const people = (a.authors || []).filter((p) => !(p.kind === "outlet" && p.id === a.source));
-    if (people.length) {
-      byline.textContent = "por " + people.map((p) => p.name).join(", ");
-      byline.hidden = false;
-    }
-    const flag = card.querySelector(".owner-flag");
-    if (a.owner_mentions?.length) {
-      // The piece names the outlet's own owner, group or a sister company.
-      const owners = state.sources.find((s) => s.id === a.source)?.owners || [];
-      const named = a.owner_mentions.join(", ");
-      // No article before the outlet name: "do Público" but "da CNN Portugal".
-      const text = `Esta notícia menciona ${named}, ligado a quem detém ${a.source_name}`
-        + (owners.length ? ` (${owners.join("; ")}).` : ".");
-      flag.querySelector(".tip").textContent = `${text} Leia sabendo desta relação.`;
-      flag.setAttribute("aria-label", `Possível conflito de interesses: ${text}`);
-      flag.hidden = false;
-    }
-    whois.attach(card, a);
-    const tags = card.querySelector(".card-topics");
-    const labels = new Map(state.topics.map((t) => [t.slug, t.label]));
-    for (const slug of a.topics || []) {
-      if (labels.has(slug)) tags.append(el("li", {}, labels.get(slug)));
-    }
-    feedList.append(card);
+  const now = new Date();
+  let last = null;
+  for (const a of seen.onlyNew ? articles.filter(isNew) : articles) {
+    const group = groupLabel(a.published_at, now);
+    if (group !== last) feedList.append(groupHead(group));
+    last = group;
+    feedList.append(buildCard(a, group));
   }
+}
+
+const newsBar = $("#news-bar");
+const newsOnly = $("#news-only");
+
+function renderNewsBar(articles) {
+  const n = articles.filter(isNew).length;
+  if (!n) seen.onlyNew = false;
+  newsBar.hidden = !n;
+  $("#news-count").textContent = `${plural(n, "nova", "novas")} desde a sua última visita`;
+  newsOnly.textContent = seen.onlyNew ? "Ver todas" : "Ver só as novas";
+  newsOnly.setAttribute("aria-pressed", String(seen.onlyNew));
+}
+
+newsOnly.addEventListener("click", () => {
+  seen.onlyNew = !seen.onlyNew;
+  if (state.lastData) { renderList(state.lastData.articles); renderNewsBar(state.lastData.articles); }
+});
+
+function renderFeed(data) {
+  state.lastData = data;
+  renderList(data.articles);
+  renderNewsBar(data.articles);
 
   renderComposition(data);
   renderSearchHint(data);
@@ -1026,7 +1137,7 @@ async function poll() {
       loadProfilesStatus();
     } else {
       setUpdated(state.lastUpdated);
-      document.querySelectorAll(".card-time:not(.dated)").forEach((t) => { t.textContent = timeAgo(t.dateTime); });
+      document.querySelectorAll(".card-time.rel").forEach((t) => { t.textContent = timeAgo(t.dateTime); });
     }
   } catch { /* server stopped; try again later */ }
 }

@@ -76,3 +76,9 @@ def test_unmatched_search_returns_nothing(client):
 def test_topics_endpoint_returns_at_most_six(client):
     topics.recompute_all(main.conn)
     assert len(client.get("/api/topics?scope=portugal").json()) <= 6
+
+
+def test_feed_items_carry_fetch_time_and_id(client):
+    """The page marks "new since your last visit" by fetch time, and keys cards by id."""
+    for a in client.get(f"/api/feed?{MIX}").json()["articles"]:
+        assert a["fetched_at"] and a["id"]

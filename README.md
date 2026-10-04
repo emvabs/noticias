@@ -45,6 +45,16 @@ Open **http://localhost:8000** (it works the same on a phone, tablet or large mo
 
 One row is pinned at the top: the brand, the sections (**Notícias · Resumo · Guardados · Investigar**, a tab bar at the bottom on phones), the search box, the **Tom** button, refresh and the **⋯** menu (articles per page, light/dark theme, links). Under it, a row that scrolls away holds the scope switch, the trending topics and the **Jornais** menu. Every menu is a small box under its button on a computer and a bottom sheet on a phone; Esc or a click outside closes it.
 
+### Reading the feed
+
+- **Two views**, chosen in **⋯ → Vista**: *Cartões* (headline, summary, topics) or *Lista* (one dense row per article: outlet, time, headline). The choice is remembered.
+- **Time groups**: "Últimas horas" (the last 3 hours, with "há 40 min"), "Hoje", "Ontem", then the date; past the first group each article shows its hour.
+- **Tone** is a small dot at the end of the meta line: green positive, red negative, a ring for neutral. Hover or tap it to see the score and the words that decided it.
+- **New since your last visit**: articles *fetched* after you last left the page carry a "nova" tag, and a line above the list counts them, with **Ver só as novas** to show only those. A visit counts once the page has been open 20 seconds, so a reload does not reset it; coming back to the tab after 5 minutes starts a new one.
+- **Already read**: headlines you opened are dimmed.
+
+New and read are remembered in this browser only (`localStorage`), per device; nothing is sent to the server.
+
 ### Scope switch
 
 Every outlet has a `scope` (`portugal` or `world`) and a `language` (`pt` or `en`) in `sources.yaml`. The switch filters by scope **before** the outlet menu and the positivity mix, so each scope has its own outlets. The choice is remembered between visits, and flipping it keeps the slider where it is.
@@ -155,10 +165,10 @@ Narrow topic selections make the pools small, so the end-of-list note appears fa
 - **Combination rules** (`lexicon/rules_pt.txt`, `lexicon/rules_en.txt`) handle headlines where single words mislead.
 - Negation: one of those words up to 3 words before a sentiment word flips its polarity.
 - `score = (pos − neg) / (pos + neg + 1)`. The label is positive if > 0.2, negative if < −0.2, otherwise neutral (set in `config.yaml`).
-- Hover a card's badge to see which words matched.
+- Hover or tap a card's tone dot to see which words matched.
 - Two kinds of word never count: the outlets' own names (SentiLex has "observador" as positive, VADER has "guardian") and the negation words themselves ("no" is negative in VADER, but here it is an operator on the words that follow).
 
-A caveat worth knowing: some feeds (Diário de Notícias, and several outlets' briefs) carry no summary, so a single word in the headline decides the label. When you spot a wrong one, look at the badge tooltip — it names the culprit — and silence it with a `0` line in the custom list, or add a combination rule.
+A caveat worth knowing: some feeds (Diário de Notícias, and several outlets' briefs) carry no summary, so a single word in the headline decides the label. When you spot a wrong one, look at the tone dot's tooltip — it names the culprit — and silence it with a `0` line in the custom list, or add a combination rule.
 
 ### Combination rules
 
@@ -175,7 +185,7 @@ desemprego, desce     1
 mortes, descem        1
 ```
 
-Every word of a rule must appear somewhere in the headline or summary, in any order; a `*` makes a term a prefix. When a rule fires, the words it names stop counting on their own, so the rule wins over the word list, and the badge tooltip shows `euribor + ultrapassa` instead of the individual words.
+Every word of a rule must appear somewhere in the headline or summary, in any order; a `*` makes a term a prefix. When a rule fires, the words it names stop counting on their own, so the rule wins over the word list, and the tooltip shows `euribor + ultrapassa` instead of the individual words.
 
 Because word order is ignored, a headline can fire rules in both directions — *"sobem os preços, descem os consumos"*. When rules sharing the same first word disagree, none of them counts and the article stays neutral, rather than picking a side at random.
 
@@ -284,7 +294,7 @@ Checked from a 280px foldable cover screen up to a 2560px monitor, in portrait a
 - **Phones** (≤ 760px): only a 54px row stays pinned (brand, search, Tom, refresh, menu); the filters scroll away with the page, and the sections move to a tab bar at the bottom. Menus open as bottom sheets over a dimmed page.
 - **Narrow windows** (≤ 1000px): the search box becomes a button that opens the box over the bar.
 - **Landscape phones and short windows** (height ≤ 560px): the top bar is not pinned at all, because a pinned bar would take too much of the screen.
-- **Touch devices** (`pointer: coarse`): buttons and chips grow to at least 44px, and the search box uses a 16px font so iOS Safari does not zoom when tapped. The sentiment badge's tooltip opens on tap as well as hover, and hover effects are limited to devices that actually have a pointer.
+- **Touch devices** (`pointer: coarse`): buttons and chips grow to at least 44px, and the search box uses a 16px font so iOS Safari does not zoom when tapped. The tone dot's tooltip opens on tap as well as hover, and hover effects are limited to devices that actually have a pointer.
 - **Notched phones**: `viewport-fit=cover` plus `env(safe-area-inset-*)` padding, so nothing hides under a notch or home indicator in landscape.
 - **Large screens** (≥ 1280px): the feed becomes two columns, and the page widens to 1400px beyond 1800px.
 - **Theme**: follows the system unless **⋯ → Tema** forces light or dark (remembered, applied before the first paint).
