@@ -329,6 +329,11 @@ button, select, input { font: inherit; color: inherit; }
   padding-bottom: 12px; scroll-padding-left: var(--gutter);
 }
 .chips::-webkit-scrollbar { display: none; }
+/* the outlet row scrolls sideways: fade its edge so the cut reads as "more" */
+.sources {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
 .sources { padding-top: 0; }
 .topicbar {
   display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap;
@@ -778,6 +783,8 @@ main {
   /* one line for outlet, time, "i" and tone */
   .card-meta .sep { display: none; }
   .card-meta { gap: 4px 7px; }
+  /* the byline takes the second line, so outlet, time and tone stay together */
+  .card-byline { order: 10; flex-basis: 100%; max-width: none; }
   .updated { display: block; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .updated::before { display: none; }
   .message { padding: 40px 14px; }
@@ -900,6 +907,7 @@ body.dd-mode main, body.dd-mode .profiles-status { display: none !important; }
   color: var(--muted); padding: 48px 20px; text-align: center;
   background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg);
 }
+.dd-table-wrap .dd-empty { border: 0; margin: 0; padding: 32px 16px; }
 .dd-caveat {
   display: flex; gap: 10px; align-items: flex-start;
   font-size: var(--fs-sm); color: var(--warn); background: var(--warn-bg);
@@ -918,10 +926,11 @@ body.dd-mode main, body.dd-mode .profiles-status { display: none !important; }
     radial-gradient(circle, color-mix(in srgb, var(--border-strong) 70%, transparent) 1px, transparent 1.2px) 0 0 / 20px 20px,
     var(--surface);
 }
-.dd-graph svg { display: block; width: 100%; cursor: grab; user-select: none; }
-.dd-graph svg.dragging { cursor: grabbing; }
-.dd-graph-own svg { height: auto; max-width: 980px; margin: 0 auto; }
-.dd-graph-radial svg { height: min(72vh, 680px); }
+/* direct children only: the line icons nested inside the map are <svg> too */
+.dd-graph > svg { display: block; width: 100%; cursor: grab; user-select: none; }
+.dd-graph > svg.dragging { cursor: grabbing; }
+.dd-graph-own > svg { height: auto; max-width: 980px; margin: 0 auto; }
+.dd-graph-radial > svg { height: min(72vh, 680px); }
 .dd-zoom {
   position: absolute; right: 12px; bottom: 12px; display: flex; gap: 2px; padding: 3px;
   background: color-mix(in srgb, var(--surface) 85%, transparent); backdrop-filter: blur(8px);
@@ -1134,7 +1143,7 @@ svg.focusing .on { opacity: 1 !important; }
   #dd-entidade:not([hidden]) { grid-template-columns: 1fr; }
   .dd-picker { position: static; }
   .dd-list { max-height: 240px; }
-  .dd-graph-radial svg { height: 420px; }
+  .dd-graph-radial > svg { height: 420px; }
   .dd-head h2 { font-size: 1.65rem; }
   .dd-summary { font-size: 1rem; padding: 14px 16px; }
   .dd-tabs { display: flex; width: 100%; }

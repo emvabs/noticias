@@ -528,8 +528,12 @@ async function showSilences() {
   $("#silence-detail").hidden = true;
   const data = await (await fetch(`/api/silences?scope=${ddState.silenceScope}`)).json();
   table.replaceChildren();
+  const wrap = table.parentElement;
+  wrap.querySelector(".dd-empty")?.remove();
+  table.hidden = !data.topics.length;
   if (!data.topics.length) {
-    table.append(el("caption", { className: "dd-empty" },
+    // outside the table: a caption is as narrow as the (empty) table
+    wrap.append(el("p", { className: "dd-empty" },
       "Ainda há poucos temas no arquivo para comparar. A tabela enche com o tempo, à medida que a app guarda notícias."));
     return;
   }
