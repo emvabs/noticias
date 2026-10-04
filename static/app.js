@@ -29,6 +29,8 @@ const state = {
   sources: [],
   lastUpdated: null,
   lastData: null,                               // the last /api/feed answer
+  today: null,                                  // the last /api/today answer
+  newCount: 0,
   view: "noticias",
 };
 
@@ -422,6 +424,7 @@ function renderTopics() {
 }
 
 async function loadTopics() {
+  loadToday();                             // the side column belongs to the same selection
   const res = await fetch(`/api/topics?scope=${state.scope}&group=${state.group}`);
   state.topics = await res.json();
   // The shortlist is recomputed on every fetch, so a chosen topic can vanish.
@@ -990,6 +993,8 @@ const newsOnly = $("#news-only");
 
 function renderNewsBar(articles) {
   const n = articles.filter(isNew).length;
+  state.newCount = n;
+  renderNow();
   if (!n) seen.onlyNew = false;
   newsBar.hidden = !n;
   $("#news-count").textContent = `${plural(n, "nova", "novas")} desde a sua última visita`;
@@ -997,10 +1002,106 @@ function renderNewsBar(articles) {
   newsOnly.setAttribute("aria-pressed", String(seen.onlyNew));
 }
 
-newsOnly.addEventListener("click", () => {
-  seen.onlyNew = !seen.onlyNew;
+function showOnlyNew(on) {
+  seen.onlyNew = on;
   if (state.lastData) { renderList(state.lastData.articles); renderNewsBar(state.lastData.articles); }
-});
+}
+newsOnly.addEventListener("click", () => showOnlyNew(!seen.onlyNew));
+
+// ---------- "Agora": the side column (the top of Investigar on narrow screens) ----------
+async function loadToday() {
+  const params = new URLSearchParams({ scope: state.scope, group: state.group });
+  try {
+    const res = await fetch(`/api/today?${params}`);
+    state.today = res.ok ? await res.json() : null;
+  } catch { state.today = null; }
+  renderNow();
+}
+
+function nowSection(title) {
+  const sec = el("section", { className: "now-sec" });
+  sec.append(el("h3", {}, title));
+  return sec;
+}
+
+function nowContent({ links = true } = {}) {
+  const frag = document.createDocumentFragment();
+  frag.append(el("h2", { className: "now-title" }, "Agora"));
+  const where = independentOn() ? "Independentes" : state.scope === "world" ? "Mundo" : "Portugal";
+
+  if (state.newCount) {
+    const sec = nowSection("Desde a sua última visita");
+    const p = el("p", { className: "now-new" }, `${plural(state.newCount, "notícia nova", "notícias novas")} `);
+    const btn = el("button", { type: "button", className: "link-btn" }, seen.onlyNew ? "Ver todas" : "Ver só essas");
+    btn.addEventListener("click", () => {
+      showOnlyNew(!seen.onlyNew);
+      if (state.view !== "noticias") location.hash = "#noticias";
+    });
+    p.append(btn);
+    sec.append(p);
+    frag.append(sec);
+  }
+
+  const t = state.today;
+  if (t?.total) {
+    const sec = nowSection(`Tom das últimas ${t.window_hours} horas · ${where}`);
+    const meter = el("div", { className: "meter", role: "img" });
+    const parts = [["pos", t.labels.positive, "positivas"], ["neu", t.labels.neutral, "neutras"],
+                   ["neg", t.labels.negative, "negativas"]];
+    const legendLine = el("p", { className: "legend" });
+    for (const [kind, n, word] of parts) {
+      const seg = el("span", { className: `seg seg-${kind}` });
+      seg.style.width = `${(100 * n / t.total).toFixed(2)}%`;
+      meter.append(seg);
+      const item = el("span");
+      item.append(el("span", { className: `key key-${kind}` }), el("b", {}, String(n)), ` ${word}`);
+      legendLine.append(item);
+    }
+    meter.setAttribute("aria-label", `${t.total} notícias: ${parts.map(([, n, w]) => `${n} ${w}`).join(", ")}`);
+    sec.append(meter, legendLine,
+      el("p", { className: "now-note" }, "Todas as notícias do dia nesta seleção, antes do cursor de tom."));
+    frag.append(sec);
+  }
+
+  if (t && t.group === "mainstream") {
+    const sec = nowSection("Silêncio do dia");
+    const s = t.silence;
+    if (s) {
+      const count = s.count === 1 ? "1 notícia" : `${s.count} notícias`;
+      const expected = String(s.expected).replace(".", ",");
+      sec.append(el("p", {}, `${s.outlet_name} quase não falou de «${s.label}»: ${count} em ${s.window_days} dias, `
+        + `quando o seu volume faria esperar ~${expected}. ${s.covered_by} de ${s.outlets} jornais cobriram o tema.`));
+      sec.append(el("p", { className: "now-note" }, "Pode ser do feed e não do jornal: é uma pista, não uma prova."));
+      const a = el("a", { href: "#investigar/silencios", className: "now-link" }, "Ver os silêncios");
+      a.append(icon("arrow", 14));
+      sec.append(a);
+    } else {
+      sec.append(el("p", { className: "now-note" }, "Nenhum silêncio forte nos temas de agora."));
+    }
+    frag.append(sec);
+  }
+
+  if (!links) return frag;                 // already on Investigar
+  const sec = nowSection("Investigar");
+  const ul = el("ul", { className: "now-links" });
+  for (const [href, text] of [["#investigar/propriedade", "Quem é dono de quê?"],
+                              ["#investigar/jornais", "Como cobre cada jornal?"],
+                              ["#investigar/silencios", "O que ficou por noticiar?"]]) {
+    const li = el("li");
+    const a = el("a", { href }, text);
+    a.append(icon("arrow", 14));
+    li.append(a);
+    ul.append(li);
+  }
+  sec.append(ul);
+  frag.append(sec);
+  return frag;
+}
+
+function renderNow() {
+  $("#now").replaceChildren(nowContent());
+  $("#now-inline").replaceChildren(nowContent({ links: false }));
+}
 
 function renderFeed(data) {
   state.lastData = data;

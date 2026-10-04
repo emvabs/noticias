@@ -470,3 +470,25 @@ def silence_findings(conn, rows, ident, cfg):
                                 "covered_by": t["covered_by"], "outlets": n_outlets},
                     **_evidence(others, cfg["articles_per_finding"])})
     return sorted(out, key=lambda f: -f["numbers"]["expected"])
+
+
+def strongest_silence(table, slugs=None):
+    """The biggest gap in a silences table: the silent cell furthest below what
+    the outlet's volume predicts, optionally only among `slugs` (topics trending
+    now). None when nothing is silent."""
+    names = {o["id"]: o["name"] for o in table["outlets"]}
+    best = None
+    for t in table["topics"]:
+        if slugs is not None and t["slug"] not in slugs:
+            continue
+        for outlet, cell in t["cells"].items():
+            if not cell["silent"]:
+                continue
+            gap = cell["expected"] - cell["count"]
+            if best is None or gap > best["gap"]:
+                best = {"topic": t["slug"], "label": t["label"], "outlet": outlet,
+                        "outlet_name": names.get(outlet, outlet), "count": cell["count"],
+                        "expected": cell["expected"], "covered_by": t["covered_by"],
+                        "outlets": len(table["outlets"]), "gap": round(gap, 1),
+                        "window_days": table["window_days"]}
+    return best

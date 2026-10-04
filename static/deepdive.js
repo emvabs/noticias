@@ -4,7 +4,7 @@
 // the two graphs have a natural fixed shape (radial, two columns), drawn in SVG.
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const DD_TABS = ["propriedade", "jornais", "jornalistas", "silencios"];
+const DD_TABS = ["inicio", "propriedade", "jornais", "jornalistas", "silencios"];
 const KIND_OF_TAB = { jornais: "outlet", jornalistas: "journalist" };
 const TAB_OF_KIND = { outlet: "jornais", journalist: "jornalistas" };
 const OWNER_KIND_LABELS = {
@@ -113,13 +113,14 @@ const ddState = { tab: null, id: null, index: {}, silenceScope: "portugal" };
 
 /** Called by the page router with the parts after #investigar: [tab, id]. */
 async function ddRoute(parts) {
-  const tab = DD_TABS.includes(parts[0]) ? parts[0] : "propriedade";
+  const tab = DD_TABS.includes(parts[0]) ? parts[0] : "inicio";
   const id = parts[1] || null;
   for (const a of document.querySelectorAll(".dd-tab")) {
     const selected = a.dataset.tab === tab;
     a.setAttribute("aria-selected", String(selected));
     a.classList.toggle("active", selected);
   }
+  $("#dd-inicio").hidden = tab !== "inicio";
   $("#dd-propriedade").hidden = tab !== "propriedade";
   $("#dd-entidade").hidden = !KIND_OF_TAB[tab];
   $("#dd-silencios").hidden = tab !== "silencios";
@@ -267,8 +268,22 @@ const ddSearch = $("#dd-search");
 const ddList = $("#dd-list");
 const ddResult = $("#dd-result");
 
+// Phones: once something is chosen, the list folds into a "Mudar de…" button.
+const ddPicker = $(".dd-picker");
+const ddPickerToggle = $(".dd-picker-toggle");
+ddPickerToggle.addEventListener("click", () => {
+  const open = !ddPicker.classList.contains("open");
+  ddPicker.classList.toggle("open", open);
+  ddPickerToggle.setAttribute("aria-expanded", String(open));
+  if (open) ddSearch.focus();
+});
+
 async function showEntityTab(kind, id, changedTab) {
   ddSearch.placeholder = kind === "outlet" ? "Procurar jornal ou agência…" : "Procurar jornalista…";
+  ddPicker.classList.toggle("has-choice", !!id);
+  ddPicker.classList.remove("open");
+  ddPickerToggle.setAttribute("aria-expanded", "false");
+  ddPickerToggle.firstElementChild.textContent = kind === "outlet" ? "Mudar de jornal" : "Mudar de jornalista";
   if (changedTab) {
     ddSearch.value = "";
     if (!ddState.index[kind]) {
@@ -352,17 +367,8 @@ function renderEntity(d) {
     return;
   }
 
-  // The graph first on wide screens; on phones the cards (with their article lists) do the job.
-  const graphWrap = el("div", { className: "dd-graph dd-graph-radial" });
-  const svgEl = svg("svg", { role: "img", "aria-label": `Mapa dos findings de ${d.name}` });
-  graphWrap.append(svgEl);
-  ddResult.append(el("h3", { className: "dd-h3" }, "Mapa: o que sustenta cada conclusão"),
-    el("p", { className: "dd-muted dd-graph-hint" },
-      "Arraste para mover, use a roda do rato para aproximar. Clique num finding para o destacar e numa notícia para a abrir."),
-    graphWrap);
-
   const cards = el("div", { className: "dd-findings" });
-  ddResult.append(el("h3", { className: "dd-h3" }, "Findings"), cards);
+  ddResult.append(el("h3", { className: "dd-h3" }, "O que se encontrou"), cards);
   const cardById = {};
   for (const f of d.findings) {
     const card = el("section", { className: `dd-card ${FINDING_CLASS[f.kind] || ""}`, tabIndex: 0 });
@@ -392,12 +398,24 @@ function renderEntity(d) {
       det.append(ul);
       card.append(det);
     }
-    card.addEventListener("click", (e) => {
-      if (e.target.closest("a, summary")) return;
-      focusFinding(svgEl, cards, f.id);
-    });
     cardById[f.id] = card;
     cards.append(card);
+  }
+  // The findings first; the map of what supports them after, folded on phones.
+  const map = el("details", { className: "dd-map", open: window.innerWidth > 760 });
+  const graphWrap = el("div", { className: "dd-graph dd-graph-radial" });
+  const svgEl = svg("svg", { role: "img", "aria-label": `Mapa dos findings de ${d.name}` });
+  graphWrap.append(svgEl);
+  map.append(el("summary", { className: "dd-h3" }, "Mapa: o que sustenta cada conclusão"),
+    el("p", { className: "dd-muted dd-graph-hint" },
+      "Arraste para mover, use a roda do rato para aproximar. Clique num finding para o destacar e numa notícia para a abrir."),
+    graphWrap);
+  ddResult.append(map);
+  for (const card of cards.children) {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest("a, summary")) return;
+      focusFinding(svgEl, cards, card.dataset.finding);
+    });
   }
   drawRadial(svgEl, graphWrap, d, cards);
 }

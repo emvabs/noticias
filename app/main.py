@@ -2,6 +2,7 @@
 import json
 import threading
 from contextlib import asynccontextmanager
+from datetime import timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException, Query
@@ -44,6 +45,7 @@ async def always_revalidate(request, call_next):
 
 DEFAULT_SCOPE = "portugal"
 DEFAULT_GROUP = "mainstream"
+TODAY_HOURS = 24      # the side column's "today"
 
 
 def source_names():
@@ -233,6 +235,25 @@ def silences(scope: str = DEFAULT_SCOPE):
 def silence_articles(topic: str, scope: str = DEFAULT_SCOPE, outlet: str | None = None):
     with _conn_lock:
         return deepdive.silence_articles(conn, scope, topic, outlet)
+
+
+@app.get("/api/today")
+def today(scope: str = DEFAULT_SCOPE, group: str = DEFAULT_GROUP):
+    """The side column: the last 24 hours' tone, and the day's strongest silence."""
+    since = ingest.iso(ingest.utcnow() - timedelta(hours=TODAY_HOURS))
+    with _conn_lock:
+        rows = conn.execute(
+            'SELECT label, COUNT(*) n FROM articles WHERE scope = ? AND "group" = ?'
+            " AND published_at >= ? GROUP BY label", (scope, group, since)).fetchall()
+        # Silences compare mainstream outlets on the topics trending now.
+        silence = None
+        if group == DEFAULT_GROUP:
+            trending = {t["slug"] for t in topics_module.current(conn, scope, DEFAULT_GROUP)}
+            silence = deepdive.strongest_silence(deepdive.silences(conn, scope), trending)
+    labels = {"positive": 0, "neutral": 0, "negative": 0}
+    labels.update({r["label"]: r["n"] for r in rows if r["label"] in labels})
+    return {"scope": scope, "group": group, "window_hours": TODAY_HOURS,
+            "labels": labels, "total": sum(labels.values()), "silence": silence}
 
 
 @app.get("/api/status")

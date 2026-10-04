@@ -111,6 +111,9 @@ fix wrong labels or noisy topics — prefer them over changing code.
   `articles.topics` is reset on every recompute. Findings are either researched
   (profile + source URL) or data (archive + supporting articles); one with
   neither is dropped. Wording is "tendência", never "viés".
+- **Investigar leads with questions and findings; graphs come after**, folded
+  on phones. The side column ("Agora", `/api/today`) is rendered twice by
+  `renderNow()`: beside the feed from 1200px, at the top of Investigar below.
 - **Graphs are hand-drawn SVG, no D3.** Both have a fixed natural shape (radial;
   owners → outlets), which reads better than a force layout and needs no
   dependency. Pan/zoom is `panZoom()` in `static/deepdive.js`.

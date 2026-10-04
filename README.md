@@ -56,6 +56,17 @@ One row is pinned at the top: the brand, the sections (**Notícias · Resumo · 
 
 New and read are remembered in this browser only (`localStorage`), per device; nothing is sent to the server.
 
+### Agora (the side column)
+
+On a wide screen (≥ 1200px) a column beside the feed shows:
+
+- how many articles are new since your last visit, with a button to show only those;
+- **the tone of the last 24 hours** in the current selection (Portugal, Mundo or Independentes) — every article of the day, before the slider;
+- **the silence of the day**: among the topics trending now, the mainstream outlet furthest below what its volume predicts (from the same table as *Silêncios*, with the same caveat: the gap may be the feed's);
+- links into Investigar.
+
+On narrower screens the same box sits at the top of Investigar. API: `GET /api/today?scope=portugal&group=mainstream`.
+
 ### Stories: one item per story
 
 When several outlets publish the same story, the feed shows it once — the newest version — with a **+3 jornais** button that unfolds **Como os outros jornais titularam**: each outlet's headline, tone dot and time, side by side. The story told by the most outlets opens the page, larger and unfolded (**Em destaque · contada por 5 jornais**).
@@ -279,7 +290,9 @@ No restart is needed: profiles and aliases are read on every request. The thresh
 
 ### Investigar (Deep Dive)
 
-**Investigar** in the sections (or **Investigar** in the "who is behind" panel) opens a view with four tabs. The address follows the tab (`#investigar/jornais/publico`; old `#deep-dive/…` links still work), so the browser's back button and bookmarks work.
+**Investigar** in the sections (or **Investigar** in the "who is behind" panel) opens a view that starts from three questions — *Quem é dono de quê?*, *Como cobre cada jornal?* and *O que ficou por noticiar?* — each leading to one of its tabs. The address follows the tab (`#investigar/jornais/publico`; old `#deep-dive/…` links still work), so the browser's back button and bookmarks work.
+
+On an outlet's or journalist's page the summary and the findings come first, as cards; the radial map of what supports them follows, folded on phones. On a phone, once something is chosen, the list folds into a **Mudar de jornal** button.
 
 - **Propriedade** — who owns each outlet and agency, as a two-column map (owners → outlets, with the share on each line). Shared owners are one node: the Portuguese State links RTP and Lusa. Click an outlet for its Deep Dive, an owner for what it holds and the sources.
 - **Jornais / Jornalistas** — pick one; you get a short summary, the **findings**, and a radial map with the selection in the centre, the findings around it and, around each finding, the articles (coloured by tone) or research sources behind it. Drag to pan, wheel or +/− to zoom, click a finding to highlight it, click an article to open it. Each finding card also lists its articles, which is the view to use on a phone.
@@ -311,7 +324,7 @@ Checked from a 280px foldable cover screen up to a 2560px monitor, in portrait a
 - **Landscape phones and short windows** (height ≤ 560px): the top bar is not pinned at all, because a pinned bar would take too much of the screen.
 - **Touch devices** (`pointer: coarse`): buttons and chips grow to at least 44px, and the search box uses a 16px font so iOS Safari does not zoom when tapped. The tone dot's tooltip opens on tap as well as hover, and hover effects are limited to devices that actually have a pointer.
 - **Notched phones**: `viewport-fit=cover` plus `env(safe-area-inset-*)` padding, so nothing hides under a notch or home indicator in landscape.
-- **Large screens** (≥ 1280px): the feed becomes two columns, and the page widens to 1400px beyond 1800px.
+- **Large screens**: the *Agora* column appears from 1200px; from 1800px the cards form two columns and the page widens to 1480px.
 - **Theme**: follows the system unless **⋯ → Tema** forces light or dark (remembered, applied before the first paint).
 - Long words and URLs wrap instead of widening the page, `prefers-reduced-motion` is respected, and there is a print stylesheet.
 

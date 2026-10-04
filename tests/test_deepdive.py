@@ -185,3 +185,38 @@ def test_silences_leave_independent_outlets_out(conn):
         add(conn, i, "oregioes", f"Notícia regional {i}", group="independent")
     archive.sync(conn)
     assert all(o["id"] != "oregioes" for o in deepdive.silences(conn, "portugal")["outlets"])
+
+
+def silent_cnn(conn):
+    """CNN skips «Irão», which the other three outlets cover (as in the test above)."""
+    n = 0
+    for src in ("publico", "expresso", "observador", "cnn"):
+        for i in range(10):
+            n += 1
+            topics = '["irao"]' if src != "cnn" and i < 4 else "[]"
+            add(conn, n, src, f"Notícia {src} {i}", topics=topics,
+                label="positive" if i == 9 else "negative" if i < 3 else "neutral")
+    conn.execute("""INSERT INTO topics_cache (scope, "group", slug, label, count, rank, computed_at)
+                    VALUES ('portugal', 'mainstream', 'irao', 'Irão', 12, 0, 'x')""")
+    archive.sync(conn)
+
+
+def test_strongest_silence_is_the_biggest_gap(conn):
+    silent_cnn(conn)
+    best = deepdive.strongest_silence(deepdive.silences(conn, "portugal"))
+    assert best["outlet"] == "cnn" and best["topic"] == "irao" and best["count"] == 0
+    # only topics trending now count
+    assert deepdive.strongest_silence(deepdive.silences(conn, "portugal"), {"outro"}) is None
+
+
+def test_api_today_counts_the_last_day_and_names_the_silence(conn, monkeypatch):
+    silent_cnn(conn)
+    old = ingest.iso(ingest.utcnow() - __import__("datetime").timedelta(hours=30))
+    conn.execute("UPDATE articles SET published_at = ? WHERE source = 'publico'", (old,))
+    monkeypatch.setattr(main, "conn", conn)
+    data = TestClient(main.app).get("/api/today?scope=portugal").json()
+    assert data["total"] == 30                    # Público's ten are older than a day
+    assert data["labels"] == {"positive": 3, "neutral": 18, "negative": 9}
+    assert data["silence"]["outlet"] == "cnn"
+    independent = TestClient(main.app).get("/api/today?scope=portugal&group=independent").json()
+    assert independent["silence"] is None and independent["total"] == 0

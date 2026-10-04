@@ -530,6 +530,8 @@ button, select, input { font: inherit; color: inherit; }
 body:not([data-view="noticias"]) .search,
 body:not([data-view="noticias"]) .search-open,
 body:not([data-view="noticias"]) .tone { display: none; }
+body:not([data-view="noticias"]) .actions { margin-left: auto; }
+#dd-inicio .view-title { margin-top: 4px; }
 .view-title {
   font-family: var(--serif); font-size: var(--fs-2xl); letter-spacing: -.025em; margin: 26px 0 16px;
 }
@@ -538,7 +540,49 @@ body:not([data-view="noticias"]) .tone { display: none; }
 /* ============================================================
    feed
    ============================================================ */
-main { padding-top: 4px; padding-bottom: 40px; }
+main { padding-top: 4px; padding-bottom: 40px; min-width: 0; }
+
+/* ============================================================
+   "Agora": the side column on wide screens, the top of Investigar otherwise
+   ============================================================ */
+.now { display: none; font-size: var(--fs-sm); }
+.now.now-inline {
+  display: block; margin-top: 18px; padding: 16px 20px 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+@media (min-width: 1200px) {
+  .feed-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 36px; align-items: start; }
+  .now {
+    display: block; position: sticky; top: calc(var(--bar-h) + 16px);
+    max-height: calc(100vh - var(--bar-h) - 32px); overflow-y: auto; scrollbar-width: thin;
+    padding: 4px 0 20px;
+  }
+  .now.now-inline { display: none; }
+}
+.now-title {
+  margin: 0 0 4px; font-family: var(--serif); font-size: 1.25rem; letter-spacing: -.01em;
+}
+.now-sec { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.now-sec:last-child { border-bottom: 0; }
+.now-sec h3 {
+  margin: 0 0 8px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.now-sec p { margin: 0 0 6px; color: var(--text-2); line-height: 1.55; }
+.now-sec .legend { margin-top: 8px; }
+.now-note { font-size: var(--fs-xs); color: var(--muted) !important; }
+.now-new::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); margin-right: 8px; vertical-align: 1px;
+}
+.now-link, .now-links a {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--accent); font-weight: 650; text-decoration: none;
+}
+.now-link:hover, .now-links a:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
+.now-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.now-links a { color: var(--text); font-weight: 550; }
+.now-links a .icon { color: var(--muted); }
 .feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 
 /* time groups: a small label on a rule */
@@ -1062,17 +1106,17 @@ body[data-layout="list"] .card.whois-on { box-shadow: inset 3px 0 0 var(--accent
   .whois-btn { width: 30px; height: 30px; }
 }
 
-/* --- large screens: two columns instead of one long strip --- */
+/* --- large screens: the side column; two columns of cards on the widest --- */
 @media (min-width: 1280px) {
-  :root { --width: 1200px; }
+  :root { --width: 1240px; }
+}
+@media (min-width: 1800px) {
+  :root { --width: 1480px; --fs-title: 1.34rem; }
   .feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start; gap: 16px;
   }
   .message { grid-column: 1 / -1; }
-}
-@media (min-width: 1800px) {
-  :root { --width: 1400px; --fs-title: 1.34rem; }
 }
 
 /* ============================================================
@@ -1115,6 +1159,32 @@ body[data-layout="list"] .card.whois-on { box-shadow: inset 3px 0 0 var(--accent
   content: ""; width: 16px; height: 16px; flex: none; margin-top: 2px; background: currentColor;
   -webkit-mask: var(--i-alert) center / contain no-repeat; mask: var(--i-alert) center / contain no-repeat;
 }
+
+/* the landing: three questions */
+.dd-questions { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 18px; }
+.dd-question {
+  position: relative; padding: 20px 20px 18px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  transition: border-color var(--fast), box-shadow var(--fast);
+}
+.dd-question:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+.dd-qicon {
+  width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent); margin-bottom: 14px;
+}
+.dd-question h2 { margin: 0 0 6px; font-family: var(--serif); font-size: 1.28rem; letter-spacing: -.01em; }
+.dd-question h2 a { color: var(--text); text-decoration: none; }
+/* the whole card is the link; links in the text stay clickable above it */
+.dd-question h2 a::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.dd-question h2 a:focus-visible { outline: none; }
+.dd-question:has(h2 a:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dd-question p { margin: 0; color: var(--text-2); font-size: var(--fs-sm); line-height: 1.55; }
+.dd-question p a { position: relative; z-index: 1; color: var(--accent); font-weight: 600; }
+
+.dd-picker-toggle { display: none; }
+.dd-map { margin-top: 6px; }
+.dd-map > summary { cursor: pointer; list-style-position: inside; }
+.dd-map > summary:hover { color: var(--text); }
 
 /* graphs: a dotted canvas, floating zoom controls */
 .dd-graph {
@@ -1341,6 +1411,17 @@ svg.focusing .on { opacity: 1 !important; }
   #dd-entidade:not([hidden]) { grid-template-columns: 1fr; }
   .dd-picker { position: static; }
   .dd-list { max-height: 240px; }
+  /* once something is chosen, the list folds into a "Mudar de…" button */
+  .dd-picker.has-choice:not(.open) #dd-search,
+  .dd-picker.has-choice:not(.open) .dd-list { display: none; }
+  .dd-picker.has-choice { padding: 6px; }
+  .dd-picker.has-choice .dd-picker-toggle {
+    display: flex; width: 100%; align-items: center; justify-content: space-between;
+    border: 0; background: none; padding: 8px 10px; cursor: pointer;
+    font-size: var(--fs-sm); font-weight: 650; color: var(--text);
+  }
+  .dd-picker.open .dd-picker-toggle { margin-bottom: 6px; }
+  .dd-picker.open .dd-picker-toggle .icon { transform: rotate(180deg); }
   .dd-graph-radial > svg { height: 420px; }
   .dd-head h2 { font-size: 1.65rem; }
   .dd-summary { font-size: 1rem; padding: 14px 16px; }

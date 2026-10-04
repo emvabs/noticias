@@ -151,7 +151,8 @@
       <p id="search-hint" class="bar search-hint" aria-live="polite" hidden></p>
     </div>
 
-    <main class="bar">
+    <div class="bar feed-layout">
+    <main>
       <div id="news-bar" class="news-bar" hidden>
         <span id="news-count"></span>
         <button type="button" id="news-only" class="link-btn" aria-pressed="false">Ver só as novas</button>
@@ -160,6 +161,10 @@
       <ol id="feed" class="feed" aria-live="polite" aria-busy="false"></ol>
       <p id="feed-end" class="feed-end" hidden></p>
     </main>
+
+    <!-- "Agora": what is new, the day's tone and silence, ways into Investigar -->
+    <aside class="now" id="now" aria-label="Agora"></aside>
+    </div>
 
     <!-- research still to do on the "who is behind the news" profiles -->
     <footer id="profiles-status" class="bar profiles-status" hidden>
@@ -187,11 +192,38 @@
   <!-- Investigar (Deep Dive): who owns what, findings per outlet/journalist, silences -->
   <section id="dd" class="view dd" hidden aria-label="Investigar">
     <nav class="dd-tabs" role="tablist" aria-label="Investigar">
+      <a role="tab" class="dd-tab" href="#investigar" data-tab="inicio">Início</a>
       <a role="tab" class="dd-tab" href="#investigar/propriedade" data-tab="propriedade">Propriedade</a>
       <a role="tab" class="dd-tab" href="#investigar/jornais" data-tab="jornais">Jornais</a>
       <a role="tab" class="dd-tab" href="#investigar/jornalistas" data-tab="jornalistas">Jornalistas</a>
       <a role="tab" class="dd-tab" href="#investigar/silencios" data-tab="silencios">Silêncios</a>
     </nav>
+
+    <div class="dd-panel" id="dd-inicio" hidden>
+      <h1 class="view-title">Investigar</h1>
+      <p class="dd-intro">Quem está por trás das notícias e o que os dados mostram. Cada conclusão
+        cita a sua fonte: a pesquisa (com ligação) ou as notícias guardadas pela app.</p>
+      <!-- phones and narrow windows: the feed's side column lives here -->
+      <section class="now now-inline" id="now-inline" aria-label="Agora"></section>
+      <div class="dd-questions">
+        <article class="dd-question">
+          <span class="dd-qicon"><span data-icon="building" data-size="22"></span></span>
+          <h2><a href="#investigar/propriedade">Quem é dono de quê?</a></h2>
+          <p>Os donos de cada jornal e agência num só mapa, com as percentagens e as fontes.</p>
+        </article>
+        <article class="dd-question">
+          <span class="dd-qicon"><span data-icon="gauge" data-size="22"></span></span>
+          <h2><a href="#investigar/jornais">Como cobre cada jornal?</a></h2>
+          <p>Tom comparado com os outros, termos mais frequentes, peso das agências e ligações a quem o detém.
+            Também por <a href="#investigar/jornalistas">jornalista</a>.</p>
+        </article>
+        <article class="dd-question">
+          <span class="dd-qicon"><span data-icon="mute" data-size="22"></span></span>
+          <h2><a href="#investigar/silencios">O que ficou por noticiar?</a></h2>
+          <p>Temas que quase todos os jornais cobriram e algum quase ignorou — uma pista, não uma prova.</p>
+        </article>
+      </div>
+    </div>
 
     <div class="dd-panel" id="dd-propriedade" hidden>
       <p class="dd-intro">Quem é dono de cada jornal e agência. Clique num jornal para o
@@ -203,6 +235,7 @@
 
     <div class="dd-panel" id="dd-entidade" hidden>
       <div class="dd-picker">
+        <button type="button" class="dd-picker-toggle" aria-expanded="false"><span></span><span data-icon="chevron" data-size="16"></span></button>
         <input id="dd-search" type="search" autocomplete="off" aria-label="Procurar">
         <ul id="dd-list" class="dd-list"></ul>
       </div>
