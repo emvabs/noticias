@@ -114,8 +114,20 @@ fix wrong labels or noisy topics — prefer them over changing code.
   warnings, selection). Everything reads from the tokens at the top of
   `static/style.css` (surfaces, ink, meaning colours, shadows, radii, type
   scale, motion) with a dark-mode set; add tokens rather than raw values.
-  Icons are line SVGs from `icon()` in `static/app.js` (CSS masks for
-  pseudo-elements) — no emoji in the UI. The backend's finding `icon` field is
+  Icons are line SVGs from `icon()` in `static/app.js` (`<span data-icon>`
+  placeholders in the HTML, CSS masks for pseudo-elements) — no emoji in the UI.
+  Dark tokens live twice: under `prefers-color-scheme` guarded by
+  `:root:not([data-theme="light"])`, and under `:root[data-theme="dark"]` for
+  the menu's forced theme — edit both.
+- **One pinned row, controls in popovers.** The slider lives in the "Tom"
+  popover; the feed keeps the screen. Menus use `popovers.bind()` (one open
+  at a time, a bottom sheet on phones). Never put `backdrop-filter` on an
+  ancestor of a sheet: it becomes the containing block of `position: fixed`
+  (the top bar's blur is on `::before` for that reason).
+- **Views are hash routes** (`#noticias`, `#resumo`, `#guardados`,
+  `#silenciados`, `#investigar/<tab>/<id>`), one router in `app.js`;
+  `deepdive.js` exposes `ddRoute(parts)`. "Independentes" is the third
+  position of the scope switch (scope `portugal`, group `independent`). The backend's finding `icon` field is
   ignored by the page, which maps each kind to a line icon.
 
 ## Gotchas

@@ -4,108 +4,194 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Notícias</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📰</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231a1916'/><text x='50' y='72' font-size='66' font-family='Georgia,serif' font-weight='700' fill='%23f6f4ef' text-anchor='middle'>N</text></svg>">
   <link rel="stylesheet" href="/static/style.css">
+  <script>
+    // the chosen theme, applied before the first paint (no flash)
+    try { const t = JSON.parse(localStorage.getItem("theme")); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch {}
+  </script>
 </head>
-<body>
+<body data-view="noticias">
+  <a class="skip" href="#feed">Saltar para as notícias</a>
+
+  <!-- the one pinned bar: brand, views, search, tone, refresh, menu -->
   <header class="topbar">
-   <div class="topbar-main">
     <div class="bar bar-top">
-      <h1 class="brand">Notícias</h1>
+      <a class="brand" href="#noticias" aria-label="Notícias — início">Notícias</a>
 
-      <div class="scope" role="group" aria-label="Âmbito">
-        <button type="button" class="scope-btn" data-scope="portugal" aria-pressed="true">Portugal</button>
-        <button type="button" class="scope-btn" data-scope="world" aria-pressed="false">Mundo</button>
-      </div>
-
-      <div class="actions">
-        <label class="limit">
-          <span class="sr-only">Número de notícias</span>
-          <select id="limit">
-            <option value="25">25 notícias</option>
-            <option value="50" selected>50 notícias</option>
-            <option value="100">100 notícias</option>
-          </select>
-        </label>
-        <a id="dd-toggle" class="btn dd-toggle" href="#deep-dive" aria-pressed="false">
-          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="currentColor"/><circle cx="4" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="20" cy="6" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="21" r="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.6 7.2 9.6 10.4M18.4 7.2 14.4 10.4M12 15v4" stroke="currentColor" stroke-width="1.8"/></svg>
-          <span class="btn-text">Deep Dive</span>
-        </a>
-        <button id="refresh" class="btn" type="button">
-          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
-          <span class="btn-text">Atualizar</span>
-        </button>
-        <span id="updated" class="updated" title="">—</span>
-      </div>
-    </div>
-
-    <div class="bar mixbar">
-      <div class="mix">
-        <label for="pct" class="mix-label">
-          <span class="pos">Positivas</span><span class="vs">vs</span><span class="neg">Negativas</span>
-        </label>
-        <div class="slider-wrap">
-          <input id="pct" type="range" min="0" max="100" step="5" value="50"
-                 aria-label="Percentagem de notícias positivas" aria-describedby="pct-value">
-        </div>
-        <output id="pct-value" for="pct" class="pct-value" aria-live="polite">
-          <strong>50%</strong><span>positivas</span>
-        </output>
-      </div>
-
-      <div class="composition" id="composition" hidden>
-        <div class="meter" role="img" id="meter-img" aria-label="">
-          <span class="seg seg-pos" id="seg-pos"></span>
-          <span class="seg seg-neu" id="seg-neu"></span>
-          <span class="seg seg-neg" id="seg-neg"></span>
-        </div>
-        <p class="legend" id="legend"></p>
-        <p class="shortfall" id="pct-actual" hidden></p>
-      </div>
-    </div>
-   </div>
-  </header>
-
-  <!-- filters scroll away with the page; the header above stays pinned -->
-  <div class="filters">
-    <nav id="sources" class="bar chips sources" aria-label="Filtrar por jornal"></nav>
-    <p id="sources-note" class="bar sources-note" hidden></p>
-    <div class="bar topicbar">
-      <form class="search" role="search" id="search-form">
-        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
-          <path d="M16.5 16.5 21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <input id="search" type="search" name="q" autocomplete="off"
-               placeholder="Pesquisar notícias…" aria-label="Pesquisar notícias">
-        <button type="button" id="search-clear" class="search-clear" aria-label="Limpar pesquisa" hidden>&times;</button>
-      </form>
-
-      <nav id="topics" class="chips topics" aria-label="Temas em destaque">
-        <span class="topics-title">Em destaque</span>
+      <!-- the views: links in the bar on wide screens, a tab bar at the bottom on phones -->
+      <nav class="viewnav" aria-label="Secções">
+        <a href="#noticias" data-view="noticias"><span data-icon="news"></span><span>Notícias</span></a>
+        <a href="#resumo" data-view="resumo"><span data-icon="list"></span><span>Resumo</span></a>
+        <a href="#guardados" data-view="guardados"><span data-icon="bookmark"></span><span>Guardados</span></a>
+        <a href="#investigar" data-view="investigar"><span data-icon="compass"></span><span>Investigar</span></a>
       </nav>
 
-      <p id="search-hint" class="search-hint" aria-live="polite" hidden></p>
+      <form class="search" role="search" id="search-form">
+        <span class="search-icon" data-icon="search"></span>
+        <input id="search" type="search" name="q" autocomplete="off"
+               placeholder="Pesquisar notícias…" aria-label="Pesquisar notícias">
+        <button type="button" id="search-clear" class="search-clear" aria-label="Limpar pesquisa" hidden><span data-icon="x"></span></button>
+      </form>
+
+      <div class="actions">
+        <!-- phones: the search box opens on demand -->
+        <button type="button" id="search-open" class="icon-btn search-open" aria-label="Pesquisar"><span data-icon="search"></span></button>
+
+        <div class="pop-anchor tone">
+          <button type="button" id="tone-btn" class="tone-btn" aria-haspopup="dialog" aria-expanded="false"
+                  aria-controls="tone-pop">
+            <span class="tone-mini" aria-hidden="true"><i class="seg-pos"></i><i class="seg-neu"></i><i class="seg-neg"></i></span>
+            <span class="tone-label">Tom</span>
+            <strong id="tone-value">50%</strong>
+            <span class="tone-alert" aria-hidden="true" hidden></span>
+          </button>
+          <div id="tone-pop" class="popover tone-pop" role="dialog" aria-label="Tom do feed" hidden>
+            <div class="pop-head">
+              <h2>Tom do feed</h2>
+              <button type="button" class="pop-close" aria-label="Fechar"><span data-icon="x"></span></button>
+            </div>
+            <div class="mix">
+              <label for="pct" class="mix-label">
+                <span class="neg">Negativas</span><span class="pos">Positivas</span>
+              </label>
+              <input id="pct" type="range" min="0" max="100" step="5" value="50"
+                     aria-label="Percentagem de notícias positivas" aria-describedby="pct-value">
+              <output id="pct-value" for="pct" class="pct-value" aria-live="polite">
+                <strong>50%</strong> <span>de notícias positivas</span>
+              </output>
+            </div>
+            <div class="composition" id="composition" hidden>
+              <div class="meter" role="img" id="meter-img" aria-label="">
+                <span class="seg seg-pos" id="seg-pos"></span>
+                <span class="seg seg-neu" id="seg-neu"></span>
+                <span class="seg seg-neg" id="seg-neg"></span>
+              </div>
+              <p class="legend" id="legend"></p>
+            </div>
+            <p class="pop-note" id="tone-note">A proporção é sempre respeitada: quando faltam notícias de um
+              lado, a lista fica mais curta em vez de ser completada com as que não pediu.</p>
+          </div>
+        </div>
+
+        <button id="refresh" class="icon-btn" type="button" aria-label="Atualizar"><span data-icon="refresh"></span></button>
+
+        <div class="pop-anchor">
+          <button type="button" id="more-btn" class="icon-btn" aria-label="Mais opções" aria-haspopup="menu"
+                  aria-expanded="false" aria-controls="more-pop"><span data-icon="more"></span></button>
+          <div id="more-pop" class="popover menu-pop" hidden>
+            <div class="pop-head">
+              <h2>Opções</h2>
+              <button type="button" class="pop-close" aria-label="Fechar"><span data-icon="x"></span></button>
+            </div>
+            <div class="menu-row">
+              <span class="menu-label" id="limit-label">Notícias por página</span>
+              <div class="seg-ctl" role="group" aria-labelledby="limit-label" id="limit">
+                <button type="button" data-value="25">25</button>
+                <button type="button" data-value="50">50</button>
+                <button type="button" data-value="100">100</button>
+              </div>
+            </div>
+            <div class="menu-row" id="layout-row" hidden>
+              <span class="menu-label" id="layout-label">Vista</span>
+              <div class="seg-ctl" role="group" aria-labelledby="layout-label" id="layout">
+                <button type="button" data-value="cards">Cartões</button>
+                <button type="button" data-value="list">Lista</button>
+              </div>
+            </div>
+            <div class="menu-row">
+              <span class="menu-label" id="theme-label">Tema</span>
+              <div class="seg-ctl" role="group" aria-labelledby="theme-label" id="theme">
+                <button type="button" data-value="auto">Auto</button>
+                <button type="button" data-value="light">Claro</button>
+                <button type="button" data-value="dark">Escuro</button>
+              </div>
+            </div>
+            <div class="menu-links">
+              <a href="#guardados"><span data-icon="bookmark"></span>Guardados</a>
+              <a href="#silenciados"><span data-icon="mute"></span>Palavras silenciadas</a>
+              <a href="#investigar"><span data-icon="compass"></span>Investigar</a>
+            </div>
+            <p class="menu-foot"><span id="updated" class="updated">—</span></p>
+          </div>
+        </div>
+      </div>
     </div>
+  </header>
+
+  <div class="view view-noticias" id="view-noticias">
+    <!-- filters scroll away with the page; the bar above stays pinned -->
+    <div class="filters">
+      <div class="bar filterbar">
+        <div class="scope" role="group" aria-label="Que notícias">
+          <button type="button" class="scope-btn" data-scope="portugal" aria-pressed="true">Portugal</button>
+          <button type="button" class="scope-btn" data-scope="world" aria-pressed="false">Mundo</button>
+          <button type="button" class="scope-btn" data-scope="independent" aria-pressed="false"
+                  title="Fumaça, Divergente, Shifter, Lisboa Para Pessoas e oRegiões">Independentes</button>
+        </div>
+
+        <nav id="topics" class="chips topics" aria-label="Temas em destaque"></nav>
+
+        <div class="filter-btns">
+          <div class="pop-anchor">
+            <button type="button" id="outlets-btn" class="chip chip-menu" aria-haspopup="dialog"
+                    aria-expanded="false" aria-controls="outlets-pop">
+              <span>Jornais</span><span class="chip-count" id="outlets-count" hidden></span><span data-icon="chevron"></span>
+            </button>
+            <div id="outlets-pop" class="popover outlets-pop" role="dialog" aria-label="Jornais" hidden>
+              <div class="pop-head">
+                <h2 id="outlets-title">Jornais</h2>
+                <button type="button" class="pop-close" aria-label="Fechar"><span data-icon="x"></span></button>
+              </div>
+              <div id="outlets-body"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p id="search-hint" class="bar search-hint" aria-live="polite" hidden></p>
+    </div>
+
+    <main class="bar">
+      <p id="message" class="message" hidden></p>
+      <ol id="feed" class="feed" aria-live="polite" aria-busy="false"></ol>
+      <p id="feed-end" class="feed-end" hidden></p>
+    </main>
+
+    <!-- research still to do on the "who is behind the news" profiles -->
+    <footer id="profiles-status" class="bar profiles-status" hidden>
+      <details>
+        <summary></summary>
+        <div class="ps-body"></div>
+      </details>
+    </footer>
   </div>
 
-  <main>
-    <p id="message" class="message" hidden></p>
-    <ol id="feed" class="feed" aria-live="polite" aria-busy="false"></ol>
-  </main>
+  <!-- views that arrive in later phases -->
+  <section class="view bar placeholder-view" id="view-resumo" hidden>
+    <h1 class="view-title">Resumo do dia</h1>
+    <p class="message">Em breve.</p>
+  </section>
+  <section class="view bar placeholder-view" id="view-guardados" hidden>
+    <h1 class="view-title">Guardados</h1>
+    <p class="message">Em breve.</p>
+  </section>
+  <section class="view bar placeholder-view" id="view-silenciados" hidden>
+    <h1 class="view-title">Palavras silenciadas</h1>
+    <p class="message">Em breve.</p>
+  </section>
 
-  <!-- Deep Dive: who owns what, findings per outlet/journalist, silences -->
-  <section id="dd" class="dd" hidden aria-label="Deep Dive">
-    <nav class="dd-tabs" role="tablist" aria-label="Deep Dive">
-      <a role="tab" class="dd-tab" href="#deep-dive/propriedade" data-tab="propriedade">Propriedade</a>
-      <a role="tab" class="dd-tab" href="#deep-dive/jornais" data-tab="jornais">Jornais</a>
-      <a role="tab" class="dd-tab" href="#deep-dive/jornalistas" data-tab="jornalistas">Jornalistas</a>
-      <a role="tab" class="dd-tab" href="#deep-dive/silencios" data-tab="silencios">Silêncios</a>
+  <!-- Investigar (Deep Dive): who owns what, findings per outlet/journalist, silences -->
+  <section id="dd" class="view dd" hidden aria-label="Investigar">
+    <nav class="dd-tabs" role="tablist" aria-label="Investigar">
+      <a role="tab" class="dd-tab" href="#investigar/propriedade" data-tab="propriedade">Propriedade</a>
+      <a role="tab" class="dd-tab" href="#investigar/jornais" data-tab="jornais">Jornais</a>
+      <a role="tab" class="dd-tab" href="#investigar/jornalistas" data-tab="jornalistas">Jornalistas</a>
+      <a role="tab" class="dd-tab" href="#investigar/silencios" data-tab="silencios">Silêncios</a>
     </nav>
 
     <div class="dd-panel" id="dd-propriedade" hidden>
-      <p class="dd-intro">Quem é dono de cada jornal e agência. Clique num jornal para ver o seu
-        Deep Dive, ou num dono para ver o que detém.</p>
+      <p class="dd-intro">Quem é dono de cada jornal e agência. Clique num jornal para o
+        investigar, ou num dono para ver o que detém.</p>
       <div class="dd-legend" id="own-legend"></div>
       <div class="dd-graph dd-graph-own"><svg id="own-svg" role="img" aria-label="Mapa de propriedade"></svg></div>
       <div class="dd-detail" id="own-detail" hidden></div>
@@ -141,13 +227,6 @@
     </div>
   </section>
 
-  <!-- research still to do on the "who is behind the news" profiles -->
-  <footer id="profiles-status" class="profiles-status" hidden>
-    <details>
-      <summary></summary>
-      <div class="ps-body"></div>
-    </details>
-  </footer>
 
   <aside id="whois" class="whois" role="dialog" aria-label="Quem está por trás desta notícia" hidden>
     <button type="button" class="whois-close" aria-label="Fechar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>

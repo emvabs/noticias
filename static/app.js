@@ -23,10 +23,13 @@ const state = {
   query: store.get("query", ""),                // free-text search
   pct: store.get("positivePct", 50),
   limit: store.get("limit", 50),
+  layout: store.get("layout", "cards"),         // "cards" or "list"
+  theme: store.get("theme", "auto"),            // "auto", "light" or "dark"
   hidden: new Set(store.get("hiddenSources", [])),
   group: store.get("group", "mainstream"),   // "independent" while the button is on
   sources: [],
   lastUpdated: null,
+  view: "noticias",
 };
 
 // ---------- helpers ----------
@@ -55,6 +58,8 @@ function hueFor(id) {
   return hash;
 }
 
+function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
+
 // ---------- line icons (24×24, stroked with the text colour) ----------
 const ICONS = {
   info: ["M12 11v5", "M12 7.5h.01", "circle:12,12,9"],
@@ -68,6 +73,15 @@ const ICONS = {
   mute: ["M11 5 6 9H3v6h3l5 4Z", "M16 9l5 6", "M21 9l-5 6"],
   x: ["M6 6l12 12", "M18 6 6 18"],
   arrow: ["M5 12h14", "M13 6l6 6-6 6"],
+  search: ["circle:11,11,7", "M16.5 16.5 21 21"],
+  refresh: ["M20 11a8 8 0 1 0-2.3 5.7", "M20 4v7h-7"],
+  more: ["circle:5,12,1", "circle:12,12,1", "circle:19,12,1"],
+  chevron: ["m6 9 6 6 6-6"],
+  check: ["m5 12.5 4.5 4.5L19 7.5"],
+  news: ["M5 5h11v14H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Z", "M16 9h3v8a2 2 0 0 1-2 2", "M8 9h5", "M8 13h5", "M8 16h3"],
+  list: ["M9 6h11", "M9 12h11", "M9 18h11", "M4 6h.01", "M4 12h.01", "M4 18h.01"],
+  bookmark: ["M6 3.5h12v17l-6-4-6 4Z"],
+  compass: ["circle:12,12,9", "m15.5 8.5-2 5-5 2 2-5Z"],
 };
 
 /** An inline SVG icon; decorative unless the caller labels it. */
@@ -92,6 +106,14 @@ function icon(name, size = 16) {
   return node;
 }
 
+/** <span data-icon="name"> placeholders in the page become line icons. */
+function hydrateIcons(root = document) {
+  for (const slot of root.querySelectorAll("[data-icon]")) {
+    slot.replaceWith(icon(slot.dataset.icon, Number(slot.dataset.size) || 18));
+  }
+}
+hydrateIcons();
+
 /** "CNN Portugal" -> "CNN", "Diário de Notícias" -> "DN", "The Guardian" -> "G". */
 function initials(name) {
   const words = (name || "").split(/\s+/).filter((w) => !/^(the|de|da|do|das|dos|para|e)$/i.test(w));
@@ -106,64 +128,148 @@ function el(tag, attrs = {}, text) {
   return node;
 }
 
-// ---------- slider ----------
+// ---------- popovers: one open at a time; a bottom sheet on phones ----------
+const popovers = (() => {
+  let open = null;                     // { btn, pop }
+  const backdrop = el("div", { className: "pop-backdrop", hidden: true });
+  document.body.append(backdrop);
+
+  function hide({ focus = false } = {}) {
+    if (!open) return;
+    const { btn, pop } = open;
+    open = null;
+    pop.hidden = true;
+    backdrop.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+    if (focus) btn.focus();
+  }
+
+  function show(btn, pop, { keyboard = false } = {}) {
+    hide();
+    open = { btn, pop };
+    pop.hidden = false;
+    backdrop.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    // opened from the keyboard: into the box, so the keys carry on from there
+    if (keyboard) pop.querySelector("input, button:not(.pop-close), a, [tabindex='0']")?.focus({ preventScroll: true });
+  }
+
+  function bind(btn, pop) {
+    // detail is 0 for a click made with Enter or Space
+    btn.addEventListener("click", (e) => (open?.pop === pop ? hide() : show(btn, pop, { keyboard: e.detail === 0 })));
+    pop.querySelector(".pop-close")?.addEventListener("click", () => hide({ focus: true }));
+  }
+
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && open) hide({ focus: true }); });
+  document.addEventListener("pointerdown", (e) => {
+    if (open && !open.pop.contains(e.target) && !open.btn.contains(e.target)) hide();
+  });
+  return { bind, hide, isOpen: (pop) => open?.pop === pop };
+})();
+
+/** A row of buttons acting as one choice ("25 | 50 | 100"). */
+function segmented(container, value, onChange) {
+  const buttons = [...container.querySelectorAll("button")];
+  const render = (v) => buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === String(v))));
+  render(value);
+  for (const b of buttons) {
+    b.addEventListener("click", () => { render(b.dataset.value); onChange(b.dataset.value); });
+  }
+}
+
+// ---------- tone: the positivity slider, in its popover ----------
 const slider = $("#pct");
 const pctValue = $("#pct-value");
-const pctActual = $("#pct-actual");
+const toneBtn = $("#tone-btn");
+const tonePop = $("#tone-pop");
+popovers.bind(toneBtn, tonePop);
 
 function renderPct() {
   slider.value = state.pct;
+  slider.style.setProperty("--fill", `${state.pct}%`);
   pctValue.querySelector("strong").textContent = `${state.pct}%`;
-  pctValue.querySelector("span").textContent = "positivas";
+  $("#tone-value").textContent = `${state.pct}%`;
+  toneBtn.setAttribute("aria-label", `Tom do feed: ${state.pct}% de notícias positivas`);
+}
+
+function setPct(value) {
+  state.pct = Math.max(0, Math.min(100, Math.round(value / 5) * 5));
+  store.set("positivePct", state.pct);
+  renderPct();
 }
 
 let debounce;
 slider.addEventListener("input", () => {
-  state.pct = Number(slider.value);
-  store.set("positivePct", state.pct);
-  renderPct();
+  setPct(Number(slider.value));
   clearTimeout(debounce);
   debounce = setTimeout(loadFeed, 150);
 });
 
-const limitSelect = $("#limit");
-limitSelect.value = String(state.limit);
-limitSelect.addEventListener("change", () => {
-  state.limit = Number(limitSelect.value);
+// ---------- options menu: page size, layout, theme ----------
+popovers.bind($("#more-btn"), $("#more-pop"));
+for (const a of document.querySelectorAll("#more-pop a")) a.addEventListener("click", () => popovers.hide());
+
+segmented($("#limit"), state.limit, (v) => {
+  state.limit = Number(v);
   store.set("limit", state.limit);
   loadFeed();
 });
 
+function applyLayout() { document.body.dataset.layout = state.layout; }
+segmented($("#layout"), state.layout, (v) => {
+  state.layout = v;
+  store.set("layout", v);
+  applyLayout();
+});
+applyLayout();
+
+function applyTheme() {
+  if (state.theme === "light" || state.theme === "dark") document.documentElement.dataset.theme = state.theme;
+  else delete document.documentElement.dataset.theme;
+}
+segmented($("#theme"), state.theme, (v) => {
+  state.theme = v;
+  store.set("theme", v);
+  applyTheme();
+});
+
 // ---------- scope switch (Portugal / Mundo) ----------
-const scopeButtons = [...document.querySelectorAll(".scope-btn")];
+const scopeButtons = [...document.querySelectorAll(".scope-btn[data-scope]")];
 
 function renderScope() {
+  // "Independentes" is Portugal's independent outlets: a selection of its own
+  const current = independentOn() ? "independent" : state.scope;
   for (const btn of scopeButtons) {
-    btn.setAttribute("aria-pressed", String(btn.dataset.scope === state.scope));
+    btn.setAttribute("aria-pressed", String(btn.dataset.scope === current));
   }
 }
 
 for (const btn of scopeButtons) {
   btn.addEventListener("click", async () => {
-    if (btn.dataset.scope === state.scope) return;
-    state.scope = btn.dataset.scope;      // the slider value is kept
-    store.set("scope", state.scope);
-    if (state.scope !== "portugal") setGroup("mainstream");   // no independents there
-    setTopic(null);                       // topics differ per scope
+    const wanted = btn.dataset.scope;
+    const current = independentOn() ? "independent" : state.scope;
+    if (wanted === current) return;
+    const scope = wanted === "independent" ? "portugal" : wanted;
+    const scopeChanged = scope !== state.scope;
+    state.scope = scope;                  // the slider value is kept
+    store.set("scope", scope);
+    setGroup(wanted === "independent" ? "independent" : "mainstream");
+    setTopic(null);                       // topics differ per scope and group
     setQuery("", { render: true });
     renderScope();
     showSkeletons();
-    await Promise.all([loadSources(), loadTopics()]);   // both belong to one scope
+    await Promise.all([loadSources(), loadTopics()]);   // both belong to one selection
     await loadFeed();                     // show what we already have, right away
     // Then fetch the feeds, unless that just happened (toggling back and forth
     // shouldn't hit every outlet again).
-    if (!state.lastUpdated || Date.now() - new Date(state.lastUpdated).getTime() > FRESH_MS) {
+    if (scopeChanged && (!state.lastUpdated
+        || Date.now() - new Date(state.lastUpdated).getTime() > FRESH_MS)) {
       await refresh();
     }
   });
 }
 
-// ---------- source filters ----------
+// ---------- outlets: the "Jornais" menu ----------
 function outletChips() {
   return state.sources.filter((s) => (s.group || "mainstream") === "mainstream");
 }
@@ -183,99 +289,102 @@ function setGroup(group) {
   store.set("group", group);
 }
 
-function renderSources() {
-  const nav = $("#sources");
-  nav.replaceChildren();
-  const enabled = outletChips().filter((s) => s.enabled);
-  const anyHidden = enabled.some((s) => state.hidden.has(s.id));
+const outletsBtn = $("#outlets-btn");
+const outletsPop = $("#outlets-pop");
+const outletsBody = $("#outlets-body");
+popovers.bind(outletsBtn, outletsPop);
 
-  // The button only makes sense for Portugal: these are all Portuguese outlets.
-  if (state.scope === "portugal") {
-    const toggle = el("button", { type: "button", className: "chip chip-group" });
-    toggle.append(el("span", { className: "dot", ariaHidden: "true" }, "◆"), "Independentes");
-    toggle.setAttribute("aria-pressed", String(independentOn()));
-    toggle.title = independentOn()
-      ? "A mostrar só jornalismo independente — clique para voltar aos generalistas"
-      : "Mostrar só Fumaça, Divergente, Shifter, Lisboa Para Pessoas e oRegiões";
-    toggle.addEventListener("click", async () => {
-      setGroup(independentOn() ? "mainstream" : "independent");
-      state.topic = null;                    // topics belong to the group
-      store.set("topic", null);
-      showSkeletons();
-      await Promise.all([loadSources(), loadTopics()]);
-      await loadFeed();
-    });
-    nav.append(toggle, el("span", { className: "chips-divider", ariaHidden: "true" }));
-  }
-
-  for (const s of outletChips()) {
-    const chip = el("button", { type: "button", className: "chip" });
-    const dot = el("span", { className: "chip-dot", ariaHidden: "true" });
-    dot.style.setProperty("--hue", hueFor(s.id));
-    chip.append(dot, s.name);
-    if (!s.enabled) {
-      chip.disabled = true;
-      chip.title = "Sem feed RSS disponível (ver sources.yaml)";
-    } else if (independentOn()) {
-      // While the button is on the individual outlets are ignored, but the
-      // selection is kept so turning it off restores exactly what was there.
-      chip.setAttribute("aria-disabled", "true");
-      chip.setAttribute("aria-pressed", "false");
-      chip.title = "Desligue “Independentes” para filtrar por jornal";
-    } else {
-      chip.setAttribute("aria-pressed", String(!state.hidden.has(s.id)));
-      chip.title = `${s.articles} notícias guardadas`;
-      if (s.errors.length) {
-        chip.append(el("span", { className: "warn", ariaHidden: "true" }, "⚠"));
-        chip.title += `\nErro na última atualização:\n${s.errors.join("\n")}`;
-      }
-      chip.addEventListener("click", () => {
-        state.hidden.has(s.id) ? state.hidden.delete(s.id) : state.hidden.add(s.id);
-        store.set("hiddenSources", [...state.hidden]);
-        renderSources();
-        loadFeed();
-      });
-    }
-    nav.append(chip);
-  }
-  renderSourcesNote();
-  if (anyHidden && !independentOn()) {
-    const all = el("button", { type: "button", className: "chip chip-all" }, "Mostrar todos");
-    all.addEventListener("click", () => {
-      state.hidden.clear();
-      store.set("hiddenSources", []);
-      renderSources();
-      loadFeed();
-    });
-    nav.append(all);
-  }
+function setHidden(ids) {
+  state.hidden = new Set(ids);
+  store.set("hiddenSources", [...state.hidden]);
+  renderSources();
+  loadFeed();
 }
 
-const sourcesNote = $("#sources-note");
+function daysSince(iso) {
+  return iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 86400000) : null;
+}
 
-function renderSourcesNote() {
+function renderSources() {
+  const enabled = outletChips().filter((s) => s.enabled);
+  const shown = enabled.filter((s) => !state.hidden.has(s.id));
+  const count = $("#outlets-count");
+  count.hidden = independentOn() || shown.length === enabled.length;
+  count.textContent = `${shown.length}/${enabled.length}`;
+  outletsBtn.classList.toggle("filtered", !count.hidden);
+  outletsBtn.classList.toggle("has-error", enabled.some((s) => s.errors.length));
+
+  outletsBody.replaceChildren();
+  if (independentOn()) renderIndependentList();
+  else renderOutletList(enabled);
+}
+
+function renderOutletList(enabled) {
+  $("#outlets-title").textContent = "Jornais";
+  const list = el("ul", { className: "outlet-list" });
+  for (const s of enabled) {
+    const li = el("li");
+    const label = el("label", { className: "outlet-row" });
+    const box = el("input", { type: "checkbox", checked: !state.hidden.has(s.id) });
+    box.addEventListener("change", () => {
+      const next = new Set(state.hidden);
+      box.checked ? next.delete(s.id) : next.add(s.id);
+      setHidden(next);
+    });
+    const dot = el("span", { className: "chip-dot", ariaHidden: "true" });
+    dot.style.setProperty("--hue", hueFor(s.id));
+    label.append(box, dot, el("span", { className: "outlet-name" }, s.name),
+      el("span", { className: "outlet-n" }, String(s.articles)));
+    if (s.errors.length) {
+      const warn = el("span", { className: "warn", title: `Erro na última atualização:\n${s.errors.join("\n")}` });
+      warn.setAttribute("aria-label", "Erro na última atualização");
+      label.append(warn);
+    }
+    // "só este": every other outlet off in one click
+    const only = el("button", { type: "button", className: "outlet-only" }, "só este");
+    only.setAttribute("aria-label", `Mostrar só ${s.name}`);
+    only.addEventListener("click", () => setHidden(enabled.filter((o) => o.id !== s.id).map((o) => o.id)));
+    li.append(label, only);
+    list.append(li);
+  }
+  const foot = el("div", { className: "pop-foot" });
+  if (state.hidden.size) {
+    const all = el("button", { type: "button", className: "link-btn" }, "Mostrar todos");
+    all.addEventListener("click", () => setHidden([]));
+    foot.append(all);
+  }
+  const off = outletChips().filter((s) => !s.enabled);
+  if (off.length) {
+    foot.append(el("p", { className: "pop-note" },
+      `Sem feed RSS: ${off.map((s) => s.name).join(", ")}.`));
+  }
+  outletsBody.append(list, foot);
+}
+
+function renderIndependentList() {
   // These outlets publish rarely, so "last piece" is the only way to notice a
   // feed that quietly stopped working.
-  const outlets = independentSources();
-  sourcesNote.replaceChildren();
-  sourcesNote.hidden = !independentOn() || !outlets.length;
-  if (sourcesNote.hidden) return;
-  sourcesNote.append(el("span", {}, "Última peça:"));
-  for (const s of outlets) {
-    const age = s.last_published
-      ? Math.floor((Date.now() - new Date(s.last_published).getTime()) / 86400000) : null;
-    const text = age === null ? "sem artigos"
-      : age === 0 ? "hoje" : age === 1 ? "ontem" : `há ${age} dias`;
-    const item = el("span", { className: age === null || age > 30 ? "stale" : "" },
-      `${s.name}: ${text}`);
-    if (s.errors.length) item.title = s.errors.join("\n");
-    sourcesNote.append(item);
+  $("#outlets-title").textContent = "Independentes";
+  const list = el("ul", { className: "outlet-list" });
+  for (const s of independentSources()) {
+    const age = daysSince(s.last_published);
+    const text = age === null ? "sem artigos" : age === 0 ? "hoje" : age === 1 ? "ontem" : `há ${age} dias`;
+    const li = el("li", { className: "outlet-row static" });
+    const dot = el("span", { className: "chip-dot", ariaHidden: "true" });
+    dot.style.setProperty("--hue", hueFor(s.id));
+    li.append(dot, el("span", { className: "outlet-name" }, s.name),
+      el("span", { className: `outlet-age${age === null || age > 30 ? " stale" : ""}` }, `última peça ${text}`));
+    if (s.errors.length) li.title = s.errors.join("\n");
+    list.append(li);
   }
+  outletsBody.append(list, el("p", { className: "pop-note" },
+    "Publicam poucas peças por mês: se uma ficar muito tempo sem nada, o feed pode ter deixado de funcionar."
+    + " Ao voltar a Portugal, volta a sua seleção de jornais."));
 }
 
 async function loadSources() {
-  // Always the whole scope: the row shows the mainstream outlets (greyed out
-  // while "Independentes" is on) and the note below lists the independents.
+  // Always the whole scope: the menu lists the mainstream outlets and, while
+  // "Independentes" is on, the independents with their last piece.
   const res = await fetch(`/api/sources?scope=${state.scope}`);
   state.sources = await res.json();
   renderSources();
@@ -327,6 +436,7 @@ async function loadTopics() {
 const searchInput = $("#search");
 const searchClear = $("#search-clear");
 const searchHint = $("#search-hint");
+const topbar = $(".topbar");
 
 function renderSearchHint(data) {
   const also = (data && data.also_searched) || [];
@@ -341,6 +451,7 @@ function setQuery(value, { render = false } = {}) {
   searchClear.hidden = !value;
   if (!value) searchHint.hidden = true;
   if (render) searchInput.value = value;
+  topbar.classList.toggle("has-query", !!value);
 }
 
 let searchDebounce;
@@ -360,8 +471,19 @@ $("#search-form").addEventListener("submit", (event) => {
 
 searchClear.addEventListener("click", () => {
   setQuery("", { render: true });
-  searchInput.focus();
   loadFeed();
+  // on phones the box closes with the query; elsewhere it keeps the focus
+  if (topbar.classList.contains("searching")) topbar.classList.remove("searching");
+  else searchInput.focus();
+});
+
+// Phones: the box takes the whole bar while it is open.
+$("#search-open").addEventListener("click", () => {
+  topbar.classList.add("searching");
+  searchInput.focus();
+});
+searchInput.addEventListener("blur", () => {
+  if (!state.query) topbar.classList.remove("searching");
 });
 
 // ---------- feed ----------
@@ -374,6 +496,7 @@ function showSkeletons(n = 6) {
   for (let i = 0; i < n; i++) feedList.append(skeletonTpl.content.firstElementChild.cloneNode(true));
 }
 const message = $("#message");
+const feedEnd = $("#feed-end");
 const tpl = $("#card-tpl");
 
 function tooltipFor(article) {
@@ -486,7 +609,7 @@ const whois = (() => {
   }
 
   function deepDiveLink(tab, id) {
-    const a = el("a", { href: `#deep-dive/${tab}/${id}`, className: "whois-dd" }, "Ver deep dive →");
+    const a = el("a", { href: `#investigar/${tab}/${id}`, className: "whois-dd" }, "Investigar →");
     a.addEventListener("click", () => close());
     return a;
   }
@@ -663,7 +786,6 @@ const whois = (() => {
 
   return { attach, close };
 })();
-
 function renderFeed(data) {
   whois.close();              // its card is about to be replaced
   feedList.replaceChildren();
@@ -720,29 +842,15 @@ function renderFeed(data) {
 
   renderComposition(data);
   renderSearchHint(data);
-
-  // The share asked for is always honoured, so the feed can be shorter than
-  // the size chosen. Say how many there were, not a percentage that matched.
-  pctActual.hidden = !data.shortfall;
-  if (data.shortfall) {
-    const kind = data.limited_by === "non_positive" ? "neutras ou negativas" : "positivas";
-    const available = data.limited_by === "non_positive"
-      ? data.available_non_positive : data.available_positive;
-    pctActual.textContent = data.count
-      ? `Só há ${available} notícias ${kind} nesta seleção — a mostrar ${data.count} de ${data.limit}`
-      : `Nenhuma notícia ${kind} nesta seleção`;
-    pctActual.title =
-      `Para manter a proporção pedida (${Math.round(data.requested_pct)}% positivas), `
-      + "a lista fica mais curta em vez de incluir notícias que não pediu.";
-  }
+  renderShortfall(data);
 
   if (!independentOn() && !activeSources().length) {
-    showMessage("Nenhum jornal selecionado.", "Escolha pelo menos um jornal acima.");
+    showMessage("Nenhum jornal selecionado.", "Escolha pelo menos um jornal no menu “Jornais”.");
   } else if (!data.articles.length) {
     if (data.limited_by) {
       const kind = data.limited_by === "non_positive" ? "neutras ou negativas" : "positivas";
       showMessage(`Nenhuma notícia ${kind} nesta seleção.`,
-        "Mova o cursor para o outro lado, ou escolha mais jornais.");
+        "Ajuste o tom, ou escolha mais jornais.", toneFix(data));
     } else if (state.query.trim()) {
       showMessage(`Nenhuma notícia com “${state.query.trim()}”.`,
         "Experimente outra palavra, ou limpe a pesquisa no ×.");
@@ -762,6 +870,47 @@ function renderFeed(data) {
   setUpdated(data.last_updated);
 }
 
+/**
+ * The nearest share that gives a full page, or null. Short of positives:
+ * round down to what they can fill; short of the rest: round up.
+ */
+function suggestedPct(data) {
+  if (!data.limit) return null;
+  const step = (x) => x / 5;
+  let pct = null;
+  if (data.limited_by === "positive") {
+    pct = 5 * Math.floor(step((100 * data.available_positive) / data.limit));
+  } else if (data.limited_by === "non_positive") {
+    pct = 5 * Math.ceil(step((100 * (data.limit - data.available_non_positive)) / data.limit));
+  }
+  return pct === null || pct === state.pct || pct < 0 || pct > 100 ? null : pct;
+}
+
+/** A button that moves the slider to the suggested share, or null. */
+function toneFix(data) {
+  const pct = suggestedPct(data);
+  if (pct === null) return null;
+  const btn = el("button", { type: "button", className: "link-btn" }, `Ajustar o tom para ${pct}%`);
+  btn.addEventListener("click", () => { setPct(pct); loadFeed(); });
+  return btn;
+}
+
+// The share asked for is always honoured, so the feed can be shorter than the
+// size chosen. Said calmly at the end of the list, not as an alarm at the top.
+function renderShortfall(data) {
+  toneBtn.querySelector(".tone-alert").hidden = !data.shortfall;
+  feedEnd.hidden = !(data.shortfall && data.count);
+  feedEnd.replaceChildren();
+  if (feedEnd.hidden) return;
+  const kind = data.limited_by === "non_positive" ? "neutras ou negativas" : "positivas";
+  const available = data.limited_by === "non_positive"
+    ? data.available_non_positive : data.available_positive;
+  feedEnd.append(`Só há ${available} notícias ${kind} nesta seleção, por isso a lista tem `
+    + `${data.count} em vez de ${data.limit}: o tom de ${Math.round(data.requested_pct)}% é respeitado. `);
+  const fix = toneFix(data);
+  if (fix) feedEnd.append(fix);
+}
+
 const composition = $("#composition");
 const meterImg = $("#meter-img");
 const legend = $("#legend");
@@ -771,9 +920,14 @@ function renderComposition(data) {
   for (const a of data.articles) counts[a.label] = (counts[a.label] || 0) + 1;
   const total = data.articles.length;
   composition.hidden = !total;
+  const pct = (n) => `${total ? (100 * n / total).toFixed(2) : 0}%`;
+  // the small bar in the button shows the same thing as the meter in the box
+  const mini = toneBtn.querySelector(".tone-mini");
+  mini.children[0].style.width = pct(counts.positive);
+  mini.children[1].style.width = pct(counts.neutral);
+  mini.children[2].style.width = pct(counts.negative);
   if (!total) return;
 
-  const pct = (n) => `${(100 * n / total).toFixed(2)}%`;
   $("#seg-pos").style.width = pct(counts.positive);
   $("#seg-neu").style.width = pct(counts.neutral);
   $("#seg-neg").style.width = pct(counts.negative);
@@ -787,17 +941,19 @@ function renderComposition(data) {
     item.append(el("span", { className: `key key-${kind}` }), el("b", {}, String(n)), ` ${word}`);
     legend.append(item);
   }
-  meterImg.setAttribute("aria-label",
-    `${total} notícias: ${parts.map(([, n, w]) => `${n} ${w}`).join(", ")}`);
+  const summary = `Nesta lista: ${parts.map(([, n, w]) => `${n} ${w}`).join(", ")}`;
+  meterImg.setAttribute("aria-label", summary);
+  toneBtn.title = summary + (data.shortfall ? ` (${data.count} de ${data.limit})` : "");
 }
 
-function showMessage(text, hint) {
+function showMessage(text, hint, action) {
   if (text) feedList.replaceChildren();
   message.hidden = !text;
   message.replaceChildren();
   if (!text) return;
   message.append(text);
   if (hint) message.append(el("span", { className: "hint" }, hint));
+  if (action) message.append(el("span", { className: "action" }, ""), action);
 }
 
 let feedRequest = 0;
@@ -827,14 +983,15 @@ async function loadFeed({ skeleton = false } = {}) {
 
 // ---------- last updated / refresh ----------
 const updatedEl = $("#updated");
+const refreshBtn = $("#refresh");
 function setUpdated(iso) {
   state.lastUpdated = iso;
-  if (!iso) { updatedEl.textContent = "A atualizar…"; updatedEl.title = ""; return; }
-  updatedEl.textContent = `Atualizado ${timeAgo(iso)}`;
-  updatedEl.title = fullDate(iso);
+  const text = iso ? `Atualizado ${timeAgo(iso)}` : "A atualizar…";
+  updatedEl.textContent = text;
+  updatedEl.title = iso ? fullDate(iso) : "";
+  refreshBtn.title = `Atualizar agora · ${text.toLowerCase()}`;
 }
 
-const refreshBtn = $("#refresh");
 async function refresh() {
   refreshBtn.disabled = true;
   refreshBtn.classList.add("spinning");
@@ -869,7 +1026,7 @@ async function poll() {
       loadProfilesStatus();
     } else {
       setUpdated(state.lastUpdated);
-      document.querySelectorAll(".card-time").forEach((t) => { t.textContent = timeAgo(t.dateTime); });
+      document.querySelectorAll(".card-time:not(.dated)").forEach((t) => { t.textContent = timeAgo(t.dateTime); });
     }
   } catch { /* server stopped; try again later */ }
 }
@@ -877,7 +1034,6 @@ async function poll() {
 // ---------- research to do: journalists without a profile, old profiles ----------
 const profilesStatus = $("#profiles-status");
 
-function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
 
 async function loadProfilesStatus() {
   let data;
@@ -924,6 +1080,48 @@ async function loadProfilesStatus() {
   body.append(how);
 }
 
+// ---------- views: #noticias, #resumo, #guardados, #silenciados, #investigar/… ----------
+const VIEWS = ["noticias", "resumo", "guardados", "silenciados", "investigar"];
+const VIEW_ELEMENT = { investigar: "dd" };
+
+function parseRoute() {
+  let hash = decodeURIComponent(location.hash.slice(1));
+  // links from before the rename keep working
+  if (hash === "deep-dive" || hash.startsWith("deep-dive/")) {
+    hash = hash.replace(/^deep-dive/, "investigar");
+    history.replaceState(null, "", `#${hash}`);
+  }
+  const parts = hash.split("/");
+  return { view: VIEWS.includes(parts[0]) ? parts[0] : "noticias", rest: parts.slice(1) };
+}
+
+function route() {
+  const { view, rest } = parseRoute();
+  const changed = view !== state.view;
+  state.view = view;
+  document.body.dataset.view = view;
+  popovers.hide();
+  whois.close();
+  for (const name of VIEWS) {
+    const node = document.getElementById(VIEW_ELEMENT[name] || `view-${name}`);
+    if (node) node.hidden = name !== view;
+  }
+  for (const a of document.querySelectorAll(".viewnav a")) {
+    if (a.dataset.view === view) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  }
+  if (view === "investigar") window.ddRoute?.(rest);
+  if (changed) window.scrollTo({ top: 0 });
+}
+window.addEventListener("hashchange", route);
+
+// the skip link moves the focus without touching the address
+$(".skip").addEventListener("click", (e) => {
+  e.preventDefault();
+  feedList.setAttribute("tabindex", "-1");
+  feedList.focus();
+});
+
 // ---------- start ----------
 // A stored "independent" makes no sense outside Portugal (the outlets are all
 // Portuguese); without this the page could load an empty, unexplained feed.
@@ -932,6 +1130,8 @@ if (state.scope !== "portugal" && independentOn()) setGroup("mainstream");
 renderPct();
 renderScope();
 setQuery(state.query, { render: true });
+// deepdive.js loads after this file: route once both are in
+document.addEventListener("DOMContentLoaded", route);
 (async () => {
   showSkeletons();
   try { await Promise.all([loadSources(), loadTopics()]); } catch { /* loadFeed will report */ }

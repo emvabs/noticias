@@ -107,49 +107,31 @@ function showTip(e, lines) {
 function hideTip() { ddTip.hidden = true; }
 
 // ==========================================================================
-// Routing: #deep-dive[/tab[/id]]
+// Routing: #investigar[/tab[/id]] (the page router calls ddRoute)
 // ==========================================================================
 const ddState = { tab: null, id: null, index: {}, silenceScope: "portugal" };
-const ddSection = $("#dd");
-const ddToggle = $("#dd-toggle");
 
-function parseHash() {
-  const parts = decodeURIComponent(location.hash.slice(1)).split("/");
-  if (parts[0] !== "deep-dive") return null;
-  const tab = DD_TABS.includes(parts[1]) ? parts[1] : "propriedade";
-  return { tab, id: parts[2] || null };
-}
-
-async function route() {
-  const r = parseHash();
-  const on = !!r;
-  document.body.classList.toggle("dd-mode", on);
-  ddSection.hidden = !on;
-  ddToggle.setAttribute("aria-pressed", String(on));
-  ddToggle.href = on ? "#" : "#deep-dive";
-  ddToggle.querySelector(".btn-text").textContent = on ? "Notícias" : "Deep Dive";
-  // on phones only the icon shows
-  ddToggle.setAttribute("aria-label", on ? "Voltar às notícias" : "Deep Dive: quem está por trás das notícias");
-  ddToggle.title = ddToggle.getAttribute("aria-label");
-  if (!on) { whois.close(); return; }
-  whois.close();
+/** Called by the page router with the parts after #investigar: [tab, id]. */
+async function ddRoute(parts) {
+  const tab = DD_TABS.includes(parts[0]) ? parts[0] : "propriedade";
+  const id = parts[1] || null;
   for (const a of document.querySelectorAll(".dd-tab")) {
-    const selected = a.dataset.tab === r.tab;
+    const selected = a.dataset.tab === tab;
     a.setAttribute("aria-selected", String(selected));
     a.classList.toggle("active", selected);
   }
-  $("#dd-propriedade").hidden = r.tab !== "propriedade";
-  $("#dd-entidade").hidden = !KIND_OF_TAB[r.tab];
-  $("#dd-silencios").hidden = r.tab !== "silencios";
-  const changedTab = r.tab !== ddState.tab;
-  ddState.tab = r.tab;
-  ddState.id = r.id;
-  if (r.tab === "propriedade" && changedTab) await showOwnership();
-  if (KIND_OF_TAB[r.tab]) await showEntityTab(KIND_OF_TAB[r.tab], r.id, changedTab);
-  if (r.tab === "silencios" && changedTab) await showSilences();
+  $("#dd-propriedade").hidden = tab !== "propriedade";
+  $("#dd-entidade").hidden = !KIND_OF_TAB[tab];
+  $("#dd-silencios").hidden = tab !== "silencios";
+  const changedTab = tab !== ddState.tab;
+  ddState.tab = tab;
+  ddState.id = id;
+  if (tab === "propriedade" && changedTab) await showOwnership();
+  if (KIND_OF_TAB[tab]) await showEntityTab(KIND_OF_TAB[tab], id, changedTab);
+  if (tab === "silencios" && changedTab) await showSilences();
   if (changedTab) window.scrollTo({ top: 0 });
 }
-window.addEventListener("hashchange", route);
+window.ddRoute = ddRoute;
 
 // ==========================================================================
 // Ownership map: owners (left) -> outlets (right)
@@ -226,12 +208,12 @@ function drawOwnership(data) {
       "data-node": o.id, tabindex: 0, transform: `translate(${X_OUTLET},${pos[`t:${o.id}`]})` });
     g.append(svg("rect", { x: 0, y: -12, width: 240, height: 24, rx: 6 }),
       svg("text", { x: 10, y: 4 }, clip(o.name, o.agency ? 24 : 34) + (o.agency ? " · agência" : "")));
-    const go = () => { location.hash = `#deep-dive/jornais/${o.id}`; };
+    const go = () => { location.hash = `#investigar/jornais/${o.id}`; };
     g.addEventListener("click", go);
     g.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
     g.addEventListener("pointerenter", (e) => {
       highlightOwn(svgEl, { outlet: o.id });
-      showTip(e, [o.name, o.type || "", o.in_app ? "Clique para o Deep Dive" : "Não está nos feeds da app"]);
+      showTip(e, [o.name, o.type || "", o.in_app ? "Clique para investigar" : "Não está nos feeds da app"]);
     });
     g.addEventListener("pointerleave", () => { highlightOwn(svgEl, null); hideTip(); });
     gNodes.append(g);
@@ -265,7 +247,7 @@ function showOwner(owner, data) {
   const ul = el("ul");
   for (const l of links) {
     const li = el("li");
-    const a = el("a", { href: `#deep-dive/jornais/${l.outlet}` }, names[l.outlet] || l.outlet);
+    const a = el("a", { href: `#investigar/jornais/${l.outlet}` }, names[l.outlet] || l.outlet);
     li.append(a, l.share ? ` — ${String(l.share).replace(".", ",")}%` : "", l.via ? ` (via ${l.via})` : "");
     if (l.source) {
       li.append(" ", el("a", { href: l.source, target: "_blank", rel: "noopener noreferrer",
@@ -311,7 +293,7 @@ function renderPicker(kind) {
   ddList.replaceChildren();
   const max = kind === "outlet" ? 40 : 60;
   for (const e of match.slice(0, max)) {
-    const a = el("a", { href: `#deep-dive/${TAB_OF_KIND[kind]}/${e.id}`,
+    const a = el("a", { href: `#investigar/${TAB_OF_KIND[kind]}/${e.id}`,
       className: e.id === ddState.id ? "active" : "" });
     a.append(el("span", { className: e.has_profile ? "dd-dot on" : "dd-dot",
       title: e.has_profile ? "Tem perfil investigado" : "Sem perfil investigado" }),
@@ -598,5 +580,3 @@ for (const b of document.querySelectorAll("[data-silence-scope]")) {
     showSilences();
   });
 }
-
-route();

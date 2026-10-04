@@ -1,6 +1,6 @@
 # Notícias: agregador com controlo de positividade
 
-This is a local website that gathers the latest news from Portuguese and international outlets. A **Portugal | Mundo** switch picks the scope, a search box and six trending topics narrow the feed, and a slider sets what share of the feed is positive news. Everything runs on your own computer: no hosting, no accounts, no paid APIs.
+This is a local website that gathers the latest news from Portuguese and international outlets. A **Portugal | Mundo | Independentes** switch picks what you read, a search box and the trending topics narrow the feed, and the **Tom** control sets what share of the feed is positive news. Everything runs on your own computer: no hosting, no accounts, no paid APIs.
 
 ## Setup (once)
 
@@ -22,7 +22,7 @@ python run.py
 
 The server restarts itself when you edit anything in `app/` (set `server.reload: false` in `config.yaml` to turn that off).
 
-Open **http://localhost:8000** (it works the same on a phone, tablet or large monitor). On startup the server fetches every feed in the background, then again every 20 minutes. The **Atualizar** button triggers a fetch right away.
+Open **http://localhost:8000** (it works the same on a phone, tablet or large monitor). On startup the server fetches every feed in the background, then again every 20 minutes. The refresh button (↻) in the top bar triggers a fetch right away; hovering it, or the **⋯** menu, says when the last one was.
 
 ## How it works
 
@@ -41,17 +41,21 @@ Open **http://localhost:8000** (it works the same on a phone, tablet or large mo
 | Page | `static/` |
 | Database | `data/news.db` (SQLite; delete it to start fresh) |
 
+### The page
+
+One row is pinned at the top: the brand, the sections (**Notícias · Resumo · Guardados · Investigar**, a tab bar at the bottom on phones), the search box, the **Tom** button, refresh and the **⋯** menu (articles per page, light/dark theme, links). Under it, a row that scrolls away holds the scope switch, the trending topics and the **Jornais** menu. Every menu is a small box under its button on a computer and a bottom sheet on a phone; Esc or a click outside closes it.
+
 ### Scope switch
 
-Every outlet has a `scope` (`portugal` or `world`) and a `language` (`pt` or `en`) in `sources.yaml`. The switch in the top bar filters by scope **before** the outlet toggles and the positivity mix, so each scope has its own outlet chips. The choice is remembered between visits, and flipping it keeps the slider where it is.
+Every outlet has a `scope` (`portugal` or `world`) and a `language` (`pt` or `en`) in `sources.yaml`. The switch filters by scope **before** the outlet menu and the positivity mix, so each scope has its own outlets. The choice is remembered between visits, and flipping it keeps the slider where it is.
 
-Switching scope shows the stored articles immediately and then fetches the feeds, the same as pressing **Atualizar** — unless a fetch happened in the last minute, so toggling back and forth doesn't hit every outlet each time.
+Switching scope shows the stored articles immediately and then fetches the feeds, the same as pressing refresh — unless a fetch happened in the last minute, so toggling back and forth doesn't hit every outlet each time.
 
 ### Independentes
 
-A button at the start of the outlet row switches the feed to five independent Portuguese outlets. It is off by default, only appears in the **Portugal** position, and its state is remembered between visits.
+The third position of the scope switch shows five independent Portuguese outlets instead of the mainstream ones. The choice is remembered between visits.
 
-While it is on, the mainstream outlet toggles are greyed out and ignored; turning it off restores exactly the selection you had. Topics are recomputed for the independent outlets alone, and the slider keeps working unchanged.
+While it is on, the outlet choices in the **Jornais** menu are ignored; going back to **Portugal** restores exactly the selection you had. Topics are recomputed for the independent outlets alone, and the slider keeps working unchanged.
 
 | Outlet | Feed | Notes |
 |---|---|---|
@@ -74,7 +78,7 @@ groups:
       min_articles: 2
 ```
 
-Because they publish rarely, a broken feed is easy to miss, so a line under the row shows when each one last published, turning red past 30 days.
+Because they publish rarely, a broken feed is easy to miss, so with **Independentes** on the **Jornais** menu lists when each one last published, in red past 30 days.
 
 Feed footers that WordPress appends ("O conteúdo … apareceu primeiro em …", "The post … appeared first on …") are stripped on ingestion: they were dominating the topics and tinting the sentiment score.
 
@@ -95,7 +99,7 @@ python -m app.topics
 
 Topics are noisy by nature. If something generic keeps showing up, add it to `config/stoplist.txt` (one word per line) and press **Atualizar**. The file already removes role words like "presidente" and "governo" — delete those lines if you would rather see them as topics.
 
-In the page, the six chips sit under the outlet filters beside the search box, labelled **Em destaque**. They are shortcuts, not a checklist: **one topic at a time**, and clicking the selected one clears it. The selection is cleared when you switch scope, because each scope has its own topics, and also when a topic drops out of the shortlist after a recompute.
+In the page, the chips sit in the filter row, labelled **Em destaque**; the row scrolls sideways when they do not fit. They are shortcuts, not a checklist: **one topic at a time**, and clicking the selected one clears it. The selection is cleared when you switch scope, because each scope has its own topics, and also when a topic drops out of the shortlist after a recompute.
 
 Topic extraction is a word-count heuristic, so it will sometimes surface something odd. The search box is there for everything the shortlist misses.
 
@@ -116,26 +120,26 @@ habitação, casas, arrendamento, rendas, housing
 
 Searching any term in a group finds all of them, and the page shows which extra terms were searched. Terms in CAPITALS are treated as acronyms; lowercase terms match the word in any case. The file is read again whenever it changes, so no restart is needed.
 
-### Slider
+### Tom (the slider)
 
-The label reads **Positivas vs Negativas**, and the track runs from red on the left to green on the right. Under it, a meter shows what the feed actually contains right now (e.g. `43 positivas · 3 neutras · 4 negativas`), so the request and the result sit side by side.
+The **Tom** button in the top bar shows the share asked for (`Tom 60%`) next to a small bar of what the list actually holds. Clicking it opens the slider, whose track runs from red (negative) to green (positive), with a meter of the current list (e.g. `43 positivas · 3 neutras · 4 negativas`), so the request and the result sit side by side.
 
 With N articles (default 50) and P %, the feed takes `round(N × P)` of the newest **positive** articles and the rest from the newest **neutral + negative** ones, then sorts everything by publish time.
 
-**The share is always honoured.** When one side runs short, the feed gets shorter instead of being padded from the other side: at 100% you see only positive news, however few there are, and the note says `Só há 45 notícias positivas nesta seleção — a mostrar 45 de 100`. Padding used to be the behaviour, and it was misleading — asking for 100% positive with 44 positive articles and a 100-article page gave a feed that was more than half negative.
+**The share is always honoured.** When one side runs short, the feed gets shorter instead of being padded from the other side: at 100% you see only positive news, however few there are, and a note at the end of the list says so (`Só há 45 notícias positivas nesta seleção, por isso a lista tem 45 em vez de 100`), with a button that moves the slider to the nearest share that fills the page. The **Tom** button carries a small amber dot while the list is shorter than asked. Padding used to be the behaviour, and it was misleading — asking for 100% positive with 44 positive articles and a 100-article page gave a feed that was more than half negative.
 
-One consequence worth knowing: if a selection has no positive articles at all, any setting above 0% shows an empty feed with a note pointing at the slider. The slider is a hard constraint, not a preference.
+One consequence worth knowing: if a selection has no positive articles at all, any setting above 0% shows an empty feed with a note and the same button. The slider is a hard constraint, not a preference.
 
 Filters apply in this order: **scope → group → outlets → topic or search → positivity mix**.
 
-When the requested and achieved percentages differ by more than 20 points, the indicator explains itself ("Poucas notícias positivas nesta seleção") instead of only showing two numbers. That happens often with the independent outlets: investigative reporting on inequality and oppression scores negative on a word list almost by construction.
+That happens often with the independent outlets: investigative reporting on inequality and oppression scores negative on a word list almost by construction.
 
 API: `GET /api/feed?scope=portugal&group=independent&positive_pct=60&limit=50&sources=publico,rtp&topics=greve&q=habitacao`
 (`scope` defaults to `portugal`, `group` to `mainstream`; `topics` matches articles carrying **any** of the slugs; `q` requires every word.)
 
 Other endpoints: `GET /api/topics?scope=portugal&group=independent`, `GET /api/sources?scope=world`, `GET /api/status`, `POST /api/refresh`.
 
-Narrow topic selections make the pools small, so the `Pedido X% · Real Y%` indicator appears far more often — that is the slider telling you there are not enough positive (or non-positive) articles left to honour the request. When nothing matches at all, the page names the filter to loosen.
+Narrow topic selections make the pools small, so the end-of-list note appears far more often — that is the slider telling you there are not enough positive (or non-positive) articles left to honour the request. When nothing matches at all, the page names the filter to loosen.
 
 ### Scoring
 
@@ -248,9 +252,9 @@ It only reads the database, so it is safe while the server runs. For each line:
 
 No restart is needed: profiles and aliases are read on every request. The thresholds live under `profiles:` in `config.yaml`.
 
-### Deep Dive
+### Investigar (Deep Dive)
 
-The **Deep Dive** button in the header (or "Ver deep dive →" in the hover box) opens a view with four tabs. The address follows the tab (`#deep-dive/jornais/publico`), so the browser's back button and bookmarks work.
+**Investigar** in the sections (or "Investigar →" in the hover box) opens a view with four tabs. The address follows the tab (`#investigar/jornais/publico`; old `#deep-dive/…` links still work), so the browser's back button and bookmarks work.
 
 - **Propriedade** — who owns each outlet and agency, as a two-column map (owners → outlets, with the share on each line). Shared owners are one node: the Portuguese State links RTP and Lusa. Click an outlet for its Deep Dive, an owner for what it holds and the sources.
 - **Jornais / Jornalistas** — pick one; you get a short summary, the **findings**, and a radial map with the selection in the centre, the findings around it and, around each finding, the articles (coloured by tone) or research sources behind it. Drag to pan, wheel or +/− to zoom, click a finding to highlight it, click an article to open it. Each finding card also lists its articles, which is the view to use on a phone.
@@ -277,11 +281,13 @@ Data findings need at least 15 articles in the last 90 days; below that the summ
 
 Checked from a 280px foldable cover screen up to a 2560px monitor, in portrait and landscape, with no horizontal scrolling anywhere.
 
-- **Phones**: the outlet and topic chips scroll away with the page while the header (brand, scope, slider) stays pinned, so the feed keeps the screen. On a 320px phone the pinned header is about 30% of the height; on a modern phone, 26%.
-- **Landscape phones and short windows** (height ≤ 560px): the header is not pinned at all and the controls tighten, because a pinned bar would take two thirds of the screen.
-- **Touch devices** (`pointer: coarse`): buttons and chips grow to at least 44px, and the "N notícias" select uses a 16px font so iOS Safari does not zoom when tapped. The sentiment badge's tooltip opens on tap as well as hover, and hover effects are limited to devices that actually have a pointer.
+- **Phones** (≤ 760px): only a 54px row stays pinned (brand, search, Tom, refresh, menu); the filters scroll away with the page, and the sections move to a tab bar at the bottom. Menus open as bottom sheets over a dimmed page.
+- **Narrow windows** (≤ 1000px): the search box becomes a button that opens the box over the bar.
+- **Landscape phones and short windows** (height ≤ 560px): the top bar is not pinned at all, because a pinned bar would take too much of the screen.
+- **Touch devices** (`pointer: coarse`): buttons and chips grow to at least 44px, and the search box uses a 16px font so iOS Safari does not zoom when tapped. The sentiment badge's tooltip opens on tap as well as hover, and hover effects are limited to devices that actually have a pointer.
 - **Notched phones**: `viewport-fit=cover` plus `env(safe-area-inset-*)` padding, so nothing hides under a notch or home indicator in landscape.
 - **Large screens** (≥ 1280px): the feed becomes two columns, and the page widens to 1400px beyond 1800px.
+- **Theme**: follows the system unless **⋯ → Tema** forces light or dark (remembered, applied before the first paint).
 - Long words and URLs wrap instead of widening the page, `prefers-reduced-motion` is respected, and there is a print stylesheet.
 
 ### Tests
