@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import config, db, deepdive, ingest, ownership, profiles, search
+from . import config, db, deepdive, ingest, ownership, profiles, search, userdata
 from . import topics as topics_module
 from .mixing import collapse, lead, mix, outlets
 
@@ -45,25 +45,35 @@ async def always_revalidate(request, call_next):
 
 DEFAULT_SCOPE = "portugal"
 DEFAULT_GROUP = "mainstream"
-TODAY_HOURS = 24      # the side column's "today"
+TODAY_HOURS = 24      # the side column's and the briefing's "today"
+BRIEFING_SIZE = 10
 
 
 def source_names():
     return {s["id"]: s["name"] for s in config.load_sources(enabled_only=False)}
 
 
-def pool(label_clause, scope, group, sources, topic_slugs, query, limit):
+def where(scope, group, sources, topic_slugs, query, muted=(), since=None):
+    """(sql, params) for the feed's filters, in order:
+    scope -> group -> outlets -> muted words -> topic/search (-> the mix, later).
+    None when the outlet list is empty: nothing can match."""
     if sources is not None and not sources:
-        return []
-    # Filter order: scope -> group -> outlets -> topic/search -> positivity mix.
-    sql = f"SELECT * FROM articles WHERE scope = ? AND {label_clause}"
+        return None
+    sql = "scope = ?"
     params = [scope]
     if group:
         sql += ' AND "group" = ?'
         params.append(group)
+    if since:
+        sql += " AND published_at >= ?"
+        params.append(since)
     if sources is not None:
         sql += f" AND source IN ({','.join('?' * len(sources))})"
         params += sources
+    mute_sql, mute_params = userdata.muted_clause(muted)
+    if mute_sql:
+        sql += f" AND NOT {mute_sql}"
+        params += mute_params
     search_sql, search_params = search.sql_clause(query)
     if search_sql:
         sql += f" AND {search_sql}"
@@ -73,10 +83,56 @@ def pool(label_clause, scope, group, sources, topic_slugs, query, limit):
         sql += (" AND EXISTS (SELECT 1 FROM json_each(articles.topics)"
                 f" WHERE json_each.value IN ({','.join('?' * len(topic_slugs))}))")
         params += topic_slugs
-    sql += " ORDER BY published_at DESC LIMIT ?"
+    return sql, params
+
+
+def pool(label_clause, scope, group, sources, topic_slugs, query, limit, muted=(), since=None):
+    found = where(scope, group, sources, topic_slugs, query, muted, since)
+    if found is None:
+        return []
+    sql, params = found
     with _conn_lock:
-        rows = conn.execute(sql, params + [limit]).fetchall()
+        rows = conn.execute(f"SELECT * FROM articles WHERE {label_clause} AND {sql}"
+                            " ORDER BY published_at DESC LIMIT ?", params + [limit]).fetchall()
     return [dict(r) for r in rows]
+
+
+def muted_count(scope, group, sources, topic_slugs, query, muted, since=None):
+    """How many articles the muted words hide from this selection."""
+    mute_sql, mute_params = userdata.muted_clause(muted)
+    found = where(scope, group, sources, topic_slugs, query, (), since)
+    if not mute_sql or found is None:
+        return 0
+    sql, params = found
+    with _conn_lock:
+        return conn.execute(f"SELECT COUNT(*) FROM articles WHERE {sql} AND {mute_sql}",
+                            params + mute_params).fetchone()[0]
+
+
+def decorate(articles):
+    """What the page needs on each article: bylines, owner mentions, names, versions."""
+    names = source_names()
+    resolver = profiles.Resolver()
+    owner_keywords = ownership.keywords_by_source()
+    for a in articles:
+        # The other outlets' versions of the story, all on the same side of the slider.
+        a["outlets"] = len(outlets(a))
+        a["also"] = [{"id": o["id"], "source": o["source"], "source_name": names.get(o["source"], o["source"]),
+                      "title": o["title"], "url": o["url"], "label": o["label"],
+                      "published_at": o["published_at"]} for o in a.get("also", [])]
+        a["authors"] = resolver.resolve_all(a["authors"])
+        # The outlet's own owner, group or sister company named in the piece.
+        a["owner_mentions"] = ownership.mentions(a["raw_text"], owner_keywords.get(a["source"], []))
+        a["source_name"] = names.get(a["source"], a["source"])
+        a["matched_words"] = json.loads(a["matched_words"] or "[]")
+        a["topics"] = json.loads(a["topics"] or "[]")
+        a.pop("title_norm", None)
+    return articles
+
+
+def importance(story):
+    """Told by more outlets first, then newer."""
+    return (len(outlets(story)), story["published_at"])
 
 
 @app.get("/")
@@ -96,35 +152,95 @@ def feed(positive_pct: float = Query(50, ge=0, le=100),
     limit = min(limit or cfg.get("default_limit", 50), cfg.get("max_limit", 200))
     source_list = [s for s in sources.split(",") if s] if sources is not None else None
     topic_list = [t for t in (topics or "").split(",") if t]
+    with _conn_lock:
+        muted = userdata.muted_terms(conn)
 
     # One item per story: several outlets' versions collapse into one, so each
     # side is read deeper than the page and then cut down to stories.
     depth = limit * 3 + 50
-    positive = collapse(pool("label = 'positive'", scope, group, source_list, topic_list, q, depth))
-    non_positive = collapse(pool("label != 'positive'", scope, group, source_list, topic_list, q, depth))
+    args = (scope, group, source_list, topic_list, q, depth, muted)
+    positive = collapse(pool("label = 'positive'", *args))
+    non_positive = collapse(pool("label != 'positive'", *args))
     articles, stats = mix(positive, non_positive, positive_pct, limit)
     top = lead(articles)
-
-    names = source_names()
-    resolver = profiles.Resolver()
-    owner_keywords = ownership.keywords_by_source()
-    for a in articles:
-        # The other outlets' versions of the story, all on the same side of the slider.
-        a["outlets"] = len(outlets(a))
-        a["also"] = [{"id": o["id"], "source": o["source"], "source_name": names.get(o["source"], o["source"]),
-                      "title": o["title"], "url": o["url"], "label": o["label"],
-                      "published_at": o["published_at"]} for o in a["also"]]
-        a["authors"] = resolver.resolve_all(a["authors"])
-        # The outlet's own owner, group or sister company named in the piece.
-        a["owner_mentions"] = ownership.mentions(a["raw_text"], owner_keywords.get(a["source"], []))
-        a["source_name"] = names.get(a["source"], a["source"])
-        a["matched_words"] = json.loads(a["matched_words"] or "[]")
-        a["topics"] = json.loads(a["topics"] or "[]")
-        a.pop("title_norm", None)
+    decorate(articles)
     # The page shows which synonyms were searched as well as the typed words.
     expanded = search.expand(q)[1:] if q else []
-    return {**stats, "lead_id": top["id"] if top else None, "scope": scope, "group": group, "topics": topic_list, "q": (q or "").strip(),
-            "also_searched": expanded, "last_updated": ingest.status["last_run"], "articles": articles}
+    return {**stats, "lead_id": top["id"] if top else None, "scope": scope, "group": group,
+            "topics": topic_list, "q": (q or "").strip(), "also_searched": expanded,
+            "muted": muted, "muted_hidden": muted_count(scope, group, source_list, topic_list, q, muted),
+            "last_updated": ingest.status["last_run"], "articles": articles}
+
+
+@app.get("/api/briefing")
+def briefing(positive_pct: float = Query(50, ge=0, le=100),
+             scope: str = DEFAULT_SCOPE,
+             group: str = DEFAULT_GROUP,
+             sources: str | None = None,
+             size: int = Query(BRIEFING_SIZE, ge=1, le=30)):
+    """The day in a few stories: the last 24 hours, one item per story, the most
+    widely told first. The slider applies exactly as in the feed."""
+    source_list = [s for s in sources.split(",") if s] if sources is not None else None
+    since = ingest.iso(ingest.utcnow() - timedelta(hours=TODAY_HOURS))
+    with _conn_lock:
+        muted = userdata.muted_terms(conn)
+    args = (scope, group, source_list, [], None, 1000, muted, since)
+    positive = sorted(collapse(pool("label = 'positive'", *args)), key=importance, reverse=True)
+    non_positive = sorted(collapse(pool("label != 'positive'", *args)), key=importance, reverse=True)
+    articles, stats = mix(positive, non_positive, positive_pct, size)
+    articles.sort(key=importance, reverse=True)
+    return {**stats, "scope": scope, "group": group, "window_hours": TODAY_HOURS,
+            "articles": decorate(articles)}
+
+
+# ---------- saved articles and muted words (shared by every device) ----------
+
+@app.get("/api/saved")
+def saved_list():
+    names = source_names()
+    with _conn_lock:
+        items = userdata.saved(conn)
+    for a in items:
+        a["source_name"] = names.get(a["source"], a["source"])
+    return items
+
+
+@app.post("/api/saved/{article_id}")
+def saved_add(article_id: int):
+    with _conn_lock:
+        found = userdata.save(conn, article_id)
+    if found is None:
+        raise HTTPException(404)
+    return {"url": found["url"]}
+
+
+@app.delete("/api/saved")
+def saved_remove(url: str):
+    with _conn_lock:
+        userdata.unsave(conn, url)
+    return {"url": url}
+
+
+@app.get("/api/muted")
+def muted_list():
+    with _conn_lock:
+        return userdata.muted_terms(conn)
+
+
+@app.post("/api/muted")
+def muted_add(term: str):
+    with _conn_lock:
+        cleaned = userdata.mute(conn, term)
+    if cleaned is None:
+        raise HTTPException(422, "Palavra vazia ou demasiado longa")
+    return {"term": cleaned}
+
+
+@app.delete("/api/muted")
+def muted_remove(term: str):
+    with _conn_lock:
+        userdata.unmute(conn, term)
+    return {"term": term}
 
 
 @app.get("/api/sources")
@@ -216,6 +332,15 @@ def deepdive_entity(kind: str, ident: str):
     if not result["articles"] and not result["has_profile"]:
         raise HTTPException(404)
     return result
+
+
+@app.get("/api/trends")
+def trends(kind: str = Query(..., pattern="^(outlet|journalist|scope)$"), id: str = Query(...)):
+    """Weekly tone of an outlet, a journalist or a whole scope, from the archive."""
+    if not profiles.SLUG_RE.match(id):
+        raise HTTPException(404)
+    with _conn_lock:
+        return deepdive.tone_trend(conn, kind, id)
 
 
 @app.get("/api/ownership")

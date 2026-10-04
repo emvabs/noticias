@@ -220,3 +220,29 @@ def test_api_today_counts_the_last_day_and_names_the_silence(conn, monkeypatch):
     assert data["silence"]["outlet"] == "cnn"
     independent = TestClient(main.app).get("/api/today?scope=portugal&group=independent").json()
     assert independent["silence"] is None and independent["total"] == 0
+
+
+def test_tone_trend_has_gaps_where_data_is_thin(conn):
+    from datetime import timedelta
+    now = ingest.utcnow()
+    n = 0
+    for week, count in ((0, 6), (3, 2)):          # this week: 6 articles; three weeks ago: 2
+        for i in range(count):
+            n += 1
+            add(conn, n, "publico", f"Peça {week} {i}", label="negative" if i < 3 else "positive")
+            stamp = ingest.iso(now - timedelta(days=7 * week + 1))
+            conn.execute("UPDATE articles SET published_at = ? WHERE url = ?", (stamp, f"https://x/{n}"))
+    archive.sync(conn)
+    t = deepdive.tone_trend(conn, "outlet", "publico", weeks=6, min_articles=5, now=now)
+    last = t["points"][-1]
+    assert last["articles"] == 6 and last["negative_pct"] == 50 and last["positive_pct"] == 50
+    assert t["points"][-4]["articles"] == 2 and t["points"][-4]["positive_pct"] is None
+    assert t["points"][0]["articles"] == 0 and t["points"][0]["negative_pct"] is None
+    assert deepdive.tone_trend(conn, "scope", "portugal", weeks=6, min_articles=5, now=now)["points"][-1]["articles"] == 6
+
+
+def test_api_trends(client):
+    data = client.get("/api/trends?kind=outlet&id=publico").json()
+    assert data["weeks"] == len(data["points"]) == 12
+    assert client.get("/api/trends?kind=nada&id=publico").status_code == 422
+    assert client.get("/api/trends?kind=outlet&id=..%2Fx").status_code == 404

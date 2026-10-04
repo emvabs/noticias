@@ -157,6 +157,7 @@
         <span id="news-count"></span>
         <button type="button" id="news-only" class="link-btn" aria-pressed="false">Ver só as novas</button>
       </div>
+      <p id="muted-note" class="muted-note" hidden></p>
       <p id="message" class="message" hidden></p>
       <ol id="feed" class="feed" aria-live="polite" aria-busy="false"></ol>
       <p id="feed-end" class="feed-end" hidden></p>
@@ -175,18 +176,39 @@
     </footer>
   </div>
 
-  <!-- views that arrive in later phases -->
-  <section class="view bar placeholder-view" id="view-resumo" hidden>
+  <!-- the day in a few stories -->
+  <section class="view bar view-page" id="view-resumo" hidden>
     <h1 class="view-title">Resumo do dia</h1>
-    <p class="message">Em breve.</p>
+    <p class="view-sub" id="brief-sub"></p>
+    <ol class="feed brief" id="brief" aria-live="polite"></ol>
+    <p class="message" id="brief-message" hidden></p>
+    <p class="feed-end" id="brief-end" hidden></p>
   </section>
-  <section class="view bar placeholder-view" id="view-guardados" hidden>
+
+  <!-- saved for later: kept by the server, so every device sees the same list -->
+  <section class="view bar view-page" id="view-guardados" hidden>
     <h1 class="view-title">Guardados</h1>
-    <p class="message">Em breve.</p>
+    <p class="view-sub">Uma cópia de cada notícia fica na base de dados da app: aparece em todos os seus
+      dispositivos e não desaparece quando as notícias antigas são apagadas.</p>
+    <ol class="saved-list" id="saved-list"></ol>
+    <p class="message" id="saved-message" hidden></p>
   </section>
-  <section class="view bar placeholder-view" id="view-silenciados" hidden>
+
+  <!-- muted words: articles that mention them leave the feed and the briefing -->
+  <section class="view bar view-page" id="view-silenciados" hidden>
     <h1 class="view-title">Palavras silenciadas</h1>
-    <p class="message">Em breve.</p>
+    <p class="view-sub">As notícias com estas palavras no título ou no resumo deixam de aparecer no feed e no
+      resumo — antes do cursor de tom, que continua a ser respeitado no que fica. Funciona como a pesquisa:
+      palavras inteiras, os sinónimos de <code>config/synonyms.txt</code> e siglas em maiúsculas (“IA”).</p>
+    <form class="mute-form" id="mute-form">
+      <input id="mute-input" type="text" autocomplete="off" maxlength="60" placeholder="Palavra ou nome, ex.: futebol"
+             aria-label="Palavra a silenciar">
+      <button type="submit" class="btn-primary">Silenciar</button>
+    </form>
+    <p class="mute-error" id="mute-error" role="alert" hidden></p>
+    <ul class="mute-list" id="mute-list"></ul>
+    <h2 class="section-label">Temas em destaque agora</h2>
+    <div class="mute-topics" id="mute-topics"></div>
   </section>
 
   <!-- Investigar (Deep Dive): who owns what, findings per outlet/journalist, silences -->
@@ -285,6 +307,7 @@
           <span class="tip" role="tooltip"></span>
         </span>
         <span class="card-tools">
+          <button type="button" class="save-btn" aria-pressed="false" aria-label="Guardar para depois"><span data-icon="bookmark" data-size="16"></span></button>
           <button type="button" class="whois-btn" data-whois="outlet" aria-label="Quem está por trás desta notícia"
                   aria-haspopup="dialog" aria-expanded="false">i</button>
           <!-- tone: a dot; the words that decided it in the tooltip -->

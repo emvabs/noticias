@@ -90,8 +90,9 @@ def migrate(conn):
     conn.commit()
     # The archive is filled from the articles already stored (first start after
     # the upgrade) and kept in step on every fetch; see app/archive.py.
-    from . import archive                 # late: archive -> ownership -> profiles -> config
+    from . import archive, userdata       # late: archive -> ownership -> profiles -> config
     conn.executescript(archive.SCHEMA)
+    conn.executescript(userdata.SCHEMA)
     if not conn.execute("SELECT 1 FROM article_archive LIMIT 1").fetchone():
         archive.sync(conn)   # only the first time: every fetch keeps it in step afterwards
 

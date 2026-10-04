@@ -30,6 +30,7 @@ const state = {
   lastUpdated: null,
   lastData: null,                               // the last /api/feed answer
   today: null,                                  // the last /api/today answer
+  trend: null,                                  // the scope's weekly tone
   newCount: 0,
   view: "noticias",
 };
@@ -204,7 +205,7 @@ let debounce;
 slider.addEventListener("input", () => {
   setPct(Number(slider.value));
   clearTimeout(debounce);
-  debounce = setTimeout(loadFeed, 150);
+  debounce = setTimeout(reloadView, 150);
 });
 
 // ---------- options menu: page size, layout, theme ----------
@@ -408,7 +409,7 @@ function renderTopics() {
       "sem temas ainda — calculados a partir das últimas 48 horas"));
     return;
   }
-  for (const t of state.topics) {
+  for (const t of state.topics.filter((topic) => !isMutedLabel(topic.label))) {
     const chip = el("button", { type: "button", className: "topic-chip" }, t.label);
     chip.setAttribute("aria-pressed", String(state.topic === t.slug));
     chip.append(el("span", { className: "count" }, String(t.count)));
@@ -875,6 +876,11 @@ function buildCard(a, group) {
   tone.setAttribute("aria-label", `Tom: ${(LABELS[a.label] || a.label).toLowerCase()}. `
     + `Palavras: ${a.matched_words.map((m) => m.word).join(", ") || "nenhuma"}`);
 
+  const save = card.querySelector(".save-btn");
+  save.dataset.url = a.url;
+  setSaveBtn(save, saved.urls.has(a.url));
+  save.addEventListener("click", () => toggleSave(a, save));
+
   const link = card.querySelector(".card-title a");
   link.href = a.url;
   link.textContent = a.title;
@@ -1012,9 +1018,13 @@ newsOnly.addEventListener("click", () => showOnlyNew(!seen.onlyNew));
 async function loadToday() {
   const params = new URLSearchParams({ scope: state.scope, group: state.group });
   try {
-    const res = await fetch(`/api/today?${params}`);
-    state.today = res.ok ? await res.json() : null;
-  } catch { state.today = null; }
+    const [today, trend] = await Promise.all([
+      fetch(`/api/today?${params}`),
+      independentOn() ? null : fetch(`/api/trends?kind=scope&id=${state.scope}`),
+    ]);
+    state.today = today.ok ? await today.json() : null;
+    state.trend = trend?.ok ? await trend.json() : null;
+  } catch { state.today = null; state.trend = null; }
   renderNow();
 }
 
@@ -1060,6 +1070,12 @@ function nowContent({ links = true } = {}) {
     meter.setAttribute("aria-label", `${t.total} notícias: ${parts.map(([, n, w]) => `${n} ${w}`).join(", ")}`);
     sec.append(meter, legendLine,
       el("p", { className: "now-note" }, "Todas as notícias do dia nesta seleção, antes do cursor de tom."));
+    frag.append(sec);
+  }
+
+  if (state.trend) {
+    const sec = nowSection(`Tom por semana · ${where}`);
+    sec.append(sparkline(state.trend, { caption: `Tom por semana, ${where}` }));
     frag.append(sec);
   }
 
@@ -1111,6 +1127,7 @@ function renderFeed(data) {
   renderComposition(data);
   renderSearchHint(data);
   renderShortfall(data);
+  renderMutedNote(data);
 
   if (!independentOn() && !activeSources().length) {
     showMessage("Nenhum jornal selecionado.", "Escolha pelo menos um jornal no menu “Jornais”.");
@@ -1159,7 +1176,7 @@ function toneFix(data) {
   const pct = suggestedPct(data);
   if (pct === null) return null;
   const btn = el("button", { type: "button", className: "link-btn" }, `Ajustar o tom para ${pct}%`);
-  btn.addEventListener("click", () => { setPct(pct); loadFeed(); });
+  btn.addEventListener("click", () => { setPct(pct); reloadView(); });
   return btn;
 }
 
@@ -1224,16 +1241,22 @@ function showMessage(text, hint, action) {
   if (action) message.append(el("span", { className: "action" }, ""), action);
 }
 
-let feedRequest = 0;
-async function loadFeed({ skeleton = false } = {}) {
-  const id = ++feedRequest;
-  if (skeleton) showSkeletons();
-  const params = new URLSearchParams({ positive_pct: state.pct, limit: state.limit,
-                                       scope: state.scope, group: state.group });
+/** Tone, scope, group and outlets: what the feed and the briefing share. */
+function selectionParams() {
+  const params = new URLSearchParams({ positive_pct: state.pct, scope: state.scope, group: state.group });
   // While "Independentes" is on the outlet toggles are ignored entirely.
   if (state.sources.length && !independentOn()) {
     params.set("sources", activeSources().join(","));
   }
+  return params;
+}
+
+let feedRequest = 0;
+async function loadFeed({ skeleton = false } = {}) {
+  const id = ++feedRequest;
+  if (skeleton) showSkeletons();
+  const params = selectionParams();
+  params.set("limit", state.limit);
   if (state.topic) params.set("topics", state.topic);
   if (state.query.trim()) params.set("q", state.query.trim());
   try {
@@ -1348,6 +1371,292 @@ async function loadProfilesStatus() {
   body.append(how);
 }
 
+// ---------- saved for later (in SQLite: every device sees the same list) ----------
+const saved = { urls: new Set(), items: [] };
+
+async function loadSaved() {
+  try { saved.items = await (await fetch("/api/saved")).json(); } catch { saved.items = []; }
+  saved.urls = new Set(saved.items.map((a) => a.url));
+  for (const b of document.querySelectorAll(".save-btn[data-url]")) setSaveBtn(b, saved.urls.has(b.dataset.url));
+  if (state.view === "guardados") renderSaved();
+}
+
+function setSaveBtn(btn, on) {
+  btn.setAttribute("aria-pressed", String(on));
+  const label = on ? "Retirar dos guardados" : "Guardar para depois";
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+
+async function toggleSave(article, btn) {
+  const on = saved.urls.has(article.url);
+  setSaveBtn(btn, !on);                  // answer at once; the list below confirms
+  try {
+    const res = on
+      ? await fetch(`/api/saved?url=${encodeURIComponent(article.url)}`, { method: "DELETE" })
+      : await fetch(`/api/saved/${article.id}`, { method: "POST" });
+    if (!res.ok) throw new Error(res.statusText);
+  } catch { /* the reload below puts the button back as it was */ }
+  await loadSaved();
+}
+
+function renderSaved() {
+  const list = $("#saved-list");
+  list.replaceChildren();
+  const msg = $("#saved-message");
+  msg.hidden = !!saved.items.length;
+  if (!saved.items.length) {
+    msg.replaceChildren("Ainda não guardou nenhuma notícia.",
+      el("span", { className: "hint" }, "Use o marcador em cada notícia para a guardar aqui."));
+    return;
+  }
+  for (const a of saved.items) {
+    const li = el("li", { className: "saved-item" });
+    const meta = el("p", { className: "saved-meta" });
+    const dot = el("span", { className: `also-dot ${a.label || "neutral"}`, role: "img" });
+    dot.setAttribute("aria-label", `Tom: ${(LABELS[a.label] || "neutra").toLowerCase()}`);
+    meta.append(dot, el("b", {}, a.source_name), ` · ${dayMonth(a.published_at)} · guardada ${timeAgo(a.saved_at)}`);
+    const title = el("h2", { className: "saved-title" });
+    const link = el("a", { href: a.url, target: "_blank", rel: "noopener noreferrer" }, a.title);
+    link.addEventListener("click", () => read.add(a.url));
+    title.append(link);
+    const remove = el("button", { type: "button", className: "link-btn saved-remove" }, "Retirar");
+    remove.setAttribute("aria-label", `Retirar “${a.title}” dos guardados`);
+    remove.addEventListener("click", async () => {
+      await fetch(`/api/saved?url=${encodeURIComponent(a.url)}`, { method: "DELETE" });
+      loadSaved();
+    });
+    li.append(meta, title);
+    if (a.summary) li.append(el("p", { className: "saved-summary" }, a.summary));
+    li.append(remove);
+    list.append(li);
+  }
+}
+
+// ---------- muted words (in SQLite too) ----------
+const muted = { terms: [] };
+const fold = (text) => (text || "").toLowerCase().normalize("NFD").replace(/\p{M}/gu, "").trim();
+const isMutedLabel = (label) => muted.terms.some((t) => fold(t) === fold(label));
+
+async function loadMuted() {
+  try { muted.terms = await (await fetch("/api/muted")).json(); } catch { muted.terms = []; }
+  renderTopics();
+  if (state.view === "silenciados") renderMuted();
+}
+
+async function addMuted(term) {
+  const error = $("#mute-error");
+  error.hidden = true;
+  const res = await fetch(`/api/muted?term=${encodeURIComponent(term)}`, { method: "POST" });
+  if (!res.ok) {
+    error.textContent = "Escreva uma palavra ou um nome (até 60 caracteres).";
+    error.hidden = false;
+    return false;
+  }
+  await loadMuted();
+  loadFeed();
+  return true;
+}
+
+async function removeMuted(term) {
+  await fetch(`/api/muted?term=${encodeURIComponent(term)}`, { method: "DELETE" });
+  await loadMuted();
+  loadFeed();
+}
+
+function renderMuted() {
+  const list = $("#mute-list");
+  list.replaceChildren();
+  if (!muted.terms.length) list.append(el("li", { className: "mute-empty" }, "Nenhuma palavra silenciada."));
+  for (const term of muted.terms) {
+    const li = el("li");
+    const remove = el("button", { type: "button", className: "mute-remove" });
+    remove.setAttribute("aria-label", `Deixar de silenciar “${term}”`);
+    remove.append(icon("x", 14));
+    remove.addEventListener("click", () => removeMuted(term));
+    li.append(el("span", {}, term), remove);
+    list.append(li);
+  }
+  // the trending topics, one click from being muted
+  const box = $("#mute-topics");
+  box.replaceChildren();
+  const open = state.topics.filter((t) => !isMutedLabel(t.label));
+  if (!open.length) box.append(el("p", { className: "mute-empty" }, "Sem temas para silenciar."));
+  for (const t of open) {
+    const b = el("button", { type: "button", className: "topic-chip" });
+    b.append(icon("mute", 14), ` ${t.label}`);
+    b.setAttribute("aria-label", `Silenciar “${t.label}”`);
+    b.addEventListener("click", () => addMuted(t.label));
+    box.append(b);
+  }
+}
+
+$("#mute-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = $("#mute-input");
+  if (await addMuted(input.value)) input.value = "";
+});
+
+function renderMutedNote(data) {
+  const note = $("#muted-note");
+  note.hidden = !data.muted_hidden;
+  if (note.hidden) return;
+  note.replaceChildren(`${plural(data.muted_hidden, "notícia oculta", "notícias ocultas")} por palavras silenciadas · `,
+    el("a", { href: "#silenciados" }, "gerir"));
+}
+
+// ---------- the day in a few stories ----------
+const briefList = $("#brief");
+
+async function loadBriefing() {
+  const params = selectionParams();
+  briefList.replaceChildren();
+  try {
+    const res = await fetch(`/api/briefing?${params}`);
+    if (!res.ok) throw new Error(res.statusText);
+    renderBriefing(await res.json());
+  } catch (err) {
+    const msg = $("#brief-message");
+    msg.hidden = false;
+    msg.textContent = `Não foi possível carregar o resumo (${err.message}).`;
+  }
+}
+
+function renderBriefing(data) {
+  const where = independentOn() ? "Independentes" : state.scope === "world" ? "Mundo" : "Portugal";
+  $("#brief-sub").textContent = `As histórias das últimas ${data.window_hours} horas contadas por mais jornais, `
+    + `uma de cada · ${where} · tom de ${Math.round(data.requested_pct)}% positivas`;
+  briefList.replaceChildren();
+  const now = new Date();
+  for (const a of data.articles) briefList.append(buildCard(a, groupLabel(a.published_at, now)));
+  renderComposition(data);
+  const msg = $("#brief-message");
+  msg.hidden = !!data.articles.length;
+  if (!data.articles.length) {
+    msg.replaceChildren(data.limited_by ? "Nenhuma história deste tom nas últimas 24 horas."
+      : "Ainda não há notícias das últimas 24 horas.");
+    const fix = toneFix(data);
+    if (fix) msg.append(el("span", { className: "action" }), fix);
+  }
+  const end = $("#brief-end");
+  end.hidden = !(data.shortfall && data.count);
+  end.replaceChildren();
+  if (!end.hidden) {
+    end.append(`Só ${data.count === 1 ? "há 1 história" : `há ${data.count} histórias`} com este tom `
+      + `nas últimas ${data.window_hours} horas. `);
+    const fix = toneFix(data);
+    if (fix) end.append(fix);
+  }
+}
+
+/** Reload what the current view shows (the slider applies to both). */
+function reloadView() {
+  if (state.view === "resumo") loadBriefing();
+  else loadFeed();
+}
+
+// ---------- sparklines: tone per week ----------
+const SVG = "http://www.w3.org/2000/svg";
+function svgNode(tag, attrs = {}, text) {
+  const node = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+const chartTip = el("div", { className: "chart-tip", hidden: true, role: "status" });
+document.body.append(chartTip);
+
+function weekLabel(start) {
+  return new Date(`${start}T12:00`).toLocaleDateString("pt-PT", { day: "numeric", month: "short" });
+}
+
+/**
+ * Positive and negative shares per week on one 0–100% axis. Green and red sit
+ * close for red-green colour blindness, so the negative line is dashed and both
+ * carry a direct label; weeks with too few articles are gaps, not points.
+ */
+function sparkline(trend, { width = 280, height = 72, caption = "" } = {}) {
+  const pts = trend.points;
+  const fig = el("figure", { className: "spark" });
+  // two weeks at least: one point is a number, not a trend
+  if (pts.filter((p) => p.positive_pct !== null).length < 2) {
+    fig.append(el("p", { className: "now-note" },
+      `Ainda poucas notícias por semana para uma tendência (mínimo ${trend.min_articles} por semana).`));
+    return fig;
+  }
+  const pad = { l: 4, r: 92, t: 8, b: 8 };
+  const n = pts.length;
+  const x = (i) => pad.l + (i * (width - pad.l - pad.r)) / (n - 1);
+  const y = (v) => pad.t + ((100 - v) * (height - pad.t - pad.b)) / 100;
+  const chart = svgNode("svg", { viewBox: `0 0 ${width} ${height}`, class: "spark-svg", role: "img" });
+  chart.append(svgNode("line", { x1: pad.l, x2: width - pad.r, y1: y(0), y2: y(0), class: "spark-base" }),
+    svgNode("line", { x1: pad.l, x2: width - pad.r, y1: y(50), y2: y(50), class: "spark-grid" }));
+  const series = [["positive_pct", "pos", "positivas"], ["negative_pct", "neg", "negativas"]];
+  const ends = [];
+  for (const [key, cls, word] of series) {
+    let d = "";
+    let pen = false;
+    pts.forEach((p, i) => {
+      if (p[key] === null) { pen = false; return; }
+      d += `${pen ? "L" : "M"}${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`;
+      pen = true;
+    });
+    chart.append(svgNode("path", { d, class: `spark-line ${cls}` }));
+    const last = pts.map((p, i) => [p[key], i]).filter(([v]) => v !== null).pop();
+    chart.append(svgNode("circle", { cx: x(last[1]), cy: y(last[0]), r: 3.5, class: `spark-dot ${cls}` }));
+    ends.push({ v: last[0], i: last[1], word, cls });
+  }
+  // direct labels at the right, nudged apart when the two values are close
+  ends.sort((a, b) => b.v - a.v);
+  let prev = -Infinity;
+  for (const e of ends) {
+    const ly = Math.max(y(e.v) + 4, prev + 12);
+    prev = ly;
+    chart.append(svgNode("text", { x: width - pad.r + 8, y: ly, class: "spark-label" }, `${e.v}% ${e.word}`));
+  }
+  const cursor = svgNode("line", { y1: pad.t, y2: height - pad.b, class: "spark-cursor", visibility: "hidden" });
+  chart.append(cursor);
+  const hide = () => { chartTip.hidden = true; cursor.setAttribute("visibility", "hidden"); };
+  chart.addEventListener("pointermove", (e) => {
+    const r = chart.getBoundingClientRect();
+    const sx = ((e.clientX - r.left) / r.width) * width;
+    const i = Math.max(0, Math.min(n - 1, Math.round(((sx - pad.l) / (width - pad.l - pad.r)) * (n - 1))));
+    const p = pts[i];
+    cursor.setAttribute("x1", x(i));
+    cursor.setAttribute("x2", x(i));
+    cursor.setAttribute("visibility", "visible");
+    chartTip.replaceChildren(el("strong", {}, `Semana de ${weekLabel(p.start)}`),
+      el("div", {}, p.positive_pct === null
+        ? `${plural(p.articles, "notícia", "notícias")}: poucas para uma percentagem`
+        : `${p.positive_pct}% positivas · ${p.negative_pct}% negativas · ${plural(p.articles, "notícia", "notícias")}`));
+    chartTip.hidden = false;
+    chartTip.style.left = `${Math.min(e.clientX + 12, window.innerWidth - chartTip.offsetWidth - 8) + window.scrollX}px`;
+    chartTip.style.top = `${e.clientY + 14 + window.scrollY}px`;
+  });
+  chart.addEventListener("pointerleave", hide);
+  const shown = pts.filter((p) => p.positive_pct !== null);
+  chart.setAttribute("aria-label", `${caption || "Tom por semana"}: de ${shown[0].positive_pct}% para `
+    + `${shown[shown.length - 1].positive_pct}% positivas, e de ${shown[0].negative_pct}% para `
+    + `${shown[shown.length - 1].negative_pct}% negativas`);
+  const legendLine = el("figcaption", { className: "spark-legend" });
+  legendLine.append(el("span", { className: "k pos" }, "positivas"), el("span", { className: "k neg" }, "negativas"),
+    ` · por semana, últimas ${n}`);
+  // the numbers, for screen readers and anyone who wants them
+  const table = el("table", { className: "sr-only" });
+  const head = el("tr");
+  head.append(el("th", {}, "Semana"), el("th", {}, "Positivas"), el("th", {}, "Negativas"), el("th", {}, "Notícias"));
+  table.append(head);
+  for (const p of pts) {
+    const tr = el("tr");
+    tr.append(el("td", {}, weekLabel(p.start)), el("td", {}, p.positive_pct === null ? "—" : `${p.positive_pct}%`),
+      el("td", {}, p.negative_pct === null ? "—" : `${p.negative_pct}%`), el("td", {}, String(p.articles)));
+    table.append(tr);
+  }
+  fig.append(chart, legendLine, table);
+  return fig;
+}
+
 // ---------- views: #noticias, #resumo, #guardados, #silenciados, #investigar/… ----------
 const VIEWS = ["noticias", "resumo", "guardados", "silenciados", "investigar"];
 const VIEW_ELEMENT = { investigar: "dd" };
@@ -1379,6 +1688,10 @@ function route() {
     else a.removeAttribute("aria-current");
   }
   if (view === "investigar") window.ddRoute?.(rest);
+  if (view === "resumo") loadBriefing();
+  if (view === "guardados") loadSaved();
+  if (view === "silenciados") loadMuted();
+  if (view === "noticias" && changed && state.lastData) renderComposition(state.lastData);
   if (changed) window.scrollTo({ top: 0 });
 }
 window.addEventListener("hashchange", route);
@@ -1402,7 +1715,7 @@ setQuery(state.query, { render: true });
 document.addEventListener("DOMContentLoaded", route);
 (async () => {
   showSkeletons();
-  try { await Promise.all([loadSources(), loadTopics()]); } catch { /* loadFeed will report */ }
+  try { await Promise.all([loadSources(), loadTopics(), loadSaved(), loadMuted()]); } catch { /* loadFeed will report */ }
   await loadFeed();
   loadProfilesStatus();
   setInterval(poll, 15_000);

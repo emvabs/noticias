@@ -42,7 +42,8 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 | Owners, owner keywords, ownership graph | `app/ownership.py` |
 | Never-deleted article archive | `app/archive.py` |
 | Deep Dive findings and silences | `app/deepdive.py`, `static/deepdive.js` |
-| Slider mixing | `app/mixing.py` |
+| Slider mixing, one item per story | `app/mixing.py` |
+| Saved articles, muted words | `app/userdata.py` |
 | API, scheduler, static files | `app/main.py` |
 | Schema and migrations | `app/db.py` |
 | Page | `static/` |
@@ -65,6 +66,12 @@ fix wrong labels or noisy topics — prefer them over changing code.
   Clusters need cosine ≥ `min_similarity` *and* two shared terms; groups
   merge only while average linkage holds (no chaining). Tune `clusters:` in
   `config.yaml` with `python -m app.clusters`, not the code.
+- **Muted words are a filter, applied before the mix** (`where()` in
+  `app/main.py`), with the search box's matching. Saved articles are copies,
+  so retention never deletes them. Both live in SQLite (shared by devices).
+- **Trends show gaps, not guesses**: a week under 5 articles is None, a
+  sparkline needs two real weeks. Green/red fail colour-blind separation
+  (ΔE 6), so the negative line is dashed and both are labelled directly.
 - **Word lists beat code changes.** Two lexicons (SentiLex-PT02 for Portuguese,
   VADER for English) plus custom lists that override them, plus co-occurrence
   rules in `lexicon/rules_*.txt` for headlines where single words mislead

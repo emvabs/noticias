@@ -38,6 +38,7 @@ Open **http://localhost:8000** (it works the same on a phone, tablet or large mo
 | Combination rules (editable) | `lexicon/rules_pt.txt`, `lexicon/rules_en.txt` |
 | Search matching and synonyms | `app/search.py`, `config/synonyms.txt` |
 | Slider mixing logic | `app/mixing.py` |
+| Saved articles, muted words | `app/userdata.py` |
 | API + scheduler | `app/main.py` |
 | Page | `static/` |
 | Database | `data/news.db` (SQLite; delete it to start fresh) |
@@ -55,6 +56,18 @@ One row is pinned at the top: the brand, the sections (**Notícias · Resumo · 
 - **Already read**: headlines you opened are dimmed.
 
 New and read are remembered in this browser only (`localStorage`), per device; nothing is sent to the server.
+
+### Resumo, Guardados, Palavras silenciadas
+
+- **Resumo** — the day in a few stories: the last 24 hours, one item per story, the ones told by the most outlets first (10 by default). The **Tom** slider applies exactly as in the feed, including the hard rule: at 100% positive the briefing only lists positive stories, however few, and says so. API: `GET /api/briefing?scope=portugal&positive_pct=50`.
+- **Guardados** — the bookmark on each card saves the article. The list is kept in the app's database (table `saved`), not the browser, so a story saved on the phone shows on the computer, and it keeps a copy (title, summary, outlet, link, date) so it survives the 14-day cleanup. API: `GET /api/saved`, `POST /api/saved/{article_id}`, `DELETE /api/saved?url=…`.
+- **Palavras silenciadas** (⋯ menu) — articles whose headline or summary contains a muted word disappear from the feed and the briefing. Matching is the search box's (whole words, synonyms from `config/synonyms.txt`, capitals for acronyms), and it is applied **before** the slider, so the share is honoured on what is left. The feed says how many articles were hidden, with a link to the list; a trending topic can be muted in one click from there, and muted topics leave the **Em destaque** row. API: `GET/POST/DELETE /api/muted?term=…`.
+
+Filters apply in this order: **scope → group → outlets → muted words → topic or search → positivity mix**.
+
+### Tom por semana
+
+Small line charts show the weekly share of positive and negative articles over the last 12 weeks, from the archive: for the current scope in the *Agora* column, and for each outlet or journalist in Investigar. A week with fewer than 5 articles is a gap, not a point, and a chart needs at least two such weeks. The negative line is dashed and both lines are labelled at their ends, because green and red are hard to tell apart for red-green colour blindness; hovering shows each week's numbers, and screen readers get a table. API: `GET /api/trends?kind=outlet|journalist|scope&id=…`.
 
 ### Agora (the side column)
 
@@ -165,8 +178,6 @@ With N articles (default 50) and P %, the feed takes `round(N × P)` of the newe
 **The share is always honoured.** When one side runs short, the feed gets shorter instead of being padded from the other side: at 100% you see only positive news, however few there are, and a note at the end of the list says so (`Só há 45 notícias positivas nesta seleção, por isso a lista tem 45 em vez de 100`), with a button that moves the slider to the nearest share that fills the page. The **Tom** button carries a small amber dot while the list is shorter than asked. Padding used to be the behaviour, and it was misleading — asking for 100% positive with 44 positive articles and a 100-article page gave a feed that was more than half negative.
 
 One consequence worth knowing: if a selection has no positive articles at all, any setting above 0% shows an empty feed with a note and the same button. The slider is a hard constraint, not a preference.
-
-Filters apply in this order: **scope → group → outlets → topic or search → positivity mix**.
 
 That happens often with the independent outlets: investigative reporting on inequality and oppression scores negative on a word list almost by construction.
 
@@ -370,4 +381,4 @@ Articles belong to their respective outlets. Only title, summary and link are st
 
 ## Upgrading an existing database
 
-These features add eight columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`, `cluster_id`) and the `topics_cache`, `article_archive` and `topic_labels` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `cluster_id` is NULL (the article stands alone) until the next fetch groups the stories. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.
+These features add eight columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`, `cluster_id`) and the `topics_cache`, `article_archive`, `topic_labels`, `saved` and `muted` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `cluster_id` is NULL (the article stands alone) until the next fetch groups the stories. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.

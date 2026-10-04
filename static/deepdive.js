@@ -359,6 +359,17 @@ function renderEntity(d) {
   if (d.kind === "journalist" && d.outlets.length) stat(d.outlets.join(", "), "escreve em", "wide");
   head.append(stats);
   if (d.stale) head.append(el("p", { className: "whois-checked stale" }, "Perfil pode estar desatualizado."));
+  // tone per week, from the archive (filled in when it arrives)
+  const trendBox = el("div", { className: "dd-trend" });
+  head.append(trendBox);
+  fetch(`/api/trends?kind=${d.kind}&id=${encodeURIComponent(d.id)}`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((t) => {
+      if (!t || ddState.id !== d.id) return;
+      trendBox.append(el("h3", { className: "dd-h3" }, "Tom por semana"),
+        sparkline(t, { width: 420, height: 90, caption: `Tom por semana, ${d.name}` }));
+    })
+    .catch(() => {});
   ddResult.append(head, el("p", { className: "dd-summary" }, d.summary));
 
   if (!d.findings.length) {

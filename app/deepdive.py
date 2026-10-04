@@ -492,3 +492,42 @@ def strongest_silence(table, slugs=None):
                         "outlets": len(table["outlets"]), "gap": round(gap, 1),
                         "window_days": table["window_days"]}
     return best
+
+
+# --------------------------------------------------------------------------
+# Tone over time: weekly shares, for the sparklines
+# --------------------------------------------------------------------------
+TREND_WEEKS = 12
+TREND_MIN_ARTICLES = 5     # a week with fewer articles is a gap, not a point
+
+
+def tone_trend(conn, kind, ident, weeks=TREND_WEEKS, min_articles=TREND_MIN_ARTICLES, now=None):
+    """Weekly positive and negative shares for an outlet, a journalist or a scope.
+
+    Weeks are counted back from now (the last point is the last 7 days). A week
+    with fewer than `min_articles` gets None instead of a share: two articles
+    make a percentage, not a trend.
+    """
+    now = now or utcnow()
+    rows = load(conn, window_days=weeks * 7, now=now)
+    mine = [a for a in rows if a["scope"] == ident] if kind == "scope" else entity_rows(rows, kind, ident)
+    points = [{"start": iso(now - timedelta(days=7 * (weeks - i)))[:10],
+               "articles": 0, "positive": 0, "negative": 0} for i in range(weeks)]
+    for a in mine:
+        age = (now - _parse(a["published_at"])).total_seconds() / 86400
+        index = weeks - 1 - int(age // 7)
+        if 0 <= index < weeks:
+            point = points[index]
+            point["articles"] += 1
+            if a["label"] in ("positive", "negative"):
+                point[a["label"]] += 1
+    for p in points:
+        enough = p["articles"] >= min_articles
+        p["positive_pct"] = _pct(p["positive"], p["articles"]) if enough else None
+        p["negative_pct"] = _pct(p["negative"], p["articles"]) if enough else None
+    return {"kind": kind, "id": ident, "weeks": weeks, "min_articles": min_articles, "points": points}
+
+
+def _parse(stamp):
+    from datetime import datetime, timezone
+    return datetime.strptime(stamp[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
