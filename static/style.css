@@ -660,6 +660,52 @@ main { padding-top: 4px; padding-bottom: 40px; }
 .tip .w-neg { color: var(--tip-neg); }
 .tip small { opacity: .7; }
 
+/* ---- the same story told by other outlets ---- */
+.card-also { margin-top: 12px; }
+.also-btn {
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2);
+  font-size: var(--fs-xs); font-weight: 650; padding: 3px 9px 3px 11px; border-radius: 999px;
+  transition: border-color var(--fast), color var(--fast);
+}
+.also-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.also-btn .icon { transition: transform var(--fast) var(--ease); color: var(--muted); }
+.also-btn[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.also-body { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.also-body h3 {
+  margin: 0 0 6px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--muted);
+}
+.also-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.also-list li {
+  display: grid; grid-template-columns: 10px auto minmax(0, 1fr) auto; gap: 4px 9px; align-items: baseline;
+  font-size: var(--fs-sm); line-height: 1.4;
+}
+.also-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neu-line); align-self: center; }
+.also-dot.positive { background: var(--pos-line); }
+.also-dot.negative { background: var(--neg-line); }
+.also-dot.neutral { background: transparent; box-shadow: inset 0 0 0 1.5px var(--neu-line); }
+.also-src { font-size: var(--fs-xs); font-weight: 650; color: var(--text-2); white-space: nowrap; }
+.also-list a { font-family: var(--serif); color: var(--text); text-decoration: none; }
+.also-list a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.also-list li.is-read a { color: var(--muted); }
+.also-time { font-size: var(--fs-2xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---- the lead story: the one told by the most outlets ---- */
+.card-lead { grid-column: 1 / -1; padding: 22px 26px 22px; border-color: var(--border-strong); }
+.lead-kicker {
+  margin: 0 0 10px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .09em;
+  text-transform: uppercase; color: var(--accent);
+}
+.card-lead .card-title { font-size: var(--fs-xl); line-height: 1.2; margin-top: 10px; }
+.card-lead .card-summary { font-size: var(--fs-md); -webkit-line-clamp: 4; }
+body[data-layout="list"] .card.card-lead {
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius);
+  padding: 18px 20px; margin-bottom: 8px;
+}
+body[data-layout="list"] .card-lead .card-summary { display: -webkit-box; }
+body[data-layout="list"] .card-lead .card-title { font-size: var(--fs-xl); line-height: 1.2; margin-top: 8px; }
+
 /* ---- list view: dense rows on rules, headline only ---- */
 body[data-layout="list"] .feed { display: block; max-width: 780px; }
 body[data-layout="list"] .card {
@@ -670,6 +716,8 @@ body[data-layout="list"] .card:hover { box-shadow: none; }
 body[data-layout="list"] .card-title { font-size: 1.06rem; line-height: 1.32; margin: 4px 0 0; }
 body[data-layout="list"] .card-summary,
 body[data-layout="list"] .card-topics { display: none; }
+body[data-layout="list"] .card-also { margin-top: 6px; }
+body[data-layout="list"] .also-btn { padding: 1px 8px 1px 9px; }
 body[data-layout="list"] .source-dot { display: none; }
 body[data-layout="list"] .card-source { font-size: var(--fs-xs); }
 body[data-layout="list"] .group-head { margin: 22px 0 2px; }
@@ -974,6 +1022,14 @@ body[data-layout="list"] .card.whois-on { box-shadow: inset 3px 0 0 var(--accent
   /* the byline takes the second line, so outlet, time and tone stay together */
   .card-byline { order: 10; flex-basis: 100%; max-width: none; }
   .message { padding: 40px 14px; }
+  .card-lead { padding: 18px 16px; }
+  .card-lead .card-title { font-size: 1.36rem; }
+  /* outlet and time on one line, the headline under them */
+  .also-list li { grid-template-columns: 10px minmax(0, 1fr) auto; }
+  .also-dot { grid-row: 1; grid-column: 1; }
+  .also-src { grid-row: 1; grid-column: 2; }
+  .also-time { grid-row: 1; grid-column: 3; }
+  .also-list a { grid-row: 2; grid-column: 2 / -1; }
 }
 @keyframes sheet { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes fade { from { opacity: 0; } }

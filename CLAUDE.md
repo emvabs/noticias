@@ -19,6 +19,7 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 .venv/bin/python -m pytest -q  # all should pass
 .venv/bin/python -m app.ingest # fetch feeds once, from the shell
 .venv/bin/python -m app.topics # print the current topics per scope and group
+.venv/bin/python -m app.clusters   # recompute and print the stories told by several articles
 .venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
 ```
@@ -36,6 +37,7 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 | Word-list scoring | `app/sentiment.py` |
 | Topic extraction (TF-IDF) | `app/topics.py` |
 | Search matching, synonyms | `app/search.py` |
+| Story clustering (TF-IDF cosine) | `app/clusters.py` |
 | Bylines, profile resolution, local stats | `app/profiles.py` |
 | Owners, owner keywords, ownership graph | `app/ownership.py` |
 | Never-deleted article archive | `app/archive.py` |
@@ -57,6 +59,12 @@ fix wrong labels or noisy topics — prefer them over changing code.
   side. Asking 100% positive shows only positive articles, even if that means 44
   instead of 100. A selection with no positive articles shows an empty feed at
   any setting above 0%. This replaced padding, which was misleading.
+- **One item per story, and the slider still decides.** `mixing.collapse()`
+  runs on each side separately, so `also` never crosses sides and the share
+  counts stories. Pools are read `limit * 3 + 50` deep before collapsing.
+  Clusters need cosine ≥ `min_similarity` *and* two shared terms; groups
+  merge only while average linkage holds (no chaining). Tune `clusters:` in
+  `config.yaml` with `python -m app.clusters`, not the code.
 - **Word lists beat code changes.** Two lexicons (SentiLex-PT02 for Portuguese,
   VADER for English) plus custom lists that override them, plus co-occurrence
   rules in `lexicon/rules_*.txt` for headlines where single words mislead

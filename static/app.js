@@ -917,6 +917,53 @@ function buildCard(a, group) {
   for (const slug of a.topics || []) {
     if (labels.has(slug)) tags.append(el("li", {}, labels.get(slug)));
   }
+  renderAlso(card, a);
+  hydrateIcons(card);
+  return card;
+}
+
+/** "+3 jornais": the other outlets' headlines for the same story, folded. */
+function renderAlso(card, a) {
+  const also = a.also || [];
+  if (!also.length) return;
+  card.querySelector(".card-also").hidden = false;
+  const others = (a.outlets || 1) - 1;
+  // the same outlet can publish a story twice (an update): say versions then
+  const label = others > 0 ? `+${plural(others, "jornal", "jornais")}` : `+${plural(also.length, "versão", "versões")}`;
+  card.querySelector(".also-label").textContent = label;
+  const btn = card.querySelector(".also-btn");
+  const body = card.querySelector(".also-body");
+  btn.setAttribute("aria-label", `${label} com esta história: ver como titularam`);
+  const list = card.querySelector(".also-list");
+  for (const o of also) {
+    const li = el("li");
+    const dot = el("span", { className: `also-dot ${o.label}`, role: "img" });
+    dot.setAttribute("aria-label", `Tom: ${(LABELS[o.label] || o.label).toLowerCase()}`);
+    const link = el("a", { href: o.url, target: "_blank", rel: "noopener noreferrer" }, o.title);
+    link.addEventListener("click", () => { read.add(o.url); li.classList.add("is-read"); });
+    li.classList.toggle("is-read", read.has(o.url));
+    li.append(dot, el("span", { className: "also-src" }, o.source_name), link,
+      el("time", { className: "also-time", dateTime: o.published_at, title: fullDate(o.published_at) },
+        clock(o.published_at)));
+    list.append(li);
+  }
+  btn.addEventListener("click", () => {
+    const open = body.hidden;
+    body.hidden = !open;
+    btn.setAttribute("aria-expanded", String(open));
+  });
+}
+
+/** The story told by the most outlets, at the top and open. */
+function buildLead(a, now) {
+  const card = buildCard(a, groupLabel(a.published_at, now));
+  card.classList.add("card-lead");
+  card.prepend(el("p", { className: "lead-kicker" }, `Em destaque · contada por ${a.outlets} jornais`));
+  const body = card.querySelector(".also-body");
+  if (body) {
+    body.hidden = false;
+    card.querySelector(".also-btn").setAttribute("aria-expanded", "true");
+  }
   return card;
 }
 
@@ -925,8 +972,12 @@ function renderList(articles) {
   whois.close();              // its card is about to be replaced
   feedList.replaceChildren();
   const now = new Date();
+  const leadId = seen.onlyNew ? null : state.lastData?.lead_id;
+  const lead = leadId ? articles.find((a) => a.id === leadId) : null;
+  if (lead) feedList.append(buildLead(lead, now));
   let last = null;
   for (const a of seen.onlyNew ? articles.filter(isNew) : articles) {
+    if (a === lead) continue;
     const group = groupLabel(a.published_at, now);
     if (group !== last) feedList.append(groupHead(group));
     last = group;

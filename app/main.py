@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config, db, deepdive, ingest, ownership, profiles, search
 from . import topics as topics_module
-from .mixing import mix
+from .mixing import collapse, lead, mix, outlets
 
 STATIC = config.ROOT / "static"
 _conn_lock = threading.Lock()
@@ -95,14 +95,23 @@ def feed(positive_pct: float = Query(50, ge=0, le=100),
     source_list = [s for s in sources.split(",") if s] if sources is not None else None
     topic_list = [t for t in (topics or "").split(",") if t]
 
-    positive = pool("label = 'positive'", scope, group, source_list, topic_list, q, limit)
-    non_positive = pool("label != 'positive'", scope, group, source_list, topic_list, q, limit)
+    # One item per story: several outlets' versions collapse into one, so each
+    # side is read deeper than the page and then cut down to stories.
+    depth = limit * 3 + 50
+    positive = collapse(pool("label = 'positive'", scope, group, source_list, topic_list, q, depth))
+    non_positive = collapse(pool("label != 'positive'", scope, group, source_list, topic_list, q, depth))
     articles, stats = mix(positive, non_positive, positive_pct, limit)
+    top = lead(articles)
 
     names = source_names()
     resolver = profiles.Resolver()
     owner_keywords = ownership.keywords_by_source()
     for a in articles:
+        # The other outlets' versions of the story, all on the same side of the slider.
+        a["outlets"] = len(outlets(a))
+        a["also"] = [{"id": o["id"], "source": o["source"], "source_name": names.get(o["source"], o["source"]),
+                      "title": o["title"], "url": o["url"], "label": o["label"],
+                      "published_at": o["published_at"]} for o in a["also"]]
         a["authors"] = resolver.resolve_all(a["authors"])
         # The outlet's own owner, group or sister company named in the piece.
         a["owner_mentions"] = ownership.mentions(a["raw_text"], owner_keywords.get(a["source"], []))
@@ -112,7 +121,7 @@ def feed(positive_pct: float = Query(50, ge=0, le=100),
         a.pop("title_norm", None)
     # The page shows which synonyms were searched as well as the typed words.
     expanded = search.expand(q)[1:] if q else []
-    return {**stats, "scope": scope, "group": group, "topics": topic_list, "q": (q or "").strip(),
+    return {**stats, "lead_id": top["id"] if top else None, "scope": scope, "group": group, "topics": topic_list, "q": (q or "").strip(),
             "also_searched": expanded, "last_updated": ingest.status["last_run"], "articles": articles}
 
 

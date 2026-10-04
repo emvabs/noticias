@@ -33,6 +33,7 @@ Open **http://localhost:8000** (it works the same on a phone, tablet or large mo
 | Feed ingestion, dedupe, 7-day cleanup | `app/ingest.py` |
 | Word-list scorer | `app/sentiment.py` |
 | Topic extraction | `app/topics.py` |
+| Story clustering | `app/clusters.py` |
 | Topic noise words (editable) | `config/stoplist.txt` |
 | Combination rules (editable) | `lexicon/rules_pt.txt`, `lexicon/rules_en.txt` |
 | Search matching and synonyms | `app/search.py`, `config/synonyms.txt` |
@@ -54,6 +55,20 @@ One row is pinned at the top: the brand, the sections (**Notícias · Resumo · 
 - **Already read**: headlines you opened are dimmed.
 
 New and read are remembered in this browser only (`localStorage`), per device; nothing is sent to the server.
+
+### Stories: one item per story
+
+When several outlets publish the same story, the feed shows it once — the newest version — with a **+3 jornais** button that unfolds **Como os outros jornais titularam**: each outlet's headline, tone dot and time, side by side. The story told by the most outlets opens the page, larger and unfolded (**Em destaque · contada por 5 jornais**).
+
+How articles are grouped (`app/clusters.py`, recomputed after every fetch): within each scope's last 48 hours, every article becomes a bag of its meaningful words (stopwords, outlet names and `config/stoplist.txt` removed, plurals merged, headline words counted double, names a little more), weighted by TF-IDF. Two articles are linked when their similarity reaches `clusters.min_similarity` (0.35) **and** they share at least two words — one shared word is usually a headline formula ("O que se sabe sobre…"). Links merge strongest first, and two groups only merge while the average similarity between all their members stays above `min_group_similarity`, so one vague word cannot chain unrelated stories together; no group grows past `max_size`. No ML: plain word counts.
+
+**The slider still decides.** Each side (positive / the rest) keeps one article per story, so 50 means 50 different stories and the share counts stories. The other versions shown under a story are only those on the **same side**: at 100% positive, a negative version of the same story is never attached.
+
+Check what is grouped right now, and tune the thresholds under `clusters:` in `config.yaml` if it joins different stories (raise `min_similarity`) or leaves the same one apart (lower it):
+
+```bash
+.venv/bin/python -m app.clusters
+```
 
 ### Scope switch
 
@@ -145,7 +160,7 @@ Filters apply in this order: **scope → group → outlets → topic or search �
 That happens often with the independent outlets: investigative reporting on inequality and oppression scores negative on a word list almost by construction.
 
 API: `GET /api/feed?scope=portugal&group=independent&positive_pct=60&limit=50&sources=publico,rtp&topics=greve&q=habitacao`
-(`scope` defaults to `portugal`, `group` to `mainstream`; `topics` matches articles carrying **any** of the slugs; `q` requires every word.)
+(`scope` defaults to `portugal`, `group` to `mainstream`; `topics` matches articles carrying **any** of the slugs; `q` requires every word.) Each article carries `outlets` (how many outlets tell its story) and `also` (the other versions, same side of the slider); `lead_id` names the story told by the most outlets.
 
 Other endpoints: `GET /api/topics?scope=portugal&group=independent`, `GET /api/sources?scope=world`, `GET /api/status`, `POST /api/refresh`.
 
@@ -342,4 +357,4 @@ Articles belong to their respective outlets. Only title, summary and link are st
 
 ## Upgrading an existing database
 
-These features add seven columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`) and the `topics_cache`, `article_archive` and `topic_labels` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.
+These features add eight columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`, `cluster_id`) and the `topics_cache`, `article_archive` and `topic_labels` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `cluster_id` is NULL (the article stands alone) until the next fetch groups the stories. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.

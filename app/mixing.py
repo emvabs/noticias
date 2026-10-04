@@ -57,3 +57,35 @@ def mix(positive, non_positive, positive_pct, limit):
         "shortfall": count < limit and bool(positive or non_positive),
         "limited_by": limited_by,
     }
+
+
+def collapse(articles):
+    """One article per story: the newest of each cluster, the others in its `also`.
+
+    `articles` is one side of the slider (positive, or the rest), newest first,
+    so the versions kept in `also` always share the representative's side:
+    asking for 100% positive never brings a negative version along. An
+    article without a cluster_id stands alone.
+    """
+    stories = {}
+    out = []
+    for a in articles:
+        key = a.get("cluster_id") or a.get("id") or id(a)
+        if key in stories:
+            stories[key]["also"].append(a)
+        else:
+            story = {**a, "also": []}
+            stories[key] = story
+            out.append(story)
+    return out
+
+
+def outlets(story):
+    """The distinct outlets telling a story, its own included."""
+    return {story["source"], *(a["source"] for a in story.get("also", []))}
+
+
+def lead(articles, min_outlets=2):
+    """The story told by the most outlets (newest on a tie), or None below min_outlets."""
+    best = max(articles, key=lambda a: (len(outlets(a)), a["published_at"]), default=None)
+    return best if best and len(outlets(best)) >= min_outlets else None

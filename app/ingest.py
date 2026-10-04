@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 import feedparser
 import httpx
 
-from . import archive, config, db, profiles, topics
+from . import archive, clusters, config, db, profiles, topics
 from .search import raw_searchable, searchable
 from .sentiment import get_scorer, normalize
 
@@ -249,13 +249,14 @@ def fetch_all(conn=None):
         topic_counts = {f"{scope}/{group}": len(found)
                         for (scope, group), found in topics.recompute_all(conn).items()}
         archived = archive.sync(conn)    # again, to keep the topics just computed
+        stories = sum(len(found) for found in clusters.recompute_all(conn).values())
         total = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
         if own_conn:
             conn.close()
         status["last_run"] = iso(utcnow())
         status["sources"] = results
         return {"sources": results, "deleted": deleted, "rescored": rescored, "bylines": bylines, "archived": archived,
-                "topics": topic_counts, "total": total, "finished_at": status["last_run"]}
+                "topics": topic_counts, "clusters": stories, "total": total, "finished_at": status["last_run"]}
     finally:
         status["running"] = False
         _lock.release()

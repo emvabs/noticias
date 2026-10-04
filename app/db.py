@@ -60,7 +60,8 @@ def migrate(conn):
                                 ("search_text", "TEXT NOT NULL DEFAULT ''"),
                                 ("raw_text", "TEXT NOT NULL DEFAULT ''"),
                                 ('"group"', "TEXT NOT NULL DEFAULT 'mainstream'"),
-                                ("authors", "TEXT")):
+                                ("authors", "TEXT"),
+                                ("cluster_id", "INTEGER")):   # NULL: stands alone
         if column.strip('"') not in existing:
             conn.execute(f"ALTER TABLE articles ADD COLUMN {column} {declaration}")
             added.append(column)

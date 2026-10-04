@@ -91,3 +91,46 @@ def test_pct_is_clamped():
     assert s["requested_pct"] == 100 and s["positive_count"] == 10
     _, s = mix(pool("p", 10), pool("n", 10), -5, 10)
     assert s["positive_count"] == 0
+
+
+# ---------- one item per story ----------
+from app.mixing import collapse, lead  # noqa: E402
+
+
+def story(id_, cluster, source, hour, label="positive"):
+    return {"id": id_, "cluster_id": cluster, "source": source, "label": label,
+            "published_at": f"2026-09-21T{hour:02d}:00:00Z"}
+
+
+def test_collapse_keeps_the_newest_per_story():
+    side = [story(3, 1, "rtp", 12), story(2, 1, "publico", 11), story(5, 5, "dn", 10), story(1, 1, "cnn", 9)]
+    out = collapse(side)
+    assert [a["id"] for a in out] == [3, 5]
+    assert [a["id"] for a in out[0]["also"]] == [2, 1]
+
+
+def test_articles_without_cluster_stand_alone():
+    out = collapse([{"id": 1, "published_at": "x"}, {"id": 2, "published_at": "x"}])
+    assert len(out) == 2
+
+
+def test_the_share_counts_stories_and_also_never_crosses_sides():
+    """Five positive versions of one story are one positive item; the negative
+    version of that same story stays on its own side and is never attached."""
+    positive = collapse([story(10 + i, 1, f"o{i}", 20 - i) for i in range(5)]
+                        + [story(20 + i, 20 + i, "o9", 10 - i) for i in range(4)])
+    negative = collapse([story(30, 1, "o7", 19, "negative")]
+                        + [story(40 + i, 40 + i, "o8", 15 - i, "negative") for i in range(10)])
+    arts, s = mix(positive, negative, 50, 10)
+    assert s["positive_count"] == 5 and s["non_positive_count"] == 5
+    for a in arts:
+        assert all(o["label"] == a["label"] for o in a["also"])
+    arts, s = mix(positive, negative, 100, 10)
+    assert s["count"] == 5 and all(a["label"] == "positive" for a in arts)
+
+
+def test_lead_is_the_story_with_most_outlets():
+    arts = collapse([story(1, 1, "rtp", 12), story(2, 1, "dn", 11), story(3, 3, "cnn", 13),
+                     story(4, 3, "rtp", 10), story(5, 3, "dn", 9)])
+    assert lead(arts)["id"] == 3
+    assert lead(collapse([story(1, 1, "rtp", 12)])) is None     # a story told once is no lead

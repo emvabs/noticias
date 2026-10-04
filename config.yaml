@@ -45,6 +45,15 @@ deepdive:
   silence_max_ratio: 0.25           # silêncio: menos de 25% do que o volume faria esperar
   silence_min_expected: 3           # ... e esperar-se-iam pelo menos 3 notícias
 
+# Histórias: a mesma notícia contada por vários jornais fica um só item.
+# Ver os grupos atuais: python -m app.clusters
+clusters:
+  window_hours: 48            # só se comparam notícias recentes
+  min_similarity: 0.35        # semelhança mínima (0–1) entre duas notícias; suba se juntar
+                              # histórias diferentes, desça se deixar a mesma separada
+  min_group_similarity: 0.2   # semelhança média para juntar dois grupos (evita correntes)
+  max_size: 12                # nenhuma história junta mais do que isto
+
 feed:
   default_limit: 50
   max_limit: 200

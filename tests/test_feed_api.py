@@ -82,3 +82,24 @@ def test_feed_items_carry_fetch_time_and_id(client):
     """The page marks "new since your last visit" by fetch time, and keys cards by id."""
     for a in client.get(f"/api/feed?{MIX}").json()["articles"]:
         assert a["fetched_at"] and a["id"]
+
+
+def test_feed_collapses_a_story_told_by_several_outlets(client):
+    from app import clusters
+    clusters.recompute_all(main.conn)
+    data = client.get(f"/api/feed?{MIX}&q=incendio").json()
+    # "Incêndio destrói casa em Sintra" and "Incêndios no norte" are different stories
+    assert data["count"] == 2
+
+
+def test_also_lists_the_other_versions(client):
+    before = client.get(f"/api/feed?{MIX}").json()["count"]
+    rows = main.conn.execute(
+        "SELECT id FROM articles WHERE scope = 'portugal' AND label != 'positive'").fetchall()
+    first, second = rows[0]["id"], rows[1]["id"]
+    main.conn.execute("UPDATE articles SET cluster_id = ? WHERE id IN (?, ?)", (first, first, second))
+    data = client.get(f"/api/feed?{MIX}").json()
+    story = next(a for a in data["articles"] if a["also"])
+    assert story["outlets"] == len({story["source"], *(o["source"] for o in story["also"])})
+    assert {"title", "url", "source_name", "label"} <= set(story["also"][0])
+    assert data["count"] == before - 1          # two of them are now one story
