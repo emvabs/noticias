@@ -211,7 +211,7 @@ The test headlines are in `eval/headlines.csv` (Portuguese, 43) and `eval/headli
 
 ### Who is behind the news
 
-Hover a card for a moment (or press its **i** button on a phone or with the keyboard) to see who owns and funds the outlet and, when the byline is known, who the journalist is. Each line cites its source, and every profile shows the date it was checked. The box also shows what this app has seen: how many articles by that outlet or journalist, and how many were positive or negative.
+Click a card's **i** button, the outlet's name or a journalist's name to open a panel on who owns and funds the outlet and, when the byline is known, who the journalist is (on a computer it slides in from the right and leaves the feed visible; on a phone it is a bottom sheet). Nothing opens on hover. The panel starts short — owner, funding, political links and what this app has seen (how many articles, how many positive or negative) — and **Ver tudo, com as fontes** unfolds every claim with its source. Every profile shows the date it was checked, and **Investigar** goes to the outlet's or journalist's page. The name you clicked comes first.
 
 **Where the bylines come from.** Each outlet in `sources.yaml` has an `author_from`:
 
@@ -264,7 +264,7 @@ No restart is needed: profiles and aliases are read on every request. The thresh
 
 ### Investigar (Deep Dive)
 
-**Investigar** in the sections (or "Investigar →" in the hover box) opens a view with four tabs. The address follows the tab (`#investigar/jornais/publico`; old `#deep-dive/…` links still work), so the browser's back button and bookmarks work.
+**Investigar** in the sections (or **Investigar** in the "who is behind" panel) opens a view with four tabs. The address follows the tab (`#investigar/jornais/publico`; old `#deep-dive/…` links still work), so the browser's back button and bookmarks work.
 
 - **Propriedade** — who owns each outlet and agency, as a two-column map (owners → outlets, with the share on each line). Shared owners are one node: the Portuguese State links RTP and Lusa. Click an outlet for its Deep Dive, an owner for what it holds and the sources.
 - **Jornais / Jornalistas** — pick one; you get a short summary, the **findings**, and a radial map with the selection in the centre, the findings around it and, around each finding, the articles (coloured by tone) or research sources behind it. Drag to pan, wheel or +/− to zoom, click a finding to highlight it, click an article to open it. Each finding card also lists its articles, which is the view to use on a phone.

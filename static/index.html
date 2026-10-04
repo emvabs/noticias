@@ -232,15 +232,18 @@
   </section>
 
 
-  <aside id="whois" class="whois" role="dialog" aria-label="Quem está por trás desta notícia" hidden>
-    <button type="button" class="whois-close" aria-label="Fechar"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <aside id="whois" class="whois" role="dialog" aria-labelledby="whois-title" hidden>
+    <div class="whois-head">
+      <h2 id="whois-title">Quem está por trás</h2>
+      <button type="button" class="whois-close" aria-label="Fechar"><span data-icon="x"></span></button>
+    </div>
     <div class="whois-body"></div>
   </aside>
 
   <template id="card-tpl">
     <li class="card">
       <div class="card-meta">
-        <span class="card-source"><span class="source-dot" aria-hidden="true"></span><span class="source-name"></span></span>
+        <span class="card-source"><span class="source-dot" aria-hidden="true"></span><button type="button" class="name-btn source-name" data-whois="outlet" aria-haspopup="dialog"></button></span>
         <span class="card-byline" hidden></span>
         <time class="card-time"></time>
         <span class="new-tag" hidden>nova</span>
@@ -249,7 +252,7 @@
           <span class="tip" role="tooltip"></span>
         </span>
         <span class="card-tools">
-          <button type="button" class="whois-btn" aria-label="Quem está por trás desta notícia"
+          <button type="button" class="whois-btn" data-whois="outlet" aria-label="Quem está por trás desta notícia"
                   aria-haspopup="dialog" aria-expanded="false">i</button>
           <!-- tone: a dot; the words that decided it in the tooltip -->
           <span class="tone-dot" tabindex="0"><span class="tip" role="tooltip"></span></span>

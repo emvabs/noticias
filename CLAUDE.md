@@ -128,6 +128,9 @@ fix wrong labels or noisy topics — prefer them over changing code.
   `#silenciados`, `#investigar/<tab>/<id>`), one router in `app.js`;
   `deepdive.js` exposes `ddRoute(parts)`. "Independentes" is the third
   position of the scope switch (scope `portugal`, group `independent`).
+- **"Who is behind" opens on click only** (`[data-whois]` triggers: the "i"
+  button and the names), never on hover: hover boxes covered the next cards.
+  Short facts first, sourced claims behind "Ver tudo".
 - **Per-device state stays in `localStorage`**: layout, theme, "new since"
   (`lastSeen`, compared with `fetched_at`, not `published_at`) and read
   articles (`readArticles`, keyed by URL, pruned after 15 days). Anything that

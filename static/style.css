@@ -696,53 +696,68 @@ body[data-layout="list"] .skeleton { border-bottom: 1px solid var(--border); bac
 .owner-flag:hover .tip, .owner-flag:focus .tip, .owner-flag:focus-visible .tip,
 .owner-flag:active .tip { opacity: 1; transform: none; }
 
-/* "who is behind this": a quiet icon button */
+/* "who is behind this": a quiet icon button; the names open it too */
 .whois-btn {
   flex: none;
-  width: 26px; height: 26px; border-radius: 50%; padding: 0;
+  width: 24px; height: 24px; border-radius: 50%; padding: 0;
   display: inline-grid; place-items: center;
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--muted); font: italic 700 .8rem/1 var(--serif); cursor: pointer;
-  transition: opacity var(--fast), color var(--fast), border-color var(--fast), background-color var(--fast);
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font: italic 700 .76rem/1 var(--serif); cursor: pointer;
+  transition: color var(--fast), border-color var(--fast), background-color var(--fast);
 }
 .whois-btn:hover, .whois-btn:focus-visible, .whois-btn[aria-expanded="true"] {
   color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft);
 }
-@media (hover: hover) {
-  .whois-btn { opacity: 0; }
-  .card:hover .whois-btn, .whois-btn:focus-visible, .whois-btn[aria-expanded="true"] { opacity: 1; }
+.name-btn {
+  border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer;
+  text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px;
+  transition: text-decoration-color var(--fast), color var(--fast);
 }
+.name-btn:hover { color: var(--accent); text-decoration-color: currentColor; }
 
 /* ============================================================
-   "who is behind this" box
+   "who is behind this": a side panel (a bottom sheet on phones)
    ============================================================ */
 .whois {
-  position: absolute; z-index: 60; left: 0; top: 0;
-  width: min(390px, calc(100vw - 32px));
-  max-height: min(74vh, 640px); overflow-y: auto; overscroll-behavior: contain;
+  position: fixed; z-index: 60; top: 0; right: 0; bottom: 0;
+  width: min(420px, 100vw);
+  display: flex; flex-direction: column;
   background: var(--surface); color: var(--text);
-  border: 1px solid var(--border); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 16px 18px 14px;
+  border-left: 1px solid var(--border); box-shadow: var(--shadow-lg);
   font-size: var(--fs-sm); line-height: 1.55;
-  animation: pop .18s var(--ease) both;
-  scrollbar-width: thin;
+  animation: slide-in .24s var(--ease) both;
 }
-@keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .whois[hidden] { display: none; }
+.whois-backdrop { display: none; }
+.whois-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: max(14px, env(safe-area-inset-top)) 18px 12px; border-bottom: 1px solid var(--border);
+}
+.whois-head h2 {
+  margin: 0; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+}
 .whois-close {
-  position: sticky; top: 0; float: right; margin: -4px -6px 0 8px; z-index: 1;
-  width: 30px; height: 30px; border: 0; border-radius: 50%;
-  display: grid; place-items: center;
-  background: var(--surface-2); color: var(--muted); font-size: 1.15rem; line-height: 1; cursor: pointer;
+  width: 32px; height: 32px; border: 0; border-radius: 50%; flex: none;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--surface-2); color: var(--muted);
   transition: background-color var(--fast), color var(--fast);
 }
 .whois-close:hover { background: var(--border); color: var(--text); }
-.whois-sec + .whois-sec { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-.whois-sec.whois-sub { border-top: 0; margin-top: 4px; padding-top: 0; }
-.whois-sec.whois-sub + .whois-sub { border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 12px; }
+.whois-body {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  padding: 14px 18px 0;
+}
+.whois-article {
+  margin: 0 0 4px !important; font-family: var(--serif); font-size: var(--fs-base); line-height: 1.4;
+  color: var(--muted) !important; font-style: italic;
+}
+.whois-sec { padding: 14px 0; }
+.whois-sec + .whois-sec { border-top: 1px solid var(--border); }
+.whois-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .whois h3 {
-  margin: 0 0 4px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .09em;
+  margin: 0 0 2px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .09em;
   text-transform: uppercase; color: var(--accent);
 }
 .whois h4 {
@@ -757,9 +772,27 @@ body[data-layout="list"] .skeleton { border-bottom: 1px solid var(--border); bac
   border-radius: 50%; background: var(--border-strong);
 }
 .whois li b { font-weight: 650; color: var(--text); }
-.whois-name { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; letter-spacing: -.01em; color: var(--text) !important; margin: 0 0 2px !important; }
+.whois-name {
+  font-family: var(--serif); font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.2;
+  color: var(--text) !important; margin: 0 !important;
+}
 .whois-type { color: var(--muted) !important; font-style: italic; }
 .whois-none, .whois-loading { color: var(--muted) !important; }
+/* the short version: label and value, one line each */
+.whois-facts {
+  display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px;
+  margin: 12px 0 0; padding: 12px 14px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.whois-facts:empty { display: none; }
+.whois-facts dt { font-size: var(--fs-xs); font-weight: 600; color: var(--muted); padding-top: 1px; }
+.whois-facts dd { margin: 0; color: var(--text); }
+.whois-more { margin-top: 10px; }
+.whois-more summary {
+  cursor: pointer; font-size: var(--fs-xs); font-weight: 650; color: var(--accent);
+  list-style-position: inside; padding: 4px 0;
+}
+.whois-more summary:hover { color: var(--accent-hover); }
 .whois-src {
   display: inline-block; font-size: var(--fs-2xs); font-weight: 600; color: var(--accent);
   text-decoration: none; white-space: nowrap; vertical-align: 1px;
@@ -767,30 +800,39 @@ body[data-layout="list"] .skeleton { border-bottom: 1px solid var(--border); bac
   transition: background-color var(--fast);
 }
 .whois-src:hover { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
-.whois-stats {
-  margin-top: 10px !important; font-size: var(--fs-xs); color: var(--text-2) !important;
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px;
-}
-.whois-checked { font-size: var(--fs-2xs); color: var(--faint) !important; }
+.whois-checked { font-size: var(--fs-2xs); color: var(--faint) !important; margin-top: 8px !important; }
 .whois-checked.stale { color: var(--neg) !important; font-weight: 600; }
 .whois-note {
-  margin: 14px -18px -14px !important; padding: 10px 18px;
+  margin: 0 -18px !important; padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
   background: var(--surface-2); border-top: 1px solid var(--border);
   font-size: var(--fs-2xs); color: var(--muted) !important;
 }
 .whois-dd {
-  display: inline-flex; align-items: center; gap: 4px; margin: 2px 0 4px;
+  display: inline-flex; align-items: center; gap: 5px; flex: none; margin-top: 2px;
   font-size: var(--fs-xs); font-weight: 650; color: var(--accent); text-decoration: none;
+  padding: 5px 10px; border-radius: 999px; background: var(--accent-soft);
 }
-.whois-dd:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
+.whois-dd:hover { color: var(--accent-hover); background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+/* the card the panel belongs to */
+.card.whois-on { border-color: var(--accent-line); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent); }
+body[data-layout="list"] .card.whois-on { box-shadow: inset 3px 0 0 var(--accent); }
 
-/* phones: a sheet pinned to the bottom of the screen */
-.whois.sheet {
-  position: fixed; left: 8px; right: 8px; top: auto; bottom: 8px;
-  width: auto; max-height: 72vh; border-radius: 22px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+/* phones: a sheet from the bottom over a dimmed page */
+@media (max-width: 760px) {
+  .whois {
+    top: auto; left: 0; width: auto; max-height: 86vh;
+    border-left: 0; border-radius: 22px 22px 0 0;
+    animation: sheet .24s var(--ease) both;
+  }
+  .whois-head { padding-top: 16px; }
+  .whois-head::before {
+    content: ""; position: absolute; top: 7px; left: 50%; translate: -50% 0;
+    width: 38px; height: 4px; border-radius: 999px; background: var(--border-strong);
+  }
+  .whois-backdrop:not([hidden]) {
+    display: block; position: fixed; inset: 0; z-index: 55; background: rgb(0 0 0 / .32); animation: fade .2s both;
+  }
 }
-.whois.sheet .whois-note { margin-bottom: calc(-14px - env(safe-area-inset-bottom)) !important; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 
 /* ============================================================
    research still to do, at the foot of the feed
