@@ -146,6 +146,13 @@ fix wrong labels or noisy topics — prefer them over changing code.
   403 from the button, and stays quiet for the automatic refresh on a scope
   switch.
 
+- **Every environment variable is read in `app/config.py`.** `load_config()`
+  applies `ENV_OVERRIDES` (`NOTICIAS_DB`, `NOTICIAS_HOST`, `NOTICIAS_PORT`,
+  `NOTICIAS_RELOAD`, `NOTICIAS_WORKER`) on top of `config.yaml`; empty counts as
+  unset. `NOTICIAS_AUTO_MIGRATE` and `NOTICIAS_ADMIN_TOKEN` have their own
+  helpers (`auto_migrate()`, `admin_token()`). The README has the full table.
+  Add a new variable there, not with `os.environ` elsewhere.
+
 ## Gotchas
 
 - **Restart after changing `app/`** — `run.py` auto-reloads, but a server started

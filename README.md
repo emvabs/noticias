@@ -24,6 +24,22 @@ The server restarts itself when you edit anything in `app/` (set `server.reload:
 
 Open **http://localhost:8000** (it works the same on a phone, tablet or large monitor). On startup the server fetches every feed in the background, then again every 20 minutes. The **Atualizar** button triggers a fetch right away.
 
+### Environment variables
+
+At home none of these is set and `config.yaml` decides everything. On a server they override it without editing the file (unset or empty = use `config.yaml`):
+
+| Variable | Overrides / does | Example |
+|---|---|---|
+| `NOTICIAS_DB` | `storage.database` (relative paths start at the project folder) | `/var/lib/noticias/news.db` |
+| `NOTICIAS_HOST` | `server.host` | `0.0.0.0` |
+| `NOTICIAS_PORT` | `server.port` | `8080` |
+| `NOTICIAS_RELOAD` | `server.reload` (`0`/`false`/`no`/`off` = off) | `0` |
+| `NOTICIAS_WORKER` | `worker` (`embedded` or `separate`, see below) | `separate` |
+| `NOTICIAS_AUTO_MIGRATE` | `0` = do not migrate on connect; run `python -m app.db migrate` instead | `0` |
+| `NOTICIAS_ADMIN_TOKEN` | lets requests from other machines use **Atualizar** (`POST /api/refresh`) | a long random string |
+
+`NOTICIAS_HOST`, `NOTICIAS_PORT` and `NOTICIAS_RELOAD` apply to `python run.py`; when you start uvicorn yourself, pass `--host`/`--port` to it.
+
 ### Fetching in a separate process
 
 That is all you need at home. On a server running several web processes, each would run its own 20-minute fetch, so the fetching can move to one process of its own: set `worker: separate` in `config.yaml` (the web server then runs no scheduler) and start
