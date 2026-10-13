@@ -19,6 +19,7 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 .venv/bin/python -m pytest -q  # all should pass
 .venv/bin/python -m app.ingest # fetch feeds once, from the shell
 .venv/bin/python -m app.worker # fetch on the interval in its own process (worker: separate)
+.venv/bin/python -m app.db migrate   # run the migrations explicitly (production)
 .venv/bin/python -m app.topics # print the current topics per scope and group
 .venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
@@ -128,6 +129,14 @@ fix wrong labels or noisy topics — prefer them over changing code.
   `<database>.fetch.lock`, so a web refresh and the worker never overlap either;
   `/api/status` "running" reads that file lock, so it sees other processes.
 
+- **Migrations run on connect unless `NOTICIAS_AUTO_MIGRATE=0`.** At home every
+  start migrates, as before. In production several processes would race, so
+  the deploy runs `python -m app.db migrate` once and switches auto-migration
+  off; a process then refuses a database whose `PRAGMA user_version` is below
+  `db.SCHEMA_VERSION`. **Bump `SCHEMA_VERSION` whenever `migrate()` gains a
+  step.** `:memory:` databases always migrate. The `sources.yaml` re-sync is
+  part of the migration, so with auto-migration off it needs the command too.
+
 ## Gotchas
 
 - **Restart after changing `app/`** — `run.py` auto-reloads, but a server started
@@ -141,7 +150,9 @@ fix wrong labels or noisy topics — prefer them over changing code.
   articles already stored.
 - `app.main` connects to the real database on import (tests included), and the
   migration writes. Keep migrations cheap: the archive backfill only runs when
-  the archive is empty.
+  the archive is empty. Keep that import path working: tests import `app.main`
+  and then swap `main.conn` for an in-memory database. With
+  `NOTICIAS_AUTO_MIGRATE=0` the import raises unless the database was migrated.
 - Never hold a SQLite write transaction across a network request: the page
   byline lookup commits per article, otherwise it locks the database for the
   server's own scheduler.

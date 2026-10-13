@@ -1,4 +1,5 @@
 """Loads config.yaml and sources.yaml from the project root."""
+import os
 from pathlib import Path
 
 import yaml
@@ -13,6 +14,20 @@ def _load(name):
 
 def load_config():
     return _load("config.yaml")
+
+
+FALSE_WORDS = {"0", "false", "no", "off"}
+
+
+def env_bool(name, default):
+    """A yes/no environment variable: "0", "false", "no" or "off" mean no."""
+    value = os.environ.get(name, "").strip().lower()
+    return default if not value else value not in FALSE_WORDS
+
+
+def auto_migrate():
+    """Whether connecting runs the migrations (default) or expects ``python -m app.db migrate``."""
+    return env_bool("NOTICIAS_AUTO_MIGRATE", True)
 
 
 WORKER_MODES = ("embedded", "separate")

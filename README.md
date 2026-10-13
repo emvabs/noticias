@@ -34,6 +34,16 @@ python -m app.worker
 
 next to the web server. It fetches once at startup, then every `fetch.interval_minutes`, never two runs at once (also not at the same time as the **Atualizar** button), and stops cleanly on Ctrl+C or SIGTERM, finishing the fetch in progress first.
 
+### Migrations
+
+The database is created and upgraded automatically every time the server or a fetch connects to it. On a server, where several processes would race to do it, turn that off with `NOTICIAS_AUTO_MIGRATE=0` and run the migrations once per deploy instead:
+
+```bash
+python -m app.db migrate
+```
+
+With auto-migration off, a process refuses to start on a database that has not been migrated, and edits to `scope` / `language` / `group` in `sources.yaml` reach stored articles only when the command runs.
+
 ## How it works
 
 | Part | File |
