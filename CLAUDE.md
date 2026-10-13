@@ -18,6 +18,7 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 .venv/bin/python run.py        # http://localhost:8000, auto-reloads on edits to app/
 .venv/bin/python -m pytest -q  # all should pass
 .venv/bin/python -m app.ingest # fetch feeds once, from the shell
+.venv/bin/python -m app.worker # fetch on the interval in its own process (worker: separate)
 .venv/bin/python -m app.topics # print the current topics per scope and group
 .venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
@@ -41,7 +42,8 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 | Never-deleted article archive | `app/archive.py` |
 | Deep Dive findings and silences | `app/deepdive.py`, `static/deepdive.js` |
 | Slider mixing | `app/mixing.py` |
-| API, scheduler, static files | `app/main.py` |
+| API, embedded scheduler, static files | `app/main.py` |
+| Scheduled fetching in its own process | `app/worker.py` |
 | Schema and migrations | `app/db.py` |
 | Page | `static/` |
 
@@ -117,6 +119,14 @@ fix wrong labels or noisy topics — prefer them over changing code.
   Icons are line SVGs from `icon()` in `static/app.js` (CSS masks for
   pseudo-elements) — no emoji in the UI. The backend's finding `icon` field is
   ignored by the page, which maps each kind to a line icon.
+
+- **One scheduler, wherever it runs.** `worker: embedded` (default) keeps the
+  APScheduler job in the web server's lifespan, as `run.py` always did.
+  `worker: separate` leaves the server with no scheduler and `python -m
+  app.worker` fetches instead, so several uvicorn workers do not each fetch the
+  same feeds. `fetch_all` holds a thread lock *and* an `flock` on
+  `<database>.fetch.lock`, so a web refresh and the worker never overlap either;
+  `/api/status` "running" reads that file lock, so it sees other processes.
 
 ## Gotchas
 

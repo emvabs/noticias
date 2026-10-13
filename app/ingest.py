@@ -4,10 +4,16 @@ import html
 import json
 import re
 import threading
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
 import feedparser
 import httpx
+
+try:
+    import fcntl
+except ImportError:   # Windows: only the in-process lock applies
+    fcntl = None
 
 from . import archive, config, db, profiles, topics
 from .search import raw_searchable, searchable
@@ -27,6 +33,44 @@ PUNCT_RE = re.compile(r"[^a-z0-9 ]+")
 
 _lock = threading.Lock()
 status = {"last_run": None, "running": False, "sources": {}}
+
+
+def lock_path():
+    """The file that marks a fetch in progress, next to the database."""
+    db_path = config.path(config.load_config()["storage"]["database"])
+    return db_path.with_name(db_path.name + ".fetch.lock")
+
+
+@contextmanager
+def _file_lock():
+    """Hold the cross-process fetch lock; yields False if another process has it.
+
+    The web server (button, embedded scheduler) and ``python -m app.worker`` are
+    separate processes, so the thread lock alone cannot stop them fetching at once.
+    """
+    if fcntl is None:
+        yield True
+        return
+    path = lock_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a") as f:
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            yield False
+            return
+        try:
+            yield True
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
+
+
+def is_running():
+    """Whether a fetch is running in this process or any other."""
+    if _lock.locked():
+        return True
+    with _file_lock() as got:
+        return not got
 
 
 def utcnow():
@@ -200,65 +244,75 @@ def cleanup(conn, retention_days):
 
 
 def fetch_all(conn=None):
-    """Fetch every enabled source. Safe to call from several threads (runs one at a time)."""
+    """Fetch every enabled source, one run at a time across threads and processes."""
     if not _lock.acquire(blocking=False):
         return {"skipped": True, "reason": "already running"}
-    status["running"] = True
     try:
-        cfg = config.load_config()
-        own_conn = conn is None
-        conn = conn or db.connect()
-        retention = cfg["storage"].get("retention_days", 14)
-        results = {}
-        with httpx.Client(headers={"User-Agent": cfg["fetch"]["user_agent"]},
-                          timeout=cfg["fetch"].get("timeout_seconds", 20),
-                          follow_redirects=True) as client:
-            for src in config.load_sources():
-                found = new = 0
-                errors = []
-                group = src.get("group", "mainstream")
-                # 0 (or missing) means "no date cutoff": take whatever the feed
-                # offers, which is what the slow independent outlets need.
-                window_days = config.group_settings(group, "ingest_window_days",
-                                                    default=retention)
-                cutoff = (iso(utcnow() - timedelta(days=window_days))
-                          if window_days else "")
-                for url in src["feeds"]:
-                    try:
-                        resp = client.get(url)
-                        resp.raise_for_status()
-                        now = utcnow()
-                        items = [a for a in parse_feed(resp.content, src["id"], now,
-                                                       src.get("scope", "portugal"),
-                                                       src.get("language", "pt"), group,
-                                                       src.get("author_from", "feed"))
-                                 if a["published_at"] >= cutoff]
-                        if not items:
-                            errors.append(f"{url}: feed vazio")
-                        found += len(items)
-                        new += store(conn, items)
-                    except Exception as ex:  # one broken feed must not stop the others
-                        errors.append(f"{url}: {type(ex).__name__}: {ex}")
-                results[src["id"]] = {"name": src["name"], "scope": src.get("scope", "portugal"),
-                                      "group": group, "found": found, "new": new,
-                                      "errors": errors, "ok": not errors}
-            bylines = fill_page_authors(conn, client, cfg["fetch"].get("author_pages_per_run", 60))
-        rescored = rescore_all(conn)
-        archive.sync(conn)               # before cleanup: the archive keeps what it deletes
-        deleted = cleanup(conn, retention)
-        topic_counts = {f"{scope}/{group}": len(found)
-                        for (scope, group), found in topics.recompute_all(conn).items()}
-        archived = archive.sync(conn)    # again, to keep the topics just computed
-        total = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
-        if own_conn:
-            conn.close()
-        status["last_run"] = iso(utcnow())
-        status["sources"] = results
-        return {"sources": results, "deleted": deleted, "rescored": rescored, "bylines": bylines, "archived": archived,
-                "topics": topic_counts, "total": total, "finished_at": status["last_run"]}
+        with _file_lock() as got:
+            if not got:
+                return {"skipped": True, "reason": "already running"}
+            status["running"] = True
+            try:
+                return _fetch_all(conn)
+            finally:
+                status["running"] = False
     finally:
-        status["running"] = False
         _lock.release()
+
+
+def _fetch_all(conn):
+    """One fetch run; the caller holds the locks."""
+    cfg = config.load_config()
+    own_conn = conn is None
+    conn = conn or db.connect()
+    retention = cfg["storage"].get("retention_days", 14)
+    results = {}
+    with httpx.Client(headers={"User-Agent": cfg["fetch"]["user_agent"]},
+                      timeout=cfg["fetch"].get("timeout_seconds", 20),
+                      follow_redirects=True) as client:
+        for src in config.load_sources():
+            found = new = 0
+            errors = []
+            group = src.get("group", "mainstream")
+            # 0 (or missing) means "no date cutoff": take whatever the feed
+            # offers, which is what the slow independent outlets need.
+            window_days = config.group_settings(group, "ingest_window_days",
+                                                default=retention)
+            cutoff = (iso(utcnow() - timedelta(days=window_days))
+                      if window_days else "")
+            for url in src["feeds"]:
+                try:
+                    resp = client.get(url)
+                    resp.raise_for_status()
+                    now = utcnow()
+                    items = [a for a in parse_feed(resp.content, src["id"], now,
+                                                   src.get("scope", "portugal"),
+                                                   src.get("language", "pt"), group,
+                                                   src.get("author_from", "feed"))
+                             if a["published_at"] >= cutoff]
+                    if not items:
+                        errors.append(f"{url}: feed vazio")
+                    found += len(items)
+                    new += store(conn, items)
+                except Exception as ex:  # one broken feed must not stop the others
+                    errors.append(f"{url}: {type(ex).__name__}: {ex}")
+            results[src["id"]] = {"name": src["name"], "scope": src.get("scope", "portugal"),
+                                  "group": group, "found": found, "new": new,
+                                  "errors": errors, "ok": not errors}
+        bylines = fill_page_authors(conn, client, cfg["fetch"].get("author_pages_per_run", 60))
+    rescored = rescore_all(conn)
+    archive.sync(conn)               # before cleanup: the archive keeps what it deletes
+    deleted = cleanup(conn, retention)
+    topic_counts = {f"{scope}/{group}": len(found)
+                    for (scope, group), found in topics.recompute_all(conn).items()}
+    archived = archive.sync(conn)    # again, to keep the topics just computed
+    total = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
+    if own_conn:
+        conn.close()
+    status["last_run"] = iso(utcnow())
+    status["sources"] = results
+    return {"sources": results, "deleted": deleted, "rescored": rescored, "bylines": bylines, "archived": archived,
+            "topics": topic_counts, "total": total, "finished_at": status["last_run"]}
 
 
 if __name__ == "__main__":

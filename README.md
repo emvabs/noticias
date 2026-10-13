@@ -24,6 +24,16 @@ The server restarts itself when you edit anything in `app/` (set `server.reload:
 
 Open **http://localhost:8000** (it works the same on a phone, tablet or large monitor). On startup the server fetches every feed in the background, then again every 20 minutes. The **Atualizar** button triggers a fetch right away.
 
+### Fetching in a separate process
+
+That is all you need at home. On a server running several web processes, each would run its own 20-minute fetch, so the fetching can move to one process of its own: set `worker: separate` in `config.yaml` (the web server then runs no scheduler) and start
+
+```bash
+python -m app.worker
+```
+
+next to the web server. It fetches once at startup, then every `fetch.interval_minutes`, never two runs at once (also not at the same time as the **Atualizar** button), and stops cleanly on Ctrl+C or SIGTERM, finishing the fetch in progress first.
+
 ## How it works
 
 | Part | File |

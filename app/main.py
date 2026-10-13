@@ -19,6 +19,9 @@ conn = db.connect()
 
 @asynccontextmanager
 async def lifespan(app):
+    if config.worker_mode() == "separate":   # python -m app.worker does the fetching
+        yield
+        return
     minutes = config.load_config()["fetch"].get("interval_minutes", 20)
     scheduler = BackgroundScheduler(timezone="UTC")
     # First run right away (in the background, so the page opens immediately).
@@ -228,7 +231,7 @@ def silence_articles(topic: str, scope: str = DEFAULT_SCOPE, outlet: str | None 
 
 @app.get("/api/status")
 def status():
-    return {"last_updated": ingest.status["last_run"], "running": ingest.status["running"]}
+    return {"last_updated": ingest.status["last_run"], "running": ingest.is_running()}
 
 
 @app.post("/api/refresh")

@@ -15,6 +15,17 @@ def load_config():
     return _load("config.yaml")
 
 
+WORKER_MODES = ("embedded", "separate")
+
+
+def worker_mode():
+    """Who runs the scheduled fetch: the web server ("embedded") or ``python -m app.worker``."""
+    mode = load_config().get("worker", "embedded")
+    if mode not in WORKER_MODES:
+        raise ValueError(f"worker: {mode!r} in config.yaml; use one of {', '.join(WORKER_MODES)}")
+    return mode
+
+
 def load_sources(enabled_only=True):
     sources = _load("sources.yaml").get("sources", [])
     if enabled_only:
