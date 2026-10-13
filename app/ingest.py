@@ -32,7 +32,7 @@ SPACE_RE = re.compile(r"\s+")
 PUNCT_RE = re.compile(r"[^a-z0-9 ]+")
 
 _lock = threading.Lock()
-status = {"last_run": None, "running": False, "sources": {}}
+RUN_HISTORY_DAYS = 7   # fetch_runs / feed_results kept this long
 
 
 def lock_path():
@@ -248,6 +248,64 @@ def cleanup(conn, retention_days):
     return deleted
 
 
+def start_run(conn):
+    run_id = conn.execute("INSERT INTO fetch_runs (started_at) VALUES (?)",
+                          (iso(utcnow()),)).lastrowid
+    conn.commit()
+    return run_id
+
+
+def record_feed(conn, run_id, source, url, items, error):
+    conn.execute("INSERT INTO feed_results (run_id, source, url, items, error, fetched_at)"
+                 " VALUES (?,?,?,?,?,?)", (run_id, source, url, items, error, iso(utcnow())))
+    conn.commit()
+
+
+def finish_run(conn, run_id, ok):
+    finished = iso(utcnow())
+    conn.execute("UPDATE fetch_runs SET finished_at = ?, ok = ? WHERE id = ?",
+                 (finished, int(ok), run_id))
+    cutoff = iso(utcnow() - timedelta(days=RUN_HISTORY_DAYS))
+    conn.execute("DELETE FROM feed_results WHERE fetched_at < ?", (cutoff,))
+    conn.execute("DELETE FROM fetch_runs WHERE started_at < ?", (cutoff,))
+    conn.commit()
+    return finished
+
+
+def last_finished(conn, ok_only=False):
+    """When the last fetch run ended (any process); ``ok_only``: one that got items."""
+    sql = "SELECT MAX(finished_at) FROM fetch_runs" + (" WHERE ok = 1" if ok_only else "")
+    return conn.execute(sql).fetchone()[0]
+
+
+def latest_errors(conn):
+    """{source: ["url: error", ...]} from each feed's most recent result."""
+    rows = conn.execute(
+        """SELECT source, url, error FROM feed_results
+           JOIN (SELECT url, MAX(run_id) run_id FROM feed_results GROUP BY url) USING (url, run_id)
+           WHERE error IS NOT NULL ORDER BY source, url""").fetchall()
+    out = {}
+    for r in rows:
+        out.setdefault(r["source"], []).append(f"{r['url']}: {r['error']}")
+    return out
+
+
+def empty_feeds(conn, hours=24):
+    """Enabled feeds fetched in the last ``hours`` that returned no items on any run."""
+    names = {s["id"]: s["name"] for s in config.load_sources()}
+    enabled = {(s["id"], url) for s in config.load_sources() for url in s["feeds"]}
+    rows = conn.execute(
+        """SELECT source, url, COUNT(*) runs, MAX(items) most,
+                  (SELECT error FROM feed_results l WHERE l.url = r.url
+                   ORDER BY run_id DESC LIMIT 1) last_error
+           FROM feed_results r WHERE fetched_at >= ?
+           GROUP BY source, url HAVING most = 0 ORDER BY source, url""",
+        (iso(utcnow() - timedelta(hours=hours)),)).fetchall()
+    return [{"source": r["source"], "name": names[r["source"]], "url": r["url"],
+             "runs": r["runs"], "last_error": r["last_error"]}
+            for r in rows if (r["source"], r["url"]) in enabled]
+
+
 def fetch_all(conn=None):
     """Fetch every enabled source, one run at a time across threads and processes."""
     if not _lock.acquire(blocking=False):
@@ -256,11 +314,7 @@ def fetch_all(conn=None):
         with _file_lock() as got:
             if not got:
                 return {"skipped": True, "reason": "already running"}
-            status["running"] = True
-            try:
-                return _fetch_all(conn)
-            finally:
-                status["running"] = False
+            return _fetch_all(conn)
     finally:
         _lock.release()
 
@@ -272,6 +326,7 @@ def _fetch_all(conn):
     conn = conn or db.connect()
     retention = cfg["storage"].get("retention_days", 14)
     results = {}
+    run_id = start_run(conn)
     with httpx.Client(headers={"User-Agent": cfg["fetch"]["user_agent"]},
                       timeout=cfg["fetch"].get("timeout_seconds", 20),
                       follow_redirects=True) as client:
@@ -286,6 +341,7 @@ def _fetch_all(conn):
             cutoff = (iso(utcnow() - timedelta(days=window_days))
                       if window_days else "")
             for url in src["feeds"]:
+                items, error = [], None
                 try:
                     resp = client.get(url, headers=source_headers(src))
                     resp.raise_for_status()
@@ -296,11 +352,14 @@ def _fetch_all(conn):
                                                    src.get("author_from", "feed"))
                              if a["published_at"] >= cutoff]
                     if not items:
-                        errors.append(f"{url}: feed vazio")
+                        error = "feed vazio"
                     found += len(items)
                     new += store(conn, items)
                 except Exception as ex:  # one broken feed must not stop the others
-                    errors.append(f"{url}: {type(ex).__name__}: {ex}")
+                    error = f"{type(ex).__name__}: {ex}"
+                if error:
+                    errors.append(f"{url}: {error}")
+                record_feed(conn, run_id, src["id"], url, len(items), error)
             results[src["id"]] = {"name": src["name"], "scope": src.get("scope", "portugal"),
                                   "group": group, "found": found, "new": new,
                                   "errors": errors, "ok": not errors}
@@ -312,12 +371,11 @@ def _fetch_all(conn):
                     for (scope, group), found in topics.recompute_all(conn).items()}
     archived = archive.sync(conn)    # again, to keep the topics just computed
     total = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
+    finished = finish_run(conn, run_id, ok=any(r["found"] for r in results.values()))
     if own_conn:
         conn.close()
-    status["last_run"] = iso(utcnow())
-    status["sources"] = results
     return {"sources": results, "deleted": deleted, "rescored": rescored, "bylines": bylines, "archived": archived,
-            "topics": topic_counts, "total": total, "finished_at": status["last_run"]}
+            "topics": topic_counts, "total": total, "finished_at": finished}
 
 
 if __name__ == "__main__":

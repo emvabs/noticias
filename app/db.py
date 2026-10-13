@@ -26,6 +26,22 @@ CREATE TABLE IF NOT EXISTS articles (
     authors       TEXT                    -- JSON list of bylines; NULL = not looked up yet
 );
 
+CREATE TABLE IF NOT EXISTS fetch_runs (     -- one row per fetch, from any process
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    started_at  TEXT NOT NULL,
+    finished_at TEXT,                       -- NULL while running (or if the process died)
+    ok          INTEGER NOT NULL DEFAULT 0  -- finished, and at least one feed had items
+);
+
+CREATE TABLE IF NOT EXISTS feed_results (   -- what each feed returned on each run
+    run_id     INTEGER NOT NULL,
+    source     TEXT NOT NULL,
+    url        TEXT NOT NULL,
+    items      INTEGER NOT NULL,            -- items within the date window, as stored
+    error      TEXT,                        -- NULL when fine; "feed vazio" when no items
+    fetched_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS topics_cache (   -- current top topics per scope and group
     scope       TEXT NOT NULL,
     "group"     TEXT NOT NULL DEFAULT 'mainstream',
@@ -40,13 +56,15 @@ CREATE TABLE IF NOT EXISTS topics_cache (   -- current top topics per scope and 
 
 # Stamped into PRAGMA user_version by migrate(). Bump it when migrate() gains a
 # step, so processes started with NOTICIAS_AUTO_MIGRATE=0 refuse an old database.
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2   # 2: fetch_runs, feed_results
 
 INDEXES = """
 CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_label ON articles(label, published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_scope ON articles(scope, published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_articles_group ON articles(scope, "group", published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feed_results_time ON feed_results(fetched_at);
+CREATE INDEX IF NOT EXISTS idx_feed_results_url ON feed_results(url, run_id);
 """
 
 

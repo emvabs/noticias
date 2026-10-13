@@ -4,10 +4,11 @@ import ipaddress
 import json
 import threading
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db, deepdive, ingest, ownership, profiles, search
@@ -118,7 +119,7 @@ def feed(positive_pct: float = Query(50, ge=0, le=100),
     # The page shows which synonyms were searched as well as the typed words.
     expanded = search.expand(q)[1:] if q else []
     return {**stats, "scope": scope, "group": group, "topics": topic_list, "q": (q or "").strip(),
-            "also_searched": expanded, "last_updated": ingest.status["last_run"], "articles": articles}
+            "also_searched": expanded, "last_updated": last_updated(), "articles": articles}
 
 
 @app.get("/api/sources")
@@ -128,6 +129,7 @@ def sources(scope: str | None = None, group: str | None = None):
         rows = conn.execute(
             "SELECT source, COUNT(*) n, MAX(published_at) last FROM articles GROUP BY source"
         ).fetchall()
+        errors = ingest.latest_errors(conn)
     stats = {r["source"]: (r["n"], r["last"]) for r in rows}
     owners = {ident: [o["name"] for o in p.get("owners") or []]
               for ident, p in ownership.outlet_profiles().items()}
@@ -137,12 +139,12 @@ def sources(scope: str | None = None, group: str | None = None):
             continue
         if group and s.get("group", DEFAULT_GROUP) != group:
             continue
-        st = ingest.status["sources"].get(s["id"], {})
         count, last = stats.get(s["id"], (0, None))
+        enabled = bool(s.get("enabled", True) and s.get("feeds"))
         out.append({"id": s["id"], "name": s["name"], "scope": s.get("scope", DEFAULT_SCOPE),
                     "language": s.get("language", "pt"), "group": s.get("group", DEFAULT_GROUP),
-                    "enabled": bool(s.get("enabled", True) and s.get("feeds")),
-                    "articles": count, "last_published": last, "errors": st.get("errors", []),
+                    "enabled": enabled, "articles": count, "last_published": last,
+                    "errors": errors.get(s["id"], []) if enabled else [],
                     "owners": owners.get(s["id"], [])})
     return out
 
@@ -231,9 +233,38 @@ def silence_articles(topic: str, scope: str = DEFAULT_SCOPE, outlet: str | None 
         return deepdive.silence_articles(conn, scope, topic, outlet)
 
 
+def last_updated():
+    """When the last fetch finished, whichever process ran it (the worker, maybe)."""
+    with _conn_lock:
+        return ingest.last_finished(conn)
+
+
 @app.get("/api/status")
 def status():
-    return {"last_updated": ingest.status["last_run"], "running": ingest.is_running()}
+    return {"last_updated": last_updated(), "running": ingest.is_running()}
+
+
+@app.get("/healthz")
+def healthz():
+    """For an uptime checker: 200 while fetches succeed, 503 once they go stale.
+
+    Stale = no successful fetch (finished, with items from at least one feed) in
+    3x fetch.interval_minutes. Reads the database, so it sees the worker's runs.
+    """
+    minutes = config.load_config()["fetch"].get("interval_minutes", 20)
+    with _conn_lock:
+        last = ingest.last_finished(conn, ok_only=True)
+        empty = ingest.empty_feeds(conn)
+    max_age = 3 * minutes
+    age = None
+    if last:
+        finished = datetime.strptime(last, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        age = round((ingest.utcnow() - finished).total_seconds() / 60, 1)
+    healthy = age is not None and age < max_age
+    return JSONResponse(status_code=200 if healthy else 503, content={
+        "status": "ok" if healthy else "stale", "last_success": last,
+        "minutes_since_success": age, "max_age_minutes": max_age,
+        "running": ingest.is_running(), "empty_feeds_24h": empty})
 
 
 # Set by a reverse proxy. A request carrying them only looks local because the
@@ -271,5 +302,5 @@ def refresh(request: Request):
     # Runs in the request thread (FastAPI threadpool); takes a couple of seconds.
     result = ingest.fetch_all()
     if result.get("skipped"):
-        return {"ok": True, "skipped": True, "last_updated": ingest.status["last_run"]}
+        return {"ok": True, "skipped": True, "last_updated": last_updated()}
     return {"ok": True, **result}

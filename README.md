@@ -58,6 +58,19 @@ Fetching every outlet on demand is limited to the computer the site runs on: a v
 curl -X POST -H "Authorization: Bearer $NOTICIAS_ADMIN_TOKEN" https://example.org/api/refresh
 ```
 
+### Health check
+
+`GET /healthz` is for an uptime checker. It answers 200 while fetching works and 503 when the last successful fetch is older than 3× `fetch.interval_minutes` (an hour, by default), or there has been none yet:
+
+```json
+{"status": "ok", "last_success": "2026-10-13T09:20:04Z", "minutes_since_success": 4.2,
+ "max_age_minutes": 60, "running": false,
+ "empty_feeds_24h": [{"source": "dn", "name": "Diário de Notícias", "url": "https://www.dn.pt/stories.rss",
+                      "runs": 72, "last_error": "feed vazio"}]}
+```
+
+A fetch counts as successful when it finished and at least one feed returned items. `empty_feeds_24h` lists the enabled feeds that returned nothing on every fetch of the last 24 hours. The history behind it is kept in the database for 7 days, so it survives a restart and includes fetches made by `python -m app.worker`.
+
 ### Migrations
 
 The database is created and upgraded automatically every time the server or a fetch connects to it. On a server, where several processes would race to do it, turn that off with `NOTICIAS_AUTO_MIGRATE=0` and run the migrations once per deploy instead:
@@ -378,4 +391,4 @@ Articles belong to their respective outlets. Only title, summary and link are st
 
 ## Upgrading an existing database
 
-These features add seven columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`) and the `topics_cache`, `article_archive` and `topic_labels` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.
+These features add seven columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`) and the `topics_cache`, `article_archive`, `topic_labels`, `fetch_runs` and `feed_results` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.

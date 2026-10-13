@@ -35,7 +35,7 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 |---|---|
 | Outlets, feeds, `scope` / `language` / `group` | `sources.yaml` |
 | Thresholds, retention, per-group settings | `config.yaml` |
-| Fetch, clean, dedupe, retention | `app/ingest.py` |
+| Fetch, clean, dedupe, retention, fetch history | `app/ingest.py` |
 | Word-list scoring | `app/sentiment.py` |
 | Topic extraction (TF-IDF) | `app/topics.py` |
 | Search matching, synonyms | `app/search.py` |
@@ -44,7 +44,7 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 | Never-deleted article archive | `app/archive.py` |
 | Deep Dive findings and silences | `app/deepdive.py`, `static/deepdive.js` |
 | Slider mixing | `app/mixing.py` |
-| API, embedded scheduler, static files | `app/main.py` |
+| API, `/healthz`, embedded scheduler, static files | `app/main.py` |
 | Scheduled fetching in its own process | `app/worker.py` |
 | Schema and migrations | `app/db.py` |
 | Page | `static/` |
@@ -153,6 +153,14 @@ fix wrong labels or noisy topics — prefer them over changing code.
   unset. `NOTICIAS_AUTO_MIGRATE` and `NOTICIAS_ADMIN_TOKEN` have their own
   helpers (`auto_migrate()`, `admin_token()`). The README has the full table.
   Add a new variable there, not with `os.environ` elsewhere.
+
+- **Fetch history lives in the database, not in memory.** Each run writes a
+  `fetch_runs` row and one `feed_results` row per feed (7 days kept). The web
+  process cannot see the worker's memory, so "Atualizado há…", per-source
+  errors in `/api/sources` and `/healthz` all read these tables, and they
+  survive a restart. `/healthz` is 200 while the last *successful* run (finished,
+  with items from at least one feed) is under 3× `fetch.interval_minutes` old,
+  503 otherwise, and lists enabled feeds with 0 items on every run in 24 h.
 
 ## Gotchas
 
