@@ -96,7 +96,7 @@ class FakeClient:
     def __init__(self, pages):
         self.pages = pages
 
-    def get(self, url):
+    def get(self, url, headers=None):
         import httpx
         if url not in self.pages:
             return httpx.Response(404, request=httpx.Request("GET", url))

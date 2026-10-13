@@ -186,6 +186,11 @@ def store(conn, articles, scorer=None):
     return inserted
 
 
+def source_headers(src):
+    """Headers for one source's requests: its own User-Agent if sources.yaml sets one."""
+    return {"User-Agent": src["user_agent"]} if src.get("user_agent") else None
+
+
 def fill_page_authors(conn, client, limit):
     """Read bylines from the pages of articles whose feed has none (newest first).
 
@@ -193,18 +198,18 @@ def fill_page_authors(conn, client, limit):
     A page that answers with an error is marked as having no byline, so it is
     not asked for again; a timeout leaves it for the next run.
     """
-    page_sources = [s["id"] for s in config.load_sources(enabled_only=False)
-                    if s.get("author_from") == "page"]
+    page_sources = {s["id"]: s for s in config.load_sources(enabled_only=False)
+                    if s.get("author_from") == "page"}
     if not page_sources or not limit:
         return 0
     rows = conn.execute(
-        f"""SELECT id, url FROM articles WHERE authors IS NULL
+        f"""SELECT id, source, url FROM articles WHERE authors IS NULL
             AND source IN ({','.join('?' * len(page_sources))})
-            ORDER BY published_at DESC LIMIT ?""", page_sources + [limit]).fetchall()
+            ORDER BY published_at DESC LIMIT ?""", list(page_sources) + [limit]).fetchall()
     done = 0
     for r in rows:
         try:
-            resp = client.get(r["url"])
+            resp = client.get(r["url"], headers=source_headers(page_sources[r["source"]]))
             names = profiles.page_authors(resp.text) if resp.is_success else []
         except httpx.HTTPError:
             continue
@@ -282,7 +287,7 @@ def _fetch_all(conn):
                       if window_days else "")
             for url in src["feeds"]:
                 try:
-                    resp = client.get(url)
+                    resp = client.get(url, headers=source_headers(src))
                     resp.raise_for_status()
                     now = utcnow()
                     items = [a for a in parse_feed(resp.content, src["id"], now,

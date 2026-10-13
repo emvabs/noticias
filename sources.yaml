@@ -4,6 +4,8 @@
 #   language: pt | en            -> escolhe o léxico usado na análise
 #   author_from: feed | page | none  -> onde está o nome do jornalista (omissão: feed).
 #       page = o feed não o traz; lê-se da página do artigo (uma vez por artigo).
+#   user_agent: "..."  -> só para fontes que recusam o fetch.user_agent de config.yaml
+#       (feed e páginas dessa fonte). Ver: python scripts/compare_user_agents.py
 sources:
   # ---------------- PORTUGAL ----------------
   - id: publico

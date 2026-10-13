@@ -23,6 +23,7 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 .venv/bin/python -m app.topics # print the current topics per scope and group
 .venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
+.venv/bin/python scripts/compare_user_agents.py  # per-feed items: browser UA vs honest UA
 ```
 
 The Python here is the python.org build, whose SSL has no CA certificates: use
@@ -175,6 +176,13 @@ fix wrong labels or noisy topics — prefer them over changing code.
 - Several feeds need care: CNN Portugal double-escapes HTML, WordPress feeds
   append "O conteúdo … apareceu primeiro em …" footers, Divergente's real
   articles are only in `?post_type=trabalho`, and DN sends no summaries.
+- **User-Agent is a setting per fetch and per source.** `fetch.user_agent` is
+  the default; a source in `sources.yaml` can set its own `user_agent` (feed
+  and article pages). The default is still the browser-like string: the switch
+  to an honest `Noticias/1.0 (+https://github.com/emvabs/noticias)` waits on
+  `scripts/compare_user_agents.py` run from a network that reaches the outlets
+  (the cloud sandbox where this was written could not). Give any source it
+  flags its own browser-like `user_agent`, then change the default.
 - SIC Notícias, Jornal de Notícias, Reuters and Associated Press have no working
   public feed (checked September 2026). They sit in `sources.yaml` with
   `enabled: false` and a comment. Do not scrape them.
