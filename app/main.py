@@ -1,10 +1,12 @@
 """FastAPI app: JSON API + the single-page frontend."""
+import hmac
+import ipaddress
 import json
 import threading
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -234,8 +236,38 @@ def status():
     return {"last_updated": ingest.status["last_run"], "running": ingest.is_running()}
 
 
+# Set by a reverse proxy. A request carrying them only looks local because the
+# proxy runs on this machine; the real visitor is somewhere else.
+PROXY_HEADERS = ("x-forwarded-for", "forwarded", "x-real-ip")
+
+
+def is_loopback(host):
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return host == "localhost"
+    mapped = getattr(ip, "ipv4_mapped", None)   # ::ffff:127.0.0.1
+    return (mapped or ip).is_loopback
+
+
+def is_local(request):
+    host = request.client.host if request.client else ""
+    return is_loopback(host) and not any(h in request.headers for h in PROXY_HEADERS)
+
+
+def has_admin_token(request):
+    token = config.admin_token()
+    scheme, _, given = request.headers.get("authorization", "").partition(" ")
+    if not token or scheme.lower() != "bearer":
+        return False
+    return hmac.compare_digest(given.strip().encode(), token.encode())
+
+
 @app.post("/api/refresh")
-def refresh():
+def refresh(request: Request):
+    """Fetch every outlet now: from this machine, or with NOTICIAS_ADMIN_TOKEN."""
+    if not (is_local(request) or has_admin_token(request)):
+        raise HTTPException(403, "refresh is limited to localhost or the admin token")
     # Runs in the request thread (FastAPI threadpool); takes a couple of seconds.
     result = ingest.fetch_all()
     if result.get("skipped"):

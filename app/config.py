@@ -30,6 +30,11 @@ def auto_migrate():
     return env_bool("NOTICIAS_AUTO_MIGRATE", True)
 
 
+def admin_token():
+    """Token that lets non-local requests trigger a fetch; empty = localhost only."""
+    return os.environ.get("NOTICIAS_ADMIN_TOKEN", "").strip()
+
+
 WORKER_MODES = ("embedded", "separate")
 
 

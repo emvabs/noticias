@@ -34,6 +34,14 @@ python -m app.worker
 
 next to the web server. It fetches once at startup, then every `fetch.interval_minutes`, never two runs at once (also not at the same time as the **Atualizar** button), and stops cleanly on Ctrl+C or SIGTERM, finishing the fetch in progress first.
 
+### Who can press Atualizar
+
+Fetching every outlet on demand is limited to the computer the site runs on: a visit from another device (or through a reverse proxy) gets "Atualização não permitida aqui" and the automatic fetch carries on as usual. To trigger a fetch from elsewhere, set `NOTICIAS_ADMIN_TOKEN` on the server and send it as a header:
+
+```bash
+curl -X POST -H "Authorization: Bearer $NOTICIAS_ADMIN_TOKEN" https://example.org/api/refresh
+```
+
 ### Migrations
 
 The database is created and upgraded automatically every time the server or a fetch connects to it. On a server, where several processes would race to do it, turn that off with `NOTICIAS_AUTO_MIGRATE=0` and run the migrations once per deploy instead:

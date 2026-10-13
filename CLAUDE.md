@@ -137,6 +137,15 @@ fix wrong labels or noisy topics — prefer them over changing code.
   step.** `:memory:` databases always migrate. The `sources.yaml` re-sync is
   part of the migration, so with auto-migration off it needs the command too.
 
+- **`POST /api/refresh` is localhost or token only.** A request is local when
+  it comes from a loopback address *and* carries no `X-Forwarded-For`,
+  `Forwarded` or `X-Real-IP`: behind a reverse proxy on the same machine every
+  visitor arrives from 127.0.0.1. Otherwise it needs `Authorization: Bearer
+  <NOTICIAS_ADMIN_TOKEN>` (compared with `hmac.compare_digest`); no token set
+  means localhost only. The page says "Atualização não permitida aqui" on a
+  403 from the button, and stays quiet for the automatic refresh on a scope
+  switch.
+
 ## Gotchas
 
 - **Restart after changing `app/`** — `run.py` auto-reloads, but a server started
