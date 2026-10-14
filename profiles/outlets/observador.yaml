@@ -1,37 +1,68 @@
 name: Observador
 type: Jornal digital e rádio (privado), fundado em 2014
-owner: Observador On Time, SA; maior acionista Luís Amaral (Amaral y Hijas Holding, ~47%)
+owner: Observador On Time, SA; maior acionista Luís Amaral (Amaral y Hijas Holding, 47,65%)
 summary: >
-  Jornal online fundado por um grupo de investidores e jornalistas liderado por
-  José Manuel Fernandes. Declara-se defensor da liberdade e de uma sociedade
-  aberta.
+  Jornal online e rádio, fundado em 2014 por António Carrapatoso, Duarte
+  Schmidt Lino, José Manuel Fernandes e Rui Ramos, com capital de cerca de
+  duas dezenas de acionistas privados. No estatuto editorial diz defender uma
+  sociedade aberta e não perfilhar qualquer programa político.
 funding:
-  - text: Capital de cerca de duas dezenas de acionistas privados, sem recurso a crédito bancário (segundo o próprio jornal). O maior é o empresário Luís Amaral; entre os outros estão António Carrapatoso e António Champalimaud.
-    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
-  - text: Em outubro de 2024 a Jerónimo Martins (dona do Pingo Doce), através da Recheio SGPS, ficou com 4,99% do capital.
-    source: https://www.esquerda.net/artigo/dono-do-pingo-doce-entra-no-capital-do-observador/92712
+  - text: Segundo o presidente do conselho de administração, António Carrapatoso (fevereiro de 2026), os acionistas investiram cerca de 12,2 milhões de euros em capital entre 2014 e 2026, mais 2,2 milhões em prestações suplementares; a dívida bancária é "praticamente nula". Tem 21 acionistas, 20 deles desde o início.
+    source: https://observador.pt/opiniao/a-afirmacao-do-observador-agora-tambem-com-resultados-operacionais-positivos/
+  - text: Também segundo Carrapatoso, 2025 foi o primeiro ano com resultados operacionais positivos (contas provisórias), com um orçamento anual de cerca de 9 milhões de euros e mais de 35 mil assinantes.
+    source: https://observador.pt/opiniao/a-afirmacao-do-observador-agora-tambem-com-resultados-operacionais-positivos/
+  - text: Em outubro de 2024 a Recheio SGPS, do grupo Jerónimo Martins (dono do Pingo Doce), entrou no capital; a ficha técnica indica 4,76%.
+    source:
+      - https://observador.pt/ficha-tecnica/
+      - https://www.esquerda.net/artigo/dono-do-pingo-doce-entra-no-capital-do-observador/92712
 political_links:
-  official: []
+  official:
+    - text: O presidente do conselho geral, Nuno Crato, foi ministro da Educação e Ciência, como independente, entre 2011 e 2015, no Governo PSD/CDS de Pedro Passos Coelho.
+      source:
+        - https://observador.pt/ficha-tecnica/
+        - https://www.iseg.ulisboa.pt/en/?p=24250
+        - https://www.rtp.pt/noticias/politica/governos-de-portugal_i852231
   reported: []
 narrative:
-  - text: No texto de apresentação o jornal diz defender "uma sociedade aberta" e os princípios da civilização ocidental, e diz que não segue nenhum programa político.
-    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
-  - text: Críticos à esquerda descrevem-no como veículo de campanhas da direita (por exemplo, a favor da revisão constitucional) e sublinham que entre os investidores iniciais havia gestores e ativistas do PSD do movimento "Compromisso Portugal" (artigo de opinião de Adriano Campos no esquerda.net, portal do Bloco de Esquerda, 2015).
+  - text: O estatuto editorial diz defender "uma sociedade aberta, com instituições respeitadoras da lei e dos direitos individuais", assume princípios "derivados da antiguidade greco-romana, do Cristianismo e do Iluminismo" e afirma que "não perfilha qualquer programa político".
+    source: https://observador.pt/estatuto-editorial/
+  - text: Em 2015, num artigo de opinião no esquerda.net, Adriano Campos descreveu o Observador como um jornal que assume campanhas da direita, como a da revisão constitucional, e apontou entre os investidores "quatro ativistas do PSD" que lançaram o movimento "Compromisso Portugal".
     source: https://www.esquerda.net/opiniao/observador-o-jornal-da-direita-aflita/36687
 owners:
   - name: Luís Amaral
     share: 47.65
     kind: person
     via: Amaral y Hijas Holding
-    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
+    source: https://observador.pt/ficha-tecnica/
+  - name: António Carrapatoso
+    share: 7.65
+    kind: person
+    via: Orientempo
+    source: https://observador.pt/ficha-tecnica/
+  - name: Alexandre Relvas
+    share: 4.77
+    kind: person
+    via: Famav Investimentos
+    source: https://observador.pt/ficha-tecnica/
+  - name: Filipe de Botton
+    share: 4.77
+    kind: person
+    via: Lusofinança
+    source: https://observador.pt/ficha-tecnica/
+  - name: Pedro de Almeida
+    share: 4.77
+    kind: person
+    via: Ardma SGPS
+    source: https://observador.pt/ficha-tecnica/
+  - name: Carlos Moreira da Silva
+    share: 4.77
+    kind: person
+    via: Teak Capital
+    source: https://observador.pt/ficha-tecnica/
   - name: Jerónimo Martins
-    share: 4.99
+    share: 4.76
     kind: company
     via: Recheio SGPS
-    source: https://www.esquerda.net/artigo/dono-do-pingo-doce-entra-no-capital-do-observador/92712
-  - name: António Carrapatoso
-    share: null
-    kind: person
-    source: https://observador.pt/explicadores/tudo-o-que-precisa-de-saber-sobre-o-observador/
-owner_keywords: [Luís Amaral, Jerónimo Martins, Pingo Doce, Recheio, Soares dos Santos, Carrapatoso]
+    source: https://observador.pt/ficha-tecnica/
+owner_keywords: [Luís Amaral, Amaral y Hijas, António Carrapatoso, Orientempo, Alexandre Relvas, Filipe de Botton, Carlos Moreira da Silva, Teak Capital, Jerónimo Martins, Pingo Doce, Recheio, Soares dos Santos, Nuno Crato]
 last_checked: 2026-09-27

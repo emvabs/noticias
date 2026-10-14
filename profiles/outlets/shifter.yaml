@@ -1,10 +1,11 @@
 name: Shifter
-type: Revista digital e trimestral impressa (privada, independente), fundada em 2013
-owner: Shifter Generation, Lda (sócio-gerente Mário Rui André); diretora Carolina Franco, editor João Gabriel Ribeiro
+type: Revista digital e impressa três vezes por ano (privada, independente), fundada em 2013
+owner: Shifter Generation, Lda, cujo gerente e detentor do capital é Mário Rui André; CEO e editor João Gabriel Ribeiro, diretora Carolina Franco
 summary: >
-  Revista sobre tecnologia, cultura, política e justiça social. Fundada por
-  Mário Rui André e João Gabriel Ribeiro, é financiada sobretudo pelos
-  leitores. A mesma empresa é dona do Lisboa Para Pessoas.
+  Revista sobre tecnologia, cultura, política e justiça social, cofundada por
+  Mário Rui André e João Gabriel Ribeiro. Vive de assinaturas, da venda da
+  revista impressa, de merchandising e de apoios da comunidade. A mesma empresa
+  publica o Lisboa Para Pessoas.
 funding:
   - text: Assinaturas (desde 2 €/mês), venda da revista impressa, merchandising e apoios da comunidade.
     source: https://shifter.pt/sobre/
@@ -12,12 +13,13 @@ political_links:
   official: []
   reported: []
 narrative:
-  - text: Diz questionar o progresso tecnológico e que "não responde a interesses económicos, corporativos ou partidários".
+  - text: Diz questionar "o progresso tecnológico e o futuro da sociedade" e que "não reage a interesses económicos, corporativos ou partidários".
     source: https://shifter.pt/sobre/
 owners:
-  - name: Shifter Generation
+  - name: Mário Rui André
     share: 100
-    kind: company
+    kind: person
+    via: Shifter Generation
     source: https://shifter.pt/sobre/
-owner_keywords: [Shifter Generation, Lisboa Para Pessoas]
+owner_keywords: [Shifter Generation, Mário Rui André, Lisboa Para Pessoas]
 last_checked: 2026-09-27

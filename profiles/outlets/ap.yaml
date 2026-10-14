@@ -2,23 +2,25 @@ name: Associated Press
 type: Agência noticiosa norte-americana (cooperativa sem fins lucrativos), fundada em 1846
 owner: Cooperativa detida pelos jornais e emissoras norte-americanos seus membros
 summary: >
-  Uma das maiores agências do mundo. É uma cooperativa sem fins lucrativos e o
-  seu livro de estilo é usado por muitas redações.
+  Uma das maiores agências noticiosas do mundo, fundada em 1846. É uma
+  cooperativa sem fins lucrativos detida pelas organizações noticiosas que
+  licenciam os seus conteúdos.
 funding:
-  - text: Venda de notícias, fotos e vídeo aos clientes e membros, licenciamento de conteúdos e donativos filantrópicos.
-    source: https://en.wikipedia.org/wiki/Associated_Press
+  - text: Vive sobretudo das taxas de licenciamento pagas pelos meios membros e clientes; nos sete anos até 2024 angariou mais de 61 milhões de dólares em donativos filantrópicos, ainda uma pequena parte das receitas.
+    source: https://www.cjr.org/analysis/associated-press.php
 political_links:
   official: []
   reported: []
 narrative:
-  - text: Em fevereiro de 2025 a Casa Branca de Donald Trump barrou-lhe o acesso à Sala Oval e ao Air Force One por continuar a escrever "Golfo do México" em vez de "Golfo da América"; a AP levou o caso a tribunal.
+  - text: Em fevereiro de 2025 a Casa Branca de Donald Trump barrou-lhe o acesso à Sala Oval e ao Air Force One por continuar a escrever "Golfo do México" em vez de "Golfo da América". Um juiz deu-lhe razão em abril de 2025, mas em junho um coletivo de recurso permitiu, por 2–1, a exclusão dos espaços restritos, dizendo que a Casa Branca pode escolher os jornalistas "incluindo com base no ponto de vista". O caso continuava em tribunal em setembro de 2026.
     source:
       - https://www.npr.org/2025/02/24/nx-s1-5307243/ap-trump-lawsuit-gulf-of-america-mexico
-      - https://www.washingtonpost.com/business/2025/11/24/ap-white-house-gulf-of-america/
+      - https://www.cbsnews.com/news/appeals-court-allows-trump-to-ban-ap-from-white-house-press-pool-for-now/
+      - https://time.com/article/2026/09/29/trump-white-house-press-pool-tv-networks-cnn
 owners:
   - name: Cooperativa de membros da AP
     share: 100
     kind: cooperative
-    source: https://en.wikipedia.org/wiki/Associated_Press
-owner_keywords: []
+    source: https://www.cjr.org/analysis/associated-press.php
+owner_keywords: [Julie Pace]
 last_checked: 2026-09-27

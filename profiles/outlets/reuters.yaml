@@ -6,21 +6,23 @@ summary: >
   são protegidos por uma empresa própria com uma ação especial que pode travar
   compras hostis ou ameaças à independência.
 funding:
-  - text: A agência de notícias é uma parte pequena da Thomson Reuters, que vive sobretudo de dados e serviços para profissionais (jurídico, fiscal, financeiro).
-    source: https://www.stratrix.com/business-model/thomson-reuters-data-subscription-model
-  - text: A Woodbridge, holding da família Thomson, tinha 67,9% em março de 2026 (70,6% com o resto da família) e comprometeu-se a votar de acordo com os Princípios de Confiança.
-    source:
-      - https://www.stocktitan.net/sec-filings/TRI/schedule-13d-a-thomson-reuters-corp-can-amended-major-shareholder-rep-9ade70af18cf.html
-      - https://www.thomsonreuters.com/content/dam/ewp-m/documents/thomsonreuters/en/pdf/corporate-responsibility/thomson-reuters-founders-share-company-limited.pdf
+  - text: A agência é uma parte pequena da Thomson Reuters. Em 2025 o segmento Reuters faturou 853 milhões de dólares, cerca de 11% dos 7 476 milhões do grupo; o grosso vem de serviços para juristas (2 868 milhões), empresas (1 987 milhões) e profissionais de impostos e contabilidade (1 302 milhões).
+    source: https://www.nasdaq.com/press-release/thomson-reuters-reports-fourth-quarter-and-full-year-2025-results-2026-02-05
 political_links:
   official: []
   reported: []
-narrative: []
+narrative:
+  - text: Os "Princípios de Confiança" dizem que a Thomson Reuters não deve passar "para as mãos de nenhum interesse, grupo ou fação" e que a sua "integridade, independência e isenção" devem ser preservadas; a Founders Share Company pode bloquear quem tente chegar a 15% dos votos sem aprovação.
+    source: https://www.thomsonreuters.com/content/dam/ewp-m/documents/thomsonreuters/en/pdf/corporate-responsibility/thomson-reuters-founders-share-company-limited.pdf
+  - text: A Woodbridge, holding da família Thomson, tinha 67,91% em março de 2026 (70,56% com entidades relacionadas) e está obrigada por acordo a votar de acordo com os Princípios de Confiança.
+    source:
+      - https://www.stocktitan.net/sec-filings/TRI/schedule-13d-a-thomson-reuters-corp-can-amended-major-shareholder-rep-9ade70af18cf.html
+      - https://www.thomsonreuters.com/content/dam/ewp-m/documents/thomsonreuters/en/pdf/corporate-responsibility/thomson-reuters-founders-share-company-limited.pdf
 owners:
   - name: Família Thomson
     share: 67.91
     kind: person
     via: Woodbridge → Thomson Reuters
     source: https://www.stocktitan.net/sec-filings/TRI/schedule-13d-a-thomson-reuters-corp-can-amended-major-shareholder-rep-9ade70af18cf.html
-owner_keywords: []
+owner_keywords: [Woodbridge, Thomson Reuters, Founders Share Company, Michael Medline, Steve Hasker]
 last_checked: 2026-09-27

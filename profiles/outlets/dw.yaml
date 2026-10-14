@@ -2,18 +2,24 @@ name: Deutsche Welle
 type: Emissora pública internacional da Alemanha
 owner: Estado alemão (instituição de direito público regida pela Lei da Deutsche Welle)
 summary: >
-  Emissora internacional alemã em 30+ línguas. É paga pelo orçamento federal,
-  não pela taxa de TV, e a lei obriga-a a ser independente do Governo.
+  Emissora internacional alemã em 32 línguas, paga pelo orçamento federal e
+  não pela taxa de televisão. A lei proíbe-a de apoiar unilateralmente
+  partidos e dá-lhe a última palavra sobre a sua programação; os conselhos que
+  a governam incluem representantes do Bundestag, do Bundesrat e do Governo.
 funding:
-  - text: Financiada por impostos, através do orçamento federal alemão, sob a tutela do Comissário do Governo para a Cultura e os Media; quase sem publicidade.
-    source: https://en.wikipedia.org/wiki/Deutsche_Welle
+  - text: Financiada por uma subvenção federal fixada todos os anos na lei do orçamento e gerida pela Comissária do Governo para a Cultura e os Media; a lei permite publicidade com limite de tempo e proíbe patrocínio em noticiários e programas políticos.
+    source:
+      - https://baj.media/wp-content/uploads/2024/08/dw_gesetz_en-2.pdf
+      - https://www.bundesregierung.de/breg-de/aktuelles/deutsche-welle-kabinett-2436130
+  - text: Em 2026 a subvenção federal desceu para cerca de 415 milhões de euros (menos 10 milhões); somada a aumentos salariais não cobertos, obrigou a poupar 21 milhões, cortar cerca de 160 postos e fechar o serviço em grego.
+    source: https://www.broadbandtvnews.com/2026/02/18/deutsche-welle-to-cut-160-posts-and-close-greek-service/
 political_links:
   official:
-    - text: O orçamento é aprovado pelo parlamento federal; o conselho de supervisão inclui representantes do Bundestag, do Bundesrat e do Governo.
-      source: https://en.wikipedia.org/wiki/Deutsche_Welle
+    - text: Segundo a Lei da Deutsche Welle, o Conselho de Radiodifusão tem 17 membros (2 do Bundestag, 2 do Bundesrat, 3 nomeados pelo Governo federal e 10 de organizações da sociedade) e elege o diretor-geral; o Conselho de Administração tem 7 (um do Bundestag, um do Bundesrat, um do Governo e 4 eleitos pelo Conselho de Radiodifusão). O Governo só fiscaliza a legalidade.
+      source: https://baj.media/wp-content/uploads/2024/08/dw_gesetz_en-2.pdf
   reported: []
 narrative:
-  - text: Em 2022 despediu cinco jornalistas do serviço árabe depois de uma investigação externa sobre antissemitismo; os visados e alguns meios árabes contestaram o processo.
+  - text: Em fevereiro de 2022 despediu cinco trabalhadores, quatro do serviço árabe, depois de uma investigação externa liderada pela antiga ministra da Justiça Sabine Leutheusser-Schnarrenberger, que encontrou casos isolados de antissemitismo mas "nenhum problema sistémico". Os despedidos, a organização Euro-Med Monitor e um académico palestiniano contestaram o processo, segundo a Al Jazeera (emissora do Estado do Catar).
     source:
       - https://www.timesofisrael.com/german-broadcaster-dw-fires-5-staffers-after-probe-on-workplace-antisemitism/
       - https://www.aljazeera.com/news/2022/2/11/career-assassination-dws-scapegoating-of-arab-employees
@@ -22,5 +28,5 @@ owners:
     share: 100
     kind: state
     source: https://www.gesetze-im-internet.de/dwg/BJNR309410997.html
-owner_keywords: [Deutsche Welle Act, Barbara Massing]
+owner_keywords: [Barbara Massing]
 last_checked: 2026-09-27

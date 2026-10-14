@@ -5,25 +5,31 @@ summary: >
   Criada em 1996 pelo emir do Catar. Diz ser editorialmente independente, mas é
   financiada pelo Estado catari e presidida por um membro da família reinante.
 funding:
-  - text: A maior parte do financiamento vem do Governo do Catar; as contas não são públicas.
+  - text: Segundo o State Media Monitor (2023), cerca de 90% do orçamento vem das autoridades do Catar, e a rede é classificada como meio controlado pelo Estado. A NewsGuard (2023) descreve-a como "detida e financiada pelo Governo do Catar", com o estatuto, desde 2006, de "empresa privada de utilidade pública", e notou que deixou de indicar esse financiamento na página "About".
     source:
-      - https://statemediamonitor.com/2026/06/al-jazeera-media-network-ajmn/
-      - https://www.allsides.com/blog/al-jazeera-state-funded
+      - https://statemediamonitor.com/?p=1122
+      - https://www.newsguardtech.com/wp-content/uploads/2024/01/AlJazeera.com_.pdf
 political_links:
   official:
-    - text: O presidente do conselho é um membro sénior da família Al Thani, que também preside à Qatar Media Corporation.
-      source: https://statemediamonitor.com/2026/06/al-jazeera-media-network-ajmn/
+    - text: O presidente do conselho de administração, o xeque Hamad bin Thamer Al Thani, é membro da família reinante e dirige também a Qatar Media Corporation.
+      source:
+        - https://network.aljazeera.net/en/node/20
+        - https://statemediamonitor.com/?p=1122
   reported: []
 narrative:
-  - text: Em 2013 um ex-correspondente disse que a cobertura estava "alinhada com a política externa do Catar", e críticos apontaram proximidade à Irmandade Muçulmana na cobertura da Síria e do Egito; a rede negou.
+  - text: Criada em novembro de 1996 por iniciativa do então emir Hamad bin Khalifa Al Thani, com o lema "A opinião e a outra opinião"; o presidente do conselho diz que foi pensada para funcionar com "uma ampla margem de liberdade".
+    source: https://www.aljazeera.com/opinions/2026/7/15/sheikh-hamad-bin-khalifa-al-thani-and-al-jazeera
+  - text: Em 2013 o antigo correspondente em Berlim Aktham Suliman disse que a cobertura estava "precisamente alinhada com a política externa do Catar", e o comentador Sultan Al Qassemi apontou ligações da chefia da secção da Síria a dirigentes próximos da Irmandade Muçulmana; a rede defendeu a sua cobertura como "premiada".
     source: https://www.wnycstudios.org/podcasts/otm/segments/262087-al-jazeera-and-qatari-governments-editorial-influence
-  - text: Proibida de emitir em Israel desde maio de 2024, ao abrigo de uma lei renovada em dezembro de 2025.
-    source: https://www.voanews.com/a/what-led-up-to-israel-shuttering-al-jazeera/7598870.html
+  - text: Proibida de emitir em Israel desde maio de 2024, ao abrigo da chamada "lei Al Jazeera"; em dezembro de 2025 o Knesset prolongou a lei até ao fim de 2027 e deixou de exigir autorização judicial para fechar meios estrangeiros.
+    source:
+      - https://www.newarab.com/news/israel-extends-law-silence-al-jazeera-two-more-years
+      - https://www.arabnews.com/node/2627245/media
 owners:
   - name: Estado do Catar
     share: 100
     kind: state
     via: Al Jazeera Media Network
-    source: https://statemediamonitor.com/2026/06/al-jazeera-media-network-ajmn/
-owner_keywords: [Al Thani, Tamim bin Hamad, Qatar Media Corporation]
+    source: https://statemediamonitor.com/?p=1122
+owner_keywords: [Al Thani, Tamim bin Hamad, Hamad bin Thamer, Hamad bin Khalifa, Qatar Media Corporation]
 last_checked: 2026-09-27

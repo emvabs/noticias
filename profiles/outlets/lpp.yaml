@@ -1,11 +1,12 @@
 name: Lisboa Para Pessoas (LPP)
-type: Jornal local da Área Metropolitana de Lisboa (digital e 3 edições impressas por ano)
+type: Jornal local da Área Metropolitana de Lisboa (digital e 3 edições impressas por ano), lançado em 2021
 owner: Shifter Generation, Lda; diretor e editor Mário Rui André
 summary: >
-  Jornalismo de proximidade sobre Lisboa, com foco na mobilidade sustentável e
-  em comunidades pouco representadas. Pertence à mesma empresa que o Shifter.
+  Jornalismo de proximidade sobre a área metropolitana de Lisboa: mobilidade,
+  habitação, cidadania e comunidades. Diz ser editado sem fins lucrativos,
+  embora pertença a uma sociedade por quotas, a mesma que publica o Shifter.
 funding:
-  - text: Assinaturas, donativos, vendas da edição impressa e publicidade; começou com investimento pessoal e um crowdfunding em 2022.
+  - text: Assinaturas, donativos, venda da edição impressa (3 vezes por ano) e publicidade. Em 2022 lançou um crowdfunding de 10 mil euros para assegurar o projeto até ao fim do ano; o fundador escreveu que até então trabalhava por menos do salário mínimo.
     source:
       - https://lisboaparapessoas.pt/sobre/
       - https://lisboaparapessoas.pt/2022/03/14/lisboa-para-pessoas-crowdfunding-manifesto/
@@ -13,12 +14,13 @@ political_links:
   official: []
   reported: []
 narrative:
-  - text: Declara não ter ligação à Câmara Municipal, a partidos ou a qualquer instituição. Tem como parceira a MUBi, associação pela mobilidade em bicicleta.
+  - text: Declara ser editado "de forma totalmente independente e sem fins lucrativos" ("procura receitas, não lucros") e que "não tem qualquer filiação à Câmara Municipal, a partidos políticos ou a qualquer instituição pública ou privada".
     source: https://lisboaparapessoas.pt/sobre/
 owners:
-  - name: Shifter Generation
+  - name: Mário Rui André
     share: 100
-    kind: company
+    kind: person
+    via: Shifter Generation
     source: https://lisboaparapessoas.pt/sobre/
-owner_keywords: [Shifter Generation, Shifter]
+owner_keywords: [Shifter Generation, Shifter, Mário Rui André]
 last_checked: 2026-09-27

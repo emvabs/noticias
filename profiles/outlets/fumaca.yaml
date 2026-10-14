@@ -13,16 +13,17 @@ funding:
     source:
       - https://fumaca.pt/transparencia/
       - https://fumaca.pt/fumaca-bolsa-jornalismo-independente-sustentabilidade/
+      - https://observador.pt/2018/04/19/projeto-de-jornalismo-independente-e-apenas-fumaca-recebe-fundo-de-80-mil-euros/
+  - text: Recebeu da Rosa-Luxemburg-Stiftung, fundação política alemã ligada ao partido Die Linke, entre 6 mil e 10,5 mil euros por ano entre 2020 e 2024, para investigações específicas.
+    source:
+      - https://fumaca.pt/transparencia/
+      - https://www.progressives-zentrum.org/en/partner/rosa-luxemburg-foundation/
 political_links:
   official: []
-  reported:
-    - text: Recebeu apoios da Rosa-Luxemburg-Stiftung (6–10,5 mil € por ano, 2020–2024), fundação alemã próxima do partido Die Linke.
-      source: https://fumaca.pt/transparencia/
+  reported: []
 narrative:
-  - text: Assume uma agenda editorial explícita contra desigualdades e "sistemas de opressão"; um estudo académico sobre a cobertura do Chega inclui-o entre os meios de investigação com postura adversativa face à extrema-direita.
-    source:
-      - https://fumaca.pt/sobre/
-      - https://impactum-journals.uc.pt/mj/article/view/11476
+  - text: Assume uma agenda editorial explícita contra desigualdades e "sistemas de opressão".
+    source: https://fumaca.pt/sobre/
 owners:
   - name: Organização sem fins lucrativos do Fumaça
     share: 100

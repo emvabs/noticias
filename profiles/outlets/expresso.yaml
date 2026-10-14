@@ -1,38 +1,45 @@
 name: Expresso
 type: Semanário e site de notícias (privado), fundado em 1973
-owner: Impresa (família Balsemão, via Impreger, ~33,7%; MFE – Media For Europe, ~32,9%)
+owner: Impresa, cotada na Euronext Lisboa (família Balsemão, via Impreger, 33,74%; MFE – MediaForEurope, 32,93%)
 summary: >
-  Fundado por Francisco Pinto Balsemão, cofundador e militante n.º 1 do PSD e
-  primeiro-ministro entre 1981 e 1983. A Impresa, dona do Expresso e da SIC, é
-  cotada em bolsa. Em 2026 entrou no capital a MFE, o grupo de media da família
-  Berlusconi.
+  Fundado em 1973 por Francisco Pinto Balsemão (1937–2025), cofundador do PSD
+  e primeiro-ministro entre 1981 e 1983. Pertence à Impresa, também dona da SIC
+  e cotada em bolsa. Desde março de 2026 a MFE, cujo maior acionista é a
+  Fininvest, da família Berlusconi, tem 32,9% da Impresa; a família Balsemão
+  mantém o controlo.
 funding:
-  - text: A MFE (família Berlusconi) entrou com 17,3 milhões de euros num aumento de capital e ficou com 32,9% da Impresa; a Impreger, da família Balsemão, mantém 33,7% e o controlo. Operação concluída em março de 2026.
+  - text: Em março de 2026 a MFE subscreveu um aumento de capital de cerca de 17,3 milhões de euros (82,5 milhões de ações a 0,21 euros) e ficou com 32,934% da Impresa; a Impreger, da família Balsemão, ficou com 33,74% e mantém o controlo.
     source:
+      - https://www.emarketstorage.it/sites/default/files/comunicati/2026-03/20260310_178563.pdf
       - https://eco.sapo.pt/2025/11/26/e-oficial-mfe-entra-no-capital-da-impresa-com-participacao-de-32934-por-173-milhoes/
-      - https://meiosepublicidade.pt/2026/03/10/impresa-concretiza-entrada-da-mfe
-  - text: O acordo parassocial entre as duas famílias prevê a distribuição de 50% dos lucros.
+  - text: O acordo parassocial prevê distribuir pelo menos 50% dos lucros distribuíveis, mas dá prioridade à reestruturação e à redução da dívida; a Impreger escolhe o presidente e a maioria da administração, e a MFE vota com a Impreger nas matérias não reservadas.
     source: https://eco.sapo.pt/2026/03/27/impresa-revela-acordo-parassocial-com-os-italianos-da-mfe/
+  - text: A Impresa teve um lucro de 1,2 milhões de euros em 2025, depois de um prejuízo de 66,2 milhões em 2024; a dívida líquida era de 126,9 milhões.
+    source: https://dinheirovivo.dn.pt/empresas/impresa-passa-de-prejuzos-a-lucros-de-12-milhes-em-2025
 political_links:
-  official: []
-  reported:
-    - text: O fundador, Francisco Pinto Balsemão (1937–2025), cofundou o PPD/PSD em 1974 (militante n.º 1) e foi primeiro-ministro entre 1981 e 1983.
-      source: https://eco.sapo.pt/2025/10/21/pinto-balsemao-a-historia-politica-do-militante-no-1-do-psd-1937-2025/
-    - text: A MFE é maioritariamente detida pela Fininvest, holding da família de Silvio Berlusconi, o fundador do partido italiano Forza Italia.
+  official:
+    - text: O fundador, Francisco Pinto Balsemão (1937–2025), cofundou o PPD/PSD em 1974 (militante n.º 1) e foi primeiro-ministro de 9 de janeiro de 1981 a 9 de junho de 1983.
       source:
-        - https://en.wikipedia.org/wiki/MFE_-_MediaForEurope
-        - https://en.wikipedia.org/wiki/Forza_Italia
-narrative: []
+        - https://eco.sapo.pt/2025/10/21/pinto-balsemao-a-historia-politica-do-militante-no-1-do-psd-1937-2025/
+        - https://www.rtp.pt/noticias/politica/governos-de-portugal_i852231
+  reported:
+    - text: O maior acionista da MFE é a Fininvest, holding da família Berlusconi (48,6% do capital, segundo a notificação de Pier Silvio Berlusconi ao regulador neerlandês AFM em 2023). O fundador da MFE, Silvio Berlusconi (1936–2023), fez carreira política no partido Forza Italia.
+      source:
+        - https://www.afm.nl/en/sector/registers/meldingenregisters/substantiele-deelnemingen/details?id=149500
+        - https://www.britannica.com/biography/Silvio-Berlusconi
+narrative:
+  - text: Em abril de 2026 a acionista minoritária Tilway Management pôs em tribunal uma ação para anular o aumento de capital e a entrada da MFE; a Impresa disse que ia contestar.
+    source: https://executivedigest.sapo.pt/?p=751138
 owners:
   - name: Família Balsemão
-    share: 33.7
+    share: 33.74
     kind: person
-    via: Impreger → Impresa
-    source: https://eco.sapo.pt/2025/11/26/e-oficial-mfe-entra-no-capital-da-impresa-com-participacao-de-32934-por-173-milhoes/
-  - name: MFE – MediaForEurope (família Berlusconi)
-    share: 32.9
+    via: Balseger → Impreger → Impresa
+    source: https://eco.sapo.pt/2026/03/27/impresa-revela-acordo-parassocial-com-os-italianos-da-mfe/
+  - name: MFE – MediaForEurope
+    share: 32.93
     kind: company
     via: Impresa
-    source: https://eco.sapo.pt/2025/11/26/e-oficial-mfe-entra-no-capital-da-impresa-com-participacao-de-32934-por-173-milhoes/
-owner_keywords: [Impresa, Impreger, SIC, SIC Notícias, Balsemão, MFE, MediaForEurope, Mediaset, Berlusconi]
+    source: https://www.emarketstorage.it/sites/default/files/comunicati/2026-03/20260310_178563.pdf
+owner_keywords: [Impresa, Impreger, Balseger, SIC, SIC Notícias, Balsemão, MFE, MediaForEurope, Mediaset, Fininvest, Berlusconi]
 last_checked: 2026-09-27

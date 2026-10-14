@@ -1,38 +1,58 @@
 name: Diário de Notícias
 type: Diário generalista nacional (privado), fundado em 1864
-owner: Global Media Group (Marco Galinha, via Páginas Civilizadas; KNJ de Kevin Ho; José Pedro Soeiro)
+owner: Global Media Group (Páginas Civilizadas, de Marco Galinha; Grandes Notícias; KNJ, de Kevin Ho; José Pedro Soeiro; César do Paço, com 20% desde maio de 2026)
 summary: >
-  Um dos jornais mais antigos do país. Continuou na Global Media quando o grupo
-  vendeu o JN, a TSF e O Jogo em 2024, depois de uma crise com salários em
-  atraso e um acionista de identidade pouco clara.
+  Diário publicado pela Global Media Group. Ficou no grupo quando este vendeu o
+  JN, a TSF e O Jogo em 2024, depois de uma crise com salários em atraso e de a
+  ERC considerar pouco transparente a identificação dos beneficiários do fundo
+  que então o controlava. Em 2026 o empresário César do Paço entrou com 20% do
+  capital.
 funding:
-  - text: Estrutura da Global Media referida em 2024 — Páginas Civilizadas (Marco Galinha) 50,25%, KNJ (Kevin Ho, empresário de Macau) 29,35%, José Pedro Soeiro 20,4%.
-    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
-  - text: Em 2023–2024 o grupo foi controlado pelo World Opportunity Fund, das Bahamas; a ERC não conseguiu identificar os beneficiários efetivos do fundo e ameaçou suspender-lhe os direitos de voto.
-    source: https://observador.pt/2024/02/15/erc-perto-de-suspender-direitos-do-fundo-das-bahamas-na-global-media/
-  - text: Desde janeiro de 2025 não tem edição impressa ao fim de semana.
-    source: https://pt.wikipedia.org/wiki/Di%C3%A1rio_de_Not%C3%ADcias_(Portugal)
+  - text: A Global Media, dona do DN, fechou 2024 com um prejuízo de cerca de 26,5 milhões de euros e receitas de 22,5 milhões; a administração atribuiu o resultado sobretudo a uma desvalorização de perto de 30 milhões de euros de goodwill. Contas provisórias, publicadas no Portal da Transparência da ERC.
+    source: https://eco.sapo.pt/2025/08/18/global-noticias-fecha-2024-com-prejuizo-de-264-milhoes/
+  - text: Em maio de 2026 a Global Media fez um aumento de capital em que o empresário luso-americano César do Paço ficou com 20%; os restantes acionistas (Páginas Civilizadas, Grandes Notícias, José Pedro Soeiro e KNJ) mantiveram-se com participações mais pequenas. O valor não foi divulgado.
+    source:
+      - https://eco.sapo.pt/2026/05/29/empresario-cesar-do-paco-vai-entrar-no-capital-da-dona-do-dn-com-20/
+      - https://eco.sapo.pt/2026/05/31/cesar-do-paco-entra-no-global-media-com-20/
 political_links:
   official: []
-  reported: []
+  reported:
+    - text: César do Paço, acionista com 20% desde 2026, foi identificado pela SIC em 2021 como financiador do Chega, com base em donativos de 2020; ele recusa ser o "principal financiador" e diz ter doado também ao PS, ao PSD e ao CDS, dentro da lei.
+      source:
+        - https://eco.sapo.pt/2026/05/31/cesar-do-paco-entra-no-global-media-com-20/
+        - https://www.dn.pt/pol%C3%ADtica/csar-do-pao-jornalismo-livre-combate-a-desinformao-fortalece-a-democracia-e-protege-a-liberdade
 narrative:
   - text: O estatuto editorial promete autonomia face a quaisquer forças políticas ou económicas e defesa da justiça social.
     source: https://www.dn.pt/estatuto-editorial
+  - text: Em 2023–2024 o grupo foi controlado pelo World Opportunity Fund, das Bahamas; em fevereiro de 2024 a ERC considerou que a informação entregue não punha fim à falta de transparência sobre os beneficiários efetivos e preparou a suspensão dos direitos de voto do fundo.
+    source: https://observador.pt/2024/02/15/erc-perto-de-suspender-direitos-do-fundo-das-bahamas-na-global-media/
+  - text: Desde 3 de janeiro de 2025 a edição em papel sai de segunda a sexta-feira, sem edição ao fim de semana.
+    source: https://eco.sapo.pt/2024/12/20/diario-de-noticias-deixa-de-ter-edicao-em-papel-ao-fim-de-semana/
 owners:
   - name: Marco Galinha
-    share: 50.25
+    share: null
     kind: person
     via: Páginas Civilizadas → Global Media
-    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
+    source: https://eco.sapo.pt/2026/05/29/empresario-cesar-do-paco-vai-entrar-no-capital-da-dona-do-dn-com-20/
+  - name: Grandes Notícias
+    share: null
+    kind: company
+    via: Global Media
+    source: https://eco.sapo.pt/2026/05/29/empresario-cesar-do-paco-vai-entrar-no-capital-da-dona-do-dn-com-20/
   - name: Kevin Ho
-    share: 29.35
+    share: null
     kind: person
     via: KNJ → Global Media
-    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
+    source: https://eco.sapo.pt/2026/05/29/empresario-cesar-do-paco-vai-entrar-no-capital-da-dona-do-dn-com-20/
   - name: José Pedro Soeiro
-    share: 20.4
+    share: null
     kind: person
     via: Global Media
-    source: https://eco.sapo.pt/2024/07/30/jn-e-tsf-tem-novos-donos-galinha-retoma-controlo-da-global-media-e-estado-reforca-na-lusa/
-owner_keywords: [Global Media, Marco Galinha, Kevin Ho, José Pedro Soeiro, Páginas Civilizadas, World Opportunity Fund]
+    source: https://eco.sapo.pt/2026/05/29/empresario-cesar-do-paco-vai-entrar-no-capital-da-dona-do-dn-com-20/
+  - name: César do Paço
+    share: 20
+    kind: person
+    via: Global Media
+    source: https://eco.sapo.pt/2026/05/29/empresario-cesar-do-paco-vai-entrar-no-capital-da-dona-do-dn-com-20/
+owner_keywords: [Global Media, Marco Galinha, Grupo Bel, Páginas Civilizadas, Grandes Notícias, Kevin Ho, KNJ, José Pedro Soeiro, César do Paço, Summit Nutritionals, World Opportunity Fund, Dinheiro Vivo, Açoriano Oriental]
 last_checked: 2026-09-27

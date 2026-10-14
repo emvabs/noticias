@@ -1,30 +1,33 @@
 name: The Guardian
 type: Diário britânico (privado, sem acionistas com fins lucrativos), fundado em 1821
-owner: Guardian Media Group, detido a 100% pelo Scott Trust Limited
+owner: Guardian Media Group, cujo único acionista é o Scott Trust Limited
 summary: >
-  O Scott Trust existe para garantir "para sempre" a independência financeira e
-  editorial do jornal. Não tem dono que receba lucros. Segundo a Press Gazette, é o diário nacional
-  britânico mais consistentemente de centro-esquerda.
+  O Scott Trust, único acionista do grupo, existe para garantir "para sempre"
+  a posição financeira e a independência editorial do Guardian. Vive sobretudo
+  das contribuições dos leitores e de um fundo de dotação que cobre os
+  prejuízos.
 funding:
-  - text: Contribuições e assinaturas dos leitores (receita digital de 126 milhões de libras em 2025/26; 1,4 milhões de apoiantes regulares), publicidade e um fundo de dotação de ~1,2 mil milhões de libras que cobre os prejuízos operacionais.
-    source:
-      - https://www.aol.co.uk/articles/guardian-media-group-publishes-2025-100403000.html
-      - https://tomorrowspublisher.today/monetisation/the-guardian-halves-losses-and-hits-record-275m-revenue/
+  - text: No exercício até março de 2026 teve receitas de 282 milhões de libras, das quais 126 milhões de leitores no digital (1,4 milhões de apoiantes regulares), e um prejuízo operacional de 17 milhões; o fundo de dotação valia 1,35 mil milhões de libras.
+    source: https://pressgazette.co.uk/media_business/guardian-grows-revenue-to-record-282m-boosted-by-us-operation/
 political_links:
   official: []
   reported:
     - text: Apoiou o Partido Trabalhista nas eleições gerais de 2024 (e, com reservas, em 2019).
       source: https://pressgazette.co.uk/publishers/nationals/general-election-2024-press-endorsements/
 narrative:
-  - text: Linha editorial de centro-esquerda assumida nos editoriais.
-    source: https://pressgazette.co.uk/publishers/nationals/general-election-2024-press-endorsements/
-  - text: Em 2023 o Scott Trust pediu desculpa pelas ligações dos fundadores ao comércio de algodão produzido por escravos e anunciou um programa de 10 milhões de libras de "justiça reparadora".
-    source: https://www.hull.ac.uk/research/projects/the-scott-trust-legacies-of-enslavement-report
+  - text: Segundo o quadro de governação do Scott Trust, além da independência do Guardian o Trust deve promover "a liberdade de imprensa e o jornalismo liberal, no Reino Unido e noutros países".
+    source: https://uploads.guim.co.uk/2025/04/24/Governance_Framework_%2802.04.2025%29.pdf
+  - text: Em 2023 o Scott Trust pediu desculpa pelas ligações do fundador, John Edward Taylor, e de pelo menos nove dos seus onze financiadores ao algodão produzido por escravos, e anunciou mais de 10 milhões de libras em dez anos para um programa de "justiça reparadora".
+    source:
+      - https://www.justiceinfo.net/en?p=114531
+      - https://www.hull.ac.uk/research/projects/the-scott-trust-legacies-of-enslavement-report
+  - text: Em abril de 2025 o grupo vendeu o dominical The Observer à Tortoise Media.
+    source: https://pressgazette.co.uk/media_business/guardian-grows-revenue-to-record-282m-boosted-by-us-operation/
 owners:
   - name: Scott Trust
     share: 100
     kind: trust
     via: Guardian Media Group
-    source: https://en.wikipedia.org/wiki/Guardian_Media_Group
-owner_keywords: [Scott Trust, Guardian Media Group]
+    source: https://uploads.guim.co.uk/2025/04/24/Governance_Framework_%2802.04.2025%29.pdf
+owner_keywords: [Scott Trust, Guardian Media Group, Anna Bateson]
 last_checked: 2026-09-27

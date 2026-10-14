@@ -2,22 +2,28 @@ name: Divergente
 type: Revista digital de jornalismo narrativo e de investigação, fundada em 2014
 owner: Bagabaga Studios (cooperativa); diretor Diogo Cardoso, editora-executiva Sofia da Palma Rodrigues
 summary: >
-  Revista sem fins lucrativos e sem publicidade. Faz reportagens longas sobre
-  temas de interesse público pouco cobertos e explica em cada peça como foi
-  financiada.
+  Revista digital de jornalismo narrativo, sem fins lucrativos e sem
+  publicidade, publicada por uma cooperativa. Faz reportagens longas sobre
+  temas de interesse público pouco cobertos e diz explicar, para cada
+  reportagem, como foi financiada.
 funding:
-  - text: Contributos dos leitores, bolsas de investigação e fundações — Civitates, European Cultural Foundation, Free Press Unlimited, IJ4EU, Journalismfund Europe e instituições públicas portuguesas.
+  - text: Financia-se com contributos dos leitores, bolsas de investigação jornalística e fundos de instituições filantrópicas e públicas; entre os apoiantes indicados estão a Civitates, a European Cultural Foundation, a Free Press Unlimited, o IJ4EU, o Journalismfund Europe, câmaras municipais, a FCT e a CNE. Não publica valores.
     source: https://divergente.pt/sobre-nos/
+  - text: Entre os apoiantes estão também a Friedrich-Ebert-Stiftung, ligada ao SPD, e a Rosa-Luxemburg-Stiftung, ligada ao Die Linke, fundações políticas alemãs.
+    source:
+      - https://divergente.pt/sobre-nos/
+      - https://www.deutschland.de/en/topic/politics/development-dialogue/creating-social-justice
+      - https://www.progressives-zentrum.org/en/partner/rosa-luxemburg-foundation/
 political_links:
   official: []
-  reported:
-    - text: Entre os apoiantes estão a Friedrich-Ebert-Stiftung e a Rosa-Luxemburg-Stiftung, fundações alemãs próximas, respetivamente, do SPD e do Die Linke.
-      source: https://divergente.pt/sobre-nos/
-narrative: []
+  reported: []
+narrative:
+  - text: Apresenta-se com o lema "Contamos histórias que revelam silêncios" e diz que todas as reportagens têm uma página que explica porque se investigou o tema, quem trabalhou nele, com que métodos e como foi financiado.
+    source: https://divergente.pt/sobre-nos/
 owners:
-  - name: Bagabaga Studios
+  - name: Bagabaga Studios, CRL
     share: 100
     kind: cooperative
     source: https://divergente.pt/sobre-nos/
-owner_keywords: [Bagabaga, Civitates]
+owner_keywords: [Bagabaga Studios, Bagabaga, Sofia da Palma Rodrigues]
 last_checked: 2026-09-27

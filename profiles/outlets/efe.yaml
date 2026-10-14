@@ -2,24 +2,28 @@ name: Agencia EFE
 type: Agência noticiosa espanhola (empresa pública)
 owner: Estado espanhol, através da SEPI (Sociedad Estatal de Participaciones Industriales)
 summary: >
-  A maior agência noticiosa em língua espanhola, fundada em 1939. É do Estado e
-  o presidente é proposto pelo Governo.
+  A primeira agência noticiosa em língua espanhola, com cerca de 85 anos. É
+  100% do Estado, através da SEPI, e o presidente é proposto pelo Governo.
 funding:
-  - text: Contrato de serviço público com o Estado espanhol mais a venda de serviços noticiosos.
-    source: https://www.sepi.es/en/sectores/agencia-efe
+  - text: Contrato de serviço público com o Estado espanhol, mais a venda de serviços noticiosos; em dezembro de 2025 o Conselho de Ministros subiu a compensação anual pelo serviço público de notícias para 60,7 milhões de euros, a primeira atualização em mais de sete anos.
+    source:
+      - https://www.sepi.es/en/sectores/agencia-efe
+      - https://www.lamoncloa.gob.es/consejodeministros/referencias/paginas/2025/20251223-referencia-rueda-de-prensa-ministros.aspx
 political_links:
   official:
-    - text: O presidente, Miguel Ángel Oliver (desde dezembro de 2023), foi proposto pelo Governo; antes foi secretário de Estado da Comunicação de Pedro Sánchez (2018–2021). PP e Vox votaram contra e chamaram-lhe "comissário político".
-      source:
-        - https://www.apmadrid.es/el-gobierno-propondra-a-miguel-angel-oliver-como-nuevo-presidente-de-la-agencia-efe/
-        - https://www.elespanol.com/invertia/medios/20240926/pp-condiciona-renovacion-rtve-salida-miguel-angel-oliver-presidente-efe/888661422_0.html
-  reported: []
-narrative: []
+    - text: O presidente, Miguel Ángel Oliver, foi proposto pelo Governo em dezembro de 2023, depois de nomeado para o conselho de administração pela SEPI e ouvido no Congresso; antes foi secretário de Estado da Comunicação de Pedro Sánchez (2018–2021).
+      source: https://www.apmadrid.es/el-gobierno-propondra-a-miguel-angel-oliver-como-nuevo-presidente-de-la-agencia-efe/
+  reported:
+    - text: PP e Vox votaram contra a nomeação de Oliver; em 2024 o PP pôs a sua saída como condição para negociar a renovação da RTVE.
+      source: https://www.elespanol.com/invertia/medios/20240926/pp-condiciona-renovacion-rtve-salida-miguel-angel-oliver-presidente-efe/888661422_0.html
+narrative:
+  - text: Segundo a SEPI, tem cerca de 2000 profissionais em 180 cidades de 110 países e distribui perto de três milhões de notícias por ano a mais de 2500 clientes.
+    source: https://www.sepi.es/en/sectores/agencia-efe
 owners:
   - name: Estado espanhol
     share: 100
     kind: state
     via: SEPI
     source: https://www.sepi.es/en/sectores/agencia-efe
-owner_keywords: []
+owner_keywords: [SEPI, Miguel Ángel Oliver]
 last_checked: 2026-09-27

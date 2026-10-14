@@ -1,24 +1,35 @@
 name: Agence France-Presse (AFP)
 type: Agência noticiosa internacional francesa (entidade pública autónoma)
-owner: Estatuto próprio definido pela lei de 10 de janeiro de 1957; não tem acionistas
+owner: Organismo autónomo com estatuto próprio definido pela lei de 10 de janeiro de 1957; não tem acionistas
 summary: >
-  Uma das três grandes agências mundiais. A lei de 1957 garante-lhe
-  independência; cerca de um terço das receitas vem do Estado francês.
+  Agência noticiosa internacional francesa com estatuto próprio desde 1957.
+  O Estado paga-lhe as missões de interesse geral (120 milhões de euros em
+  2025), cerca de 40% das receitas, e tem três representantes no conselho de
+  administração.
 funding:
-  - text: Cerca de dois terços das receitas são comerciais; o resto vem do Estado francês como compensação pelas missões de interesse geral (113,3 milhões de euros em 2022) e como assinante.
-    source: https://en.wikipedia.org/wiki/Agence_France-Presse
-  - text: A Comissão Europeia aceitou o financiamento público como serviço de interesse geral, mas obrigou a separar essa compensação das receitas comerciais (lei de 2015).
-    source: https://pressgazette.co.uk/news/european-commission-backs-state-funding-news-agencies-after-complaint-against-afp/
+  - text: Em 2025 as receitas foram de 320,3 milhões de euros, das quais 200,3 milhões comerciais; a compensação do Estado pelas missões de interesse geral foi de 120 milhões (124 milhões previstos para 2026). Segundo uma pergunta parlamentar de 2025, o financiamento público pesa cerca de 43% das receitas.
+    source:
+      - https://www.cbnews.fr/medias/afp-affiche-leger-benefice-2025
+      - https://questions.assemblee-nationale.fr/q17/17-9293QE.htm
+  - text: Em 2014 a Comissão Europeia aceitou o financiamento público, desde que pague missões de serviço público e não seja uma subvenção disfarçada; a lei de 2015 obrigou a separar as contas dessas missões das atividades comerciais. O apoio atual foi autorizado por decisão da Comissão de dezembro de 2023, com um contrato de objetivos para 2024–2028.
+    source:
+      - https://pressgazette.co.uk/news/european-commission-backs-state-funding-news-agencies-after-complaint-against-afp/
+      - https://conferenceconsensuslogement.senat.fr/rap/l14-296/l14-2961.pdf
+      - https://questions.assemblee-nationale.fr/q17/17-9293QE.htm
 political_links:
   official:
-    - text: Dos 15 membros do conselho de administração, três representam o Governo (primeiro-ministro, Finanças e Negócios Estrangeiros); os restantes representam a imprensa francesa (8), a rádio e televisão públicas (2) e os trabalhadores (2).
-      source: https://en.wikipedia.org/wiki/Agence_France-Presse
+    - text: Desde a reforma de 2015 o conselho de administração inclui três representantes do Estado (Negócios Estrangeiros, Comunicação e Economia), cinco representantes da imprensa, representantes do audiovisual público, três dos trabalhadores e cinco personalidades qualificadas.
+      source: https://conferenceconsensuslogement.senat.fr/rap/l14-296/l14-2961.pdf
   reported: []
-narrative: []
+narrative:
+  - text: Em 2025 perdeu contratos nos EUA (Voice of America e verificação de factos para a Meta) e lançou um plano de poupança de 10 a 12 milhões de euros por ano a partir de 2026; o Ministério da Cultura francês descreveu a situação como "sem precedentes".
+    source:
+      - https://questions.assemblee-nationale.fr/q17/17-9293QE.htm
+      - https://www.cbnews.fr/medias/afp-affiche-leger-benefice-2025
 owners:
-  - name: Estatuto próprio (lei de 1957, sem acionistas)
+  - name: Organismo autónomo (lei de 1957)
     share: 100
     kind: public
-    source: https://en.wikipedia.org/wiki/Agence_France-Presse
-owner_keywords: []
+    source: https://questions.assemblee-nationale.fr/q17/17-9293QE.htm
+owner_keywords: [Fabrice Fries]
 last_checked: 2026-09-27

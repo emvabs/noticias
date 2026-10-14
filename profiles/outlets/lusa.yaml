@@ -2,35 +2,42 @@ name: Agência Lusa
 type: Agência noticiosa portuguesa (empresa pública)
 owner: Estado português (100% desde novembro de 2025)
 summary: >
-  A agência nacional abastece quase todos os jornais, rádios e televisões
-  portuguesas; muitas notícias assinadas "Lusa" chegam iguais a vários meios.
-  Passou a ser totalmente do Estado em 2025, e os novos estatutos são contestados
-  pela ERC e pelos jornalistas.
+  A agência noticiosa nacional. Passou a ser totalmente do Estado em novembro
+  de 2025; os novos estatutos, com administração nomeada pelo Governo, foram
+  considerados pela ERC não conformes com as boas práticas de independência e
+  contestados pelos jornalistas.
 funding:
-  - text: Indemnização compensatória do Estado pelo serviço noticioso de interesse público (cerca de 15 milhões de euros por ano entre 2025 e 2027), mais a venda do serviço aos meios de comunicação.
+  - text: Indemnização compensatória do Estado pelo serviço noticioso de interesse público, fixada no contrato 2022–2027 em 13,56 milhões de euros por ano (sem IVA) e revista ao fim de três anos; em 2025 foi de 14,98 milhões. O resto vem da venda do serviço aos meios de comunicação.
     source:
       - https://www.lusa.pt/Files/lusamaterial/PDFs/CPSNIIP_2022_2027.pdf
-      - https://visao.pt/atualidade/economia/2023-07-03-publicada-em-dr-autorizacao-para-aumento-da-indemnizacao-compensatoria-a-lusa/
-  - text: O Estado comprou em 2024 as participações da Global Media e da Páginas Civilizadas (ficou com 95,86%) e em 2025 as restantes.
+      - https://www.lusa.pt/Files/lusamaterial/PDFs/Lusa_RelAnual_CPSNIIP_2025.pdf
+  - text: O Estado comprou em 2024 as participações da Global Media e da Páginas Civilizadas (ficou com 95,86%) e em novembro de 2025 as últimas ações, à cooperativa NP – Notícias de Portugal, por 145 mil euros. Em dezembro de 2025 fez um aumento de capital de 5 milhões de euros para a modernização da agência.
     source:
       - https://observador.pt/2024/07/31/estado-compra-acoes-da-global-media-e-fica-com-959-da-agencia-lusa/
-      - https://eco.sapo.pt/2026/09/09/erc-aponta-desconformidades-na-reestruturacao-da-lusa/
+      - https://eco.sapo.pt/2025/11/21/estado-ja-detem-100-da-lusa-e-aprova-projeto-de-novos-estatutos/
+      - https://eco.sapo.pt/2026/01/22/aumento-de-capital-da-lusa-e-para-financiar-a-modernizacao-da-agencia-de-noticias/
 political_links:
   official:
-    - text: Os três administradores executivos são designados pelo Governo, em representação do Estado como acionista único.
-      source: https://cnnportugal.iol.pt/lusa/greve/trabalhadores-da-lusa-em-greve-acusam-governo-de-impor-estatutos-que-ferem-a-protecao-da-independencia-dos-jornalistas/20260520/6a0d55bdd34edcee7c645a91
+    - text: Os três administradores executivos são designados pelo Governo, em representação do Estado como acionista único, para o mandato 2026–2029.
+      source:
+        - https://eco.sapo.pt/2026/09/09/erc-aponta-desconformidades-na-reestruturacao-da-lusa/
+        - https://observador.pt/2026/09/09/erc-diz-que-reestruturacao-da-lusa-nao-esta-conforme-o-funcionamento-independente-de-um-meio-publico/
+    - text: O novo Conselho Consultivo tem 13 membros, seis deles de nomeação política, e só intervém a partir do mandato 2030–2033.
+      source:
+        - https://observador.pt/2026/09/22/direcao-de-informacao-da-lusa-avisa-que-ter-elemento-politico-desvirtua-logica-dos-criterios-editoriais/
+        - https://observador.pt/2026/09/09/erc-diz-que-reestruturacao-da-lusa-nao-esta-conforme-o-funcionamento-independente-de-um-meio-publico/
   reported:
-    - text: Em setembro de 2026 a ERC concluiu que a reestruturação "não está conforme" as boas práticas de independência de um meio público — o conselho consultivo que devia travar o controlo do Governo só se aplica a partir de 2030.
+    - text: Em setembro de 2026 a ERC concluiu que a reestruturação "não está conforme" o quadro normativo e as boas práticas de independência de um meio público, e que terá efeitos de relevo na independência da Lusa face ao poder político, porque o Conselho Consultivo só se aplica a partir de 2030.
       source: https://observador.pt/2026/09/09/erc-diz-que-reestruturacao-da-lusa-nao-esta-conforme-o-funcionamento-independente-de-um-meio-publico/
     - text: Em maio de 2026 os trabalhadores fizeram greve, acusando o Governo de impor estatutos que "ferem a proteção da independência dos jornalistas".
       source: https://cnnportugal.iol.pt/lusa/greve/trabalhadores-da-lusa-em-greve-acusam-governo-de-impor-estatutos-que-ferem-a-protecao-da-independencia-dos-jornalistas/20260520/6a0d55bdd34edcee7c645a91
 narrative:
-  - text: A Direção de Informação avisou em 2026 que ter um "elemento político" nos órgãos da agência desvirtua a "lógica dos critérios editoriais".
+  - text: Em setembro de 2026 a Direção de Informação, dirigida por Luísa Meireles, avisou que "a introdução do elemento político num órgão de supervisão numa empresa de comunicação social pública desvirtua e altera a lógica dos critérios editoriais".
     source: https://observador.pt/2026/09/22/direcao-de-informacao-da-lusa-avisa-que-ter-elemento-politico-desvirtua-logica-dos-criterios-editoriais/
 owners:
   - name: Estado português
     share: 100
     kind: state
-    source: https://eco.sapo.pt/2026/09/09/erc-aponta-desconformidades-na-reestruturacao-da-lusa/
-owner_keywords: []
+    source: https://eco.sapo.pt/2025/11/21/estado-ja-detem-100-da-lusa-e-aprova-projeto-de-novos-estatutos/
+owner_keywords: [Leitão Amaro, NP – Notícias de Portugal, Luísa Meireles]
 last_checked: 2026-09-27
