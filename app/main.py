@@ -125,7 +125,7 @@ def feed(positive_pct: float = Query(50, ge=0, le=100),
         a["topics"] = json.loads(a["topics"] or "[]")
         a.pop("title_norm", None)
     # The page shows which synonyms were searched as well as the typed words.
-    expanded = search.expand(q)[1:] if q else []
+    expanded = search.expand(q) if q else []
     return {**stats, "scope": scope, "group": group, "topics": topic_list, "q": (q or "").strip(),
             "also_searched": expanded, "last_updated": last_updated(), "articles": articles}
 

@@ -76,3 +76,9 @@ def test_unmatched_search_returns_nothing(client):
 def test_topics_endpoint_returns_at_most_six(client):
     topics.recompute_all(main.conn)
     assert len(client.get("/api/topics?scope=portugal").json()) <= 6
+
+
+def test_also_searched_lists_every_synonym(client):
+    """The first synonym used to be dropped: "IA" never showed "AI"."""
+    data = client.get(f"/api/feed?{MIX}&q=IA").json()
+    assert data["also_searched"][:2] == ["AI", "inteligência artificial"]
