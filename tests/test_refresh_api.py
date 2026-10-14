@@ -14,7 +14,7 @@ def no_real_fetch(monkeypatch):
 
 
 def client(host):
-    return TestClient(main.app, client=(host, 50000))
+    return TestClient(main.app, client=(host, 50000), base_url="http://localhost:8000")
 
 
 @pytest.mark.parametrize("host", ["127.0.0.1", "::1", "::ffff:127.0.0.1", "localhost"])

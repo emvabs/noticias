@@ -58,6 +58,12 @@ Fetching every outlet on demand is limited to the computer the site runs on: a v
 curl -X POST -H "Authorization: Bearer $NOTICIAS_ADMIN_TOKEN" https://example.org/api/refresh
 ```
 
+### Password
+
+When the site is reachable from outside this computer (Tailscale Funnel, a server), put a password in `data/password.txt`. Visitors from elsewhere get the browser's login box: any user name, that password. With no file, or an empty one, the site is open. Visits made on this computer (`http://localhost:8000`) never ask. `/healthz` is always open, so an uptime checker needs no password.
+
+The password opens the site, not the **Atualizar** button: fetching on demand from elsewhere still needs `NOTICIAS_ADMIN_TOKEN`.
+
 ### Health check
 
 `GET /healthz` is for an uptime checker. It answers 200 while fetching works and 503 when the last successful fetch is older than 3× `fetch.interval_minutes` (an hour, by default), or there has been none yet:

@@ -287,6 +287,6 @@ def test_ownership_graph_merges_shared_owners():
     g = ownership.graph()
     by_name = {o["name"]: o for o in g["owners"]}
     assert sorted(by_name["Estado português"]["outlets"]) == ["lusa", "rtp"]
-    assert sorted(by_name["Shifter Generation"]["outlets"]) == ["lpp", "shifter"]
+    assert sorted(by_name["Mário Rui André"]["outlets"]) == ["lpp", "shifter"]
     outlet_ids = {o["id"] for o in g["outlets"]}
     assert all(l["outlet"] in outlet_ids for l in g["links"])

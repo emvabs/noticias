@@ -45,6 +45,7 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 | Deep Dive findings and silences | `app/deepdive.py`, `static/deepdive.js` |
 | Slider mixing | `app/mixing.py` |
 | API, `/healthz`, embedded scheduler, static files | `app/main.py` |
+| Site password, what counts as local | `app/access.py` |
 | Scheduled fetching in its own process | `app/worker.py` |
 | Schema and migrations | `app/db.py` |
 | Page | `static/` |
@@ -146,6 +147,13 @@ fix wrong labels or noisy topics — prefer them over changing code.
   means localhost only. The page says "Atualização não permitida aqui" on a
   403 from the button, and stays quiet for the automatic refresh on a scope
   switch.
+
+- **`data/password.txt` guards the whole site from outside** (`app/access.py`,
+  a middleware in `app/main.py`). Basic auth, any user name; no file or an
+  empty one means open; `/healthz` is exempt. `access.is_local` is the one
+  definition of "local" (loopback address, a local `Host`, no proxy headers,
+  including Tailscale Funnel's) and the refresh check uses it too. The site is
+  served publicly through Tailscale Funnel, so this file being set matters.
 
 - **Every environment variable is read in `app/config.py`.** `load_config()`
   applies `ENV_OVERRIDES` (`NOTICIAS_DB`, `NOTICIAS_HOST`, `NOTICIAS_PORT`,

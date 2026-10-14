@@ -1,6 +1,5 @@
 """FastAPI app: JSON API + the single-page frontend."""
 import hmac
-import ipaddress
 import json
 import threading
 from contextlib import asynccontextmanager
@@ -8,10 +7,10 @@ from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import config, db, deepdive, ingest, ownership, profiles, search
+from . import access, config, db, deepdive, ingest, ownership, profiles, search
 from . import topics as topics_module
 from .mixing import mix
 
@@ -37,6 +36,19 @@ async def lifespan(app):
 
 app = FastAPI(title="Notícias", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+
+@app.middleware("http")
+async def require_password(request, call_next):
+    """Visits from outside this machine need data/password.txt, when it is set.
+
+    /healthz stays open so an uptime checker needs no password.
+    """
+    host = request.client.host if request.client else ""
+    if request.url.path != "/healthz" and not access.allowed(host, request.headers):
+        return Response("Password required", status_code=401,
+                        headers={"WWW-Authenticate": 'Basic realm="Noticias"'})
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -267,25 +279,6 @@ def healthz():
         "running": ingest.is_running(), "empty_feeds_24h": empty})
 
 
-# Set by a reverse proxy. A request carrying them only looks local because the
-# proxy runs on this machine; the real visitor is somewhere else.
-PROXY_HEADERS = ("x-forwarded-for", "forwarded", "x-real-ip")
-
-
-def is_loopback(host):
-    try:
-        ip = ipaddress.ip_address(host)
-    except ValueError:
-        return host == "localhost"
-    mapped = getattr(ip, "ipv4_mapped", None)   # ::ffff:127.0.0.1
-    return (mapped or ip).is_loopback
-
-
-def is_local(request):
-    host = request.client.host if request.client else ""
-    return is_loopback(host) and not any(h in request.headers for h in PROXY_HEADERS)
-
-
 def has_admin_token(request):
     token = config.admin_token()
     scheme, _, given = request.headers.get("authorization", "").partition(" ")
@@ -297,7 +290,8 @@ def has_admin_token(request):
 @app.post("/api/refresh")
 def refresh(request: Request):
     """Fetch every outlet now: from this machine, or with NOTICIAS_ADMIN_TOKEN."""
-    if not (is_local(request) or has_admin_token(request)):
+    host = request.client.host if request.client else ""
+    if not (access.is_local(host, request.headers) or has_admin_token(request)):
         raise HTTPException(403, "refresh is limited to localhost or the admin token")
     # Runs in the request thread (FastAPI threadpool); takes a couple of seconds.
     result = ingest.fetch_all()
