@@ -7,11 +7,13 @@ common every week ranks low and a term that spiked today ranks high.
 Run `python -m app.topics` to print the current topics per scope.
 """
 import json
+import math
 import re
 from datetime import timedelta
 
 from . import config, sentiment
-from .sentiment import normalize
+from .db import iso, utcnow
+from .sentiment import normalize, slugify
 
 WINDOW_HOURS = 48
 BACKGROUND_DAYS = 7
@@ -74,10 +76,6 @@ def load_stoplist():
 def stopwords_all():
     """Every word that is never a topic: stopwords, config/stoplist.txt, outlet names."""
     return _normalized(STOPWORDS_PT | STOPWORDS_EN) | load_stoplist() | outlet_words()
-
-
-def slugify(label):
-    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", normalize(label))).strip("-")
 
 
 def singular(term):
@@ -227,7 +225,6 @@ def extract(window_rows, background_rows, stopwords=None,
 
 
 def _log(x):
-    import math
     return math.log(x) + 1  # +1 so a term seen every day still scores above zero
 
 
@@ -275,7 +272,6 @@ def settings_for(group):
 
 def compute_for_scope(conn, scope, group=config.DEFAULT_GROUP, now=None):
     """Extract topics for one scope+group, store them and tag the articles."""
-    from .ingest import iso, utcnow
     now = now or utcnow()
     window_hours, background_days, max_topics, min_articles = settings_for(group)
     window_start = iso(now - timedelta(hours=window_hours))

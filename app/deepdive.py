@@ -17,7 +17,7 @@ from datetime import timedelta
 
 from . import archive, config, ownership, profiles
 from . import topics as topics_module
-from .ingest import iso, utcnow
+from .db import iso, utcnow
 
 LABELS = {"positive": "positivas", "neutral": "neutras", "negative": "negativas"}
 # How the baseline reads in a sentence: (after "que", after "contra X%")

@@ -16,6 +16,7 @@ except ImportError:   # Windows: only the in-process lock applies
     fcntl = None
 
 from . import archive, config, db, profiles, topics
+from .db import iso, utcnow
 from .search import raw_searchable, searchable
 from . import sentiment
 from .sentiment import get_scorer, normalize
@@ -72,14 +73,6 @@ def is_running():
         return True
     with _file_lock() as got:
         return not got
-
-
-def utcnow():
-    return datetime.now(timezone.utc)
-
-
-def iso(dt):
-    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def summary_limit():

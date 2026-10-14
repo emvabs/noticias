@@ -32,6 +32,11 @@ def normalize(text):
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
 
 
+def slugify(text):
+    """"Banco de Portugal" -> "banco-de-portugal": normalized, words joined by hyphens."""
+    return re.sub(r"[^a-z0-9]+", "-", normalize(text)).strip("-")
+
+
 def tokenize(text):
     return TOKEN_RE.findall(normalize(text))
 

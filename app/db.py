@@ -1,6 +1,7 @@
 """SQLite storage.  Migrate explicitly with:  python -m app.db migrate"""
 import argparse
 import sqlite3
+from datetime import datetime, timezone
 
 from . import config
 
@@ -66,6 +67,15 @@ CREATE INDEX IF NOT EXISTS idx_articles_group ON articles(scope, "group", publis
 CREATE INDEX IF NOT EXISTS idx_feed_results_time ON feed_results(fetched_at);
 CREATE INDEX IF NOT EXISTS idx_feed_results_url ON feed_results(url, run_id);
 """
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
+
+
+def iso(dt):
+    """How every timestamp is stored: 2026-09-21T16:23:09Z."""
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def migrate(conn):

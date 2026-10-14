@@ -9,6 +9,7 @@ Both come from the researched outlet profiles (``profiles/outlets/*.yaml``):
 """
 from . import config, profiles
 from .search import raw_searchable
+from .sentiment import slugify
 
 AGENCIES = {"lusa", "efe", "afp", "ap", "reuters"}   # news agencies, not outlets people read
 OWNER_KINDS = {"state", "public", "company", "person", "fund", "cooperative", "nonprofit", "trust"}
@@ -47,7 +48,7 @@ def graph():
                         "type": p.get("type", ""), "in_app": ident in enabled,
                         "agency": ident in AGENCIES})
         for o in p.get("owners") or []:
-            key = profiles.slugify(o["name"])
+            key = slugify(o["name"])
             node = owners.setdefault(key, {"id": key, "name": o["name"], "kind": o.get("kind"),
                                            "outlets": []})
             node["outlets"].append(ident)

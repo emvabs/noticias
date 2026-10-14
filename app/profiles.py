@@ -8,13 +8,13 @@ stored articles too. Profiles are hand-researched YAML files in
 import html
 import json
 import re
-import unicodedata
 from collections import Counter
 from datetime import date, timedelta
 
 import yaml
 
 from . import config
+from .sentiment import slugify
 
 PROFILES = config.ROOT / "profiles"
 SLUG_RE = re.compile(r"^[a-z0-9-]+$")
@@ -86,12 +86,6 @@ def entry_authors(entry):
 # --------------------------------------------------------------------------
 # Resolving names to profiles
 # --------------------------------------------------------------------------
-def slugify(name):
-    text = unicodedata.normalize("NFKD", name.lower())
-    text = "".join(c for c in text if not unicodedata.combining(c))
-    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
-
-
 def load_aliases():
     """profiles/aliases.txt: ``Byline = journalist:slug | outlet:id | -``."""
     aliases = {}
