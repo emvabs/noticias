@@ -835,21 +835,30 @@ function setUpdated(iso) {
 }
 
 const refreshBtn = $("#refresh");
-async function refresh() {
+// manual: the button was pressed, so a refusal is worth saying (the automatic
+// refresh on switching scope just shows what is stored).
+async function refresh({ manual = false } = {}) {
   refreshBtn.disabled = true;
   refreshBtn.classList.add("spinning");
+  let denied = false;
   try {
     const res = await fetch("/api/refresh", { method: "POST" });
-    const data = await res.json();
+    denied = res.status === 403;           // only this computer (or the admin token) may fetch
+    const data = denied ? {} : await res.json();
     if (data.skipped) await waitUntilIdle(); // an automatic update was already running
   } catch { /* shown by loadFeed below if the server is down */ }
   await Promise.all([loadSources(), loadTopics()]);
   await loadFeed();
   loadProfilesStatus();
+  if (denied && manual) {
+    updatedEl.textContent = "Atualização não permitida aqui";
+    updatedEl.title = "Só o computador onde o site corre pode pedir uma atualização."
+      + " As notícias continuam a atualizar-se sozinhas.";
+  }
   refreshBtn.disabled = false;
   refreshBtn.classList.remove("spinning");
 }
-refreshBtn.addEventListener("click", refresh);
+refreshBtn.addEventListener("click", () => refresh({ manual: true }));
 
 async function waitUntilIdle() {
   for (let i = 0; i < 60; i++) {

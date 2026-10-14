@@ -24,6 +24,63 @@ The server restarts itself when you edit anything in `app/` (set `server.reload:
 
 Open **http://localhost:8000** (it works the same on a phone, tablet or large monitor). On startup the server fetches every feed in the background, then again every 20 minutes. The **Atualizar** button triggers a fetch right away.
 
+### Environment variables
+
+At home none of these is set and `config.yaml` decides everything. On a server they override it without editing the file (unset or empty = use `config.yaml`):
+
+| Variable | Overrides / does | Example |
+|---|---|---|
+| `NOTICIAS_DB` | `storage.database` (relative paths start at the project folder) | `/var/lib/noticias/news.db` |
+| `NOTICIAS_HOST` | `server.host` | `0.0.0.0` |
+| `NOTICIAS_PORT` | `server.port` | `8080` |
+| `NOTICIAS_RELOAD` | `server.reload` (`0`/`false`/`no`/`off` = off) | `0` |
+| `NOTICIAS_WORKER` | `worker` (`embedded` or `separate`, see below) | `separate` |
+| `NOTICIAS_AUTO_MIGRATE` | `0` = do not migrate on connect; run `python -m app.db migrate` instead | `0` |
+| `NOTICIAS_ADMIN_TOKEN` | lets requests from other machines use **Atualizar** (`POST /api/refresh`) | a long random string |
+
+`NOTICIAS_HOST`, `NOTICIAS_PORT` and `NOTICIAS_RELOAD` apply to `python run.py`; when you start uvicorn yourself, pass `--host`/`--port` to it.
+
+### Fetching in a separate process
+
+That is all you need at home. On a server running several web processes, each would run its own 20-minute fetch, so the fetching can move to one process of its own: set `worker: separate` in `config.yaml` (the web server then runs no scheduler) and start
+
+```bash
+python -m app.worker
+```
+
+next to the web server. It fetches once at startup, then every `fetch.interval_minutes`, never two runs at once (also not at the same time as the **Atualizar** button), and stops cleanly on Ctrl+C or SIGTERM, finishing the fetch in progress first.
+
+### Who can press Atualizar
+
+Fetching every outlet on demand is limited to the computer the site runs on: a visit from another device (or through a reverse proxy) gets "Atualização não permitida aqui" and the automatic fetch carries on as usual. To trigger a fetch from elsewhere, set `NOTICIAS_ADMIN_TOKEN` on the server and send it as a header:
+
+```bash
+curl -X POST -H "Authorization: Bearer $NOTICIAS_ADMIN_TOKEN" https://example.org/api/refresh
+```
+
+### Health check
+
+`GET /healthz` is for an uptime checker. It answers 200 while fetching works and 503 when the last successful fetch is older than 3× `fetch.interval_minutes` (an hour, by default), or there has been none yet:
+
+```json
+{"status": "ok", "last_success": "2026-10-13T09:20:04Z", "minutes_since_success": 4.2,
+ "max_age_minutes": 60, "running": false,
+ "empty_feeds_24h": [{"source": "dn", "name": "Diário de Notícias", "url": "https://www.dn.pt/stories.rss",
+                      "runs": 72, "last_error": "feed vazio"}]}
+```
+
+A fetch counts as successful when it finished and at least one feed returned items. `empty_feeds_24h` lists the enabled feeds that returned nothing on every fetch of the last 24 hours. The history behind it is kept in the database for 7 days, so it survives a restart and includes fetches made by `python -m app.worker`.
+
+### Migrations
+
+The database is created and upgraded automatically every time the server or a fetch connects to it. On a server, where several processes would race to do it, turn that off with `NOTICIAS_AUTO_MIGRATE=0` and run the migrations once per deploy instead:
+
+```bash
+python -m app.db migrate
+```
+
+With auto-migration off, a process refuses to start on a database that has not been migrated, and edits to `scope` / `language` / `group` in `sources.yaml` reach stored articles only when the command runs.
+
 ## How it works
 
 | Part | File |
@@ -317,6 +374,14 @@ python -m pytest
 
 To add an outlet, add a block to `sources.yaml` (with `scope` and `language`) and restart.
 
+Requests carry the `fetch.user_agent` from `config.yaml`. An outlet that refuses it can get its own `user_agent:` in `sources.yaml`. To see which outlets answer differently to two User-Agents (by default the browser-like one and `Noticias/1.0 (+https://github.com/emvabs/noticias)`):
+
+```bash
+python scripts/compare_user_agents.py
+```
+
+It prints status and item count per feed (and bylines found on one article page for `author_from: page` outlets), and the `sources.yaml` lines for any outlet that gets less with the new one.
+
 ## Licenses
 
 - **SentiLex-PT02**: Paula Carvalho & Mário J. Silva, **CC-BY 4.0**, https://doi.org/10.23728/b2share.93ab120efdaa4662baec6adee8e7585f
@@ -326,4 +391,4 @@ Articles belong to their respective outlets. Only title, summary and link are st
 
 ## Upgrading an existing database
 
-These features add seven columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`) and the `topics_cache`, `article_archive` and `topic_labels` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.
+These features add seven columns to `articles` (`scope`, `language`, `group`, `topics`, `search_text`, `raw_text`, `authors`) and the `topics_cache`, `article_archive`, `topic_labels`, `fetch_runs` and `feed_results` tables. They are created automatically on startup; scope and language are backfilled from `sources.yaml` and the two search columns are rebuilt from the stored headlines, so no manual step is needed. `authors` starts empty (NULL) on old rows: it fills in when the feed lists the article again, or from the page for `author_from: page` outlets. Scope, language and group are re-synced from `sources.yaml` on every startup, so moving an outlet between groups applies to the articles already stored. **Restart the server after pulling changes**: an older running process reads the new `config.yaml`, finds no lexicon where it expects one, and would re-score every article as neutral.

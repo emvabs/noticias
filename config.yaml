@@ -4,6 +4,12 @@ server:
   port: 8000
   reload: true    # reinicia sozinho quando edita o código (ponha false se preferir)
 
+# Quem faz a atualização automática:
+#   embedded = o próprio servidor web (como sempre; basta python run.py)
+#   separate = um processo à parte, python -m app.worker (para vários processos web
+#              num servidor: assim só um vai buscar os feeds)
+worker: embedded
+
 fetch:
   interval_minutes: 20      # atualização automática
   timeout_seconds: 20

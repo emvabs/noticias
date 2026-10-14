@@ -21,9 +21,8 @@ if __name__ == "__main__":
             f"\n  A porta {port} já está em uso — o site provavelmente já está a correr"
             f" noutra janela (abra http://localhost:{port}).\n"
             f"  Para ver o que está a usar a porta:  lsof -i :{port}\n"
-            f"  Ou mude 'port' em config.yaml.\n")
+            f"  Ou mude 'port' em config.yaml (ou NOTICIAS_PORT).\n")
     print(f"\n  Notícias a correr em  http://localhost:{port}\n  (Ctrl+C para parar)\n")
-    uvicorn.run("app.main:app", host=host, port=port, log_level="warning",
-                # picks up edits to the code without a manual restart
-                reload=server.get("reload", True),
-                reload_dirs=[str(Path(__file__).parent / "app")])
+    reload = server.get("reload", True)   # picks up edits to the code without a manual restart
+    uvicorn.run("app.main:app", host=host, port=port, log_level="warning", reload=reload,
+                reload_dirs=[str(Path(__file__).parent / "app")] if reload else None)

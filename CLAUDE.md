@@ -18,9 +18,12 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 .venv/bin/python run.py        # http://localhost:8000, auto-reloads on edits to app/
 .venv/bin/python -m pytest -q  # all should pass
 .venv/bin/python -m app.ingest # fetch feeds once, from the shell
+.venv/bin/python -m app.worker # fetch on the interval in its own process (worker: separate)
+.venv/bin/python -m app.db migrate   # run the migrations explicitly (production)
 .venv/bin/python -m app.topics # print the current topics per scope and group
 .venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
+.venv/bin/python scripts/compare_user_agents.py  # per-feed items: browser UA vs honest UA
 ```
 
 The Python here is the python.org build, whose SSL has no CA certificates: use
@@ -32,7 +35,7 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 |---|---|
 | Outlets, feeds, `scope` / `language` / `group` | `sources.yaml` |
 | Thresholds, retention, per-group settings | `config.yaml` |
-| Fetch, clean, dedupe, retention | `app/ingest.py` |
+| Fetch, clean, dedupe, retention, fetch history | `app/ingest.py` |
 | Word-list scoring | `app/sentiment.py` |
 | Topic extraction (TF-IDF) | `app/topics.py` |
 | Search matching, synonyms | `app/search.py` |
@@ -41,7 +44,8 @@ The Python here is the python.org build, whose SSL has no CA certificates: use
 | Never-deleted article archive | `app/archive.py` |
 | Deep Dive findings and silences | `app/deepdive.py`, `static/deepdive.js` |
 | Slider mixing | `app/mixing.py` |
-| API, scheduler, static files | `app/main.py` |
+| API, `/healthz`, embedded scheduler, static files | `app/main.py` |
+| Scheduled fetching in its own process | `app/worker.py` |
 | Schema and migrations | `app/db.py` |
 | Page | `static/` |
 
@@ -118,6 +122,46 @@ fix wrong labels or noisy topics — prefer them over changing code.
   pseudo-elements) — no emoji in the UI. The backend's finding `icon` field is
   ignored by the page, which maps each kind to a line icon.
 
+- **One scheduler, wherever it runs.** `worker: embedded` (default) keeps the
+  APScheduler job in the web server's lifespan, as `run.py` always did.
+  `worker: separate` leaves the server with no scheduler and `python -m
+  app.worker` fetches instead, so several uvicorn workers do not each fetch the
+  same feeds. `fetch_all` holds a thread lock *and* an `flock` on
+  `<database>.fetch.lock`, so a web refresh and the worker never overlap either;
+  `/api/status` "running" reads that file lock, so it sees other processes.
+
+- **Migrations run on connect unless `NOTICIAS_AUTO_MIGRATE=0`.** At home every
+  start migrates, as before. In production several processes would race, so
+  the deploy runs `python -m app.db migrate` once and switches auto-migration
+  off; a process then refuses a database whose `PRAGMA user_version` is below
+  `db.SCHEMA_VERSION`. **Bump `SCHEMA_VERSION` whenever `migrate()` gains a
+  step.** `:memory:` databases always migrate. The `sources.yaml` re-sync is
+  part of the migration, so with auto-migration off it needs the command too.
+
+- **`POST /api/refresh` is localhost or token only.** A request is local when
+  it comes from a loopback address *and* carries no `X-Forwarded-For`,
+  `Forwarded` or `X-Real-IP`: behind a reverse proxy on the same machine every
+  visitor arrives from 127.0.0.1. Otherwise it needs `Authorization: Bearer
+  <NOTICIAS_ADMIN_TOKEN>` (compared with `hmac.compare_digest`); no token set
+  means localhost only. The page says "Atualização não permitida aqui" on a
+  403 from the button, and stays quiet for the automatic refresh on a scope
+  switch.
+
+- **Every environment variable is read in `app/config.py`.** `load_config()`
+  applies `ENV_OVERRIDES` (`NOTICIAS_DB`, `NOTICIAS_HOST`, `NOTICIAS_PORT`,
+  `NOTICIAS_RELOAD`, `NOTICIAS_WORKER`) on top of `config.yaml`; empty counts as
+  unset. `NOTICIAS_AUTO_MIGRATE` and `NOTICIAS_ADMIN_TOKEN` have their own
+  helpers (`auto_migrate()`, `admin_token()`). The README has the full table.
+  Add a new variable there, not with `os.environ` elsewhere.
+
+- **Fetch history lives in the database, not in memory.** Each run writes a
+  `fetch_runs` row and one `feed_results` row per feed (7 days kept). The web
+  process cannot see the worker's memory, so "Atualizado há…", per-source
+  errors in `/api/sources` and `/healthz` all read these tables, and they
+  survive a restart. `/healthz` is 200 while the last *successful* run (finished,
+  with items from at least one feed) is under 3× `fetch.interval_minutes` old,
+  503 otherwise, and lists enabled feeds with 0 items on every run in 24 h.
+
 ## Gotchas
 
 - **Restart after changing `app/`** — `run.py` auto-reloads, but a server started
@@ -131,13 +175,22 @@ fix wrong labels or noisy topics — prefer them over changing code.
   articles already stored.
 - `app.main` connects to the real database on import (tests included), and the
   migration writes. Keep migrations cheap: the archive backfill only runs when
-  the archive is empty.
+  the archive is empty. Keep that import path working: tests import `app.main`
+  and then swap `main.conn` for an in-memory database. With
+  `NOTICIAS_AUTO_MIGRATE=0` the import raises unless the database was migrated.
 - Never hold a SQLite write transaction across a network request: the page
   byline lookup commits per article, otherwise it locks the database for the
   server's own scheduler.
 - Several feeds need care: CNN Portugal double-escapes HTML, WordPress feeds
   append "O conteúdo … apareceu primeiro em …" footers, Divergente's real
   articles are only in `?post_type=trabalho`, and DN sends no summaries.
+- **User-Agent is a setting per fetch and per source.** `fetch.user_agent` is
+  the default; a source in `sources.yaml` can set its own `user_agent` (feed
+  and article pages). The default is still the browser-like string: the switch
+  to an honest `Noticias/1.0 (+https://github.com/emvabs/noticias)` waits on
+  `scripts/compare_user_agents.py` run from a network that reaches the outlets
+  (the cloud sandbox where this was written could not). Give any source it
+  flags its own browser-like `user_agent`, then change the default.
 - SIC Notícias, Jornal de Notícias, Reuters and Associated Press have no working
   public feed (checked September 2026). They sit in `sources.yaml` with
   `enabled: false` and a comment. Do not scrape them.
