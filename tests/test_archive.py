@@ -26,9 +26,9 @@ def test_archive_keeps_articles_that_retention_deletes():
     assert set(archived(conn)) == {"https://x/1", "https://x/2"}
 
 
-def test_archive_follows_rescoring_and_late_bylines():
+def test_archive_follows_rescoring_and_bylines():
     conn = db.connect(":memory:")
-    ingest.store(conn, [article(1, "Uma notícia", authors=None)])
+    ingest.store(conn, [article(1, "Uma notícia")])
     archive.sync(conn)
     conn.execute("UPDATE articles SET label = 'negative', authors = '[\"Ana Sousa\"]'")
     archive.sync(conn)

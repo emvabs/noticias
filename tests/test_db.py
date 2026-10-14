@@ -52,3 +52,18 @@ def test_auto_migrate_setting(monkeypatch, value, expected):
     else:
         monkeypatch.setenv("NOTICIAS_AUTO_MIGRATE", value)
     assert config.auto_migrate() is expected
+
+
+def test_migrate_turns_unknown_bylines_into_empty_lists(tmp_path):
+    """Rows stored before bylines were kept have NULL authors; [] means the same."""
+    conn = db.connect(tmp_path / "news.db")
+    conn.execute("""INSERT INTO articles (source, title, title_norm, url, published_at, fetched_at,
+                    authors) VALUES ('rtp', 'T', 't', 'https://x/1', '2026-10-01T00:00:00Z',
+                    '2026-10-01T00:00:00Z', NULL)""")
+    conn.execute("""INSERT INTO article_archive (url, source, scope, "group", language,
+                    published_at, title, authors) VALUES ('https://x/2', 'rtp', 'portugal',
+                    'mainstream', 'pt', '2026-10-01T00:00:00Z', 'T', NULL)""")
+    db.migrate(conn)
+    assert conn.execute("SELECT authors FROM articles").fetchone()[0] == "[]"
+    assert conn.execute("SELECT authors FROM article_archive WHERE url = 'https://x/2'"
+                        ).fetchone()[0] == "[]"

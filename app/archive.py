@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS article_archive (
     language       TEXT NOT NULL,
     published_at   TEXT NOT NULL,
     title          TEXT NOT NULL,
-    authors        TEXT,                     -- JSON list of bylines; NULL = unknown
+    authors        TEXT DEFAULT '[]',        -- JSON list of bylines
     label          TEXT,
     score          REAL,
     topics         TEXT NOT NULL DEFAULT '[]', -- every topic it was ever tagged with

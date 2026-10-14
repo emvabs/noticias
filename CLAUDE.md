@@ -96,7 +96,7 @@ fix wrong labels or noisy topics — prefer them over changing code.
   335 waiting for research. Bylines come only from feeds.
 - **Bylines are stored as cleaned names and resolved at read time**
   (`profiles.Resolver`), so editing `aliases.txt` applies to stored articles.
-  `authors` is `[]` when the feed has none (NULL only on older rows). Mapping
+  `authors` is `[]` when the feed has none. Mapping
   agency bylines to `outlet:<id>` is what the Deep Dive agency finding counts.
   Bylines naming an outlet, or with words such as "Redação"/"Staff"/"Agências"
   (`NON_PERSON_WORDS`), are not people even without an alias; aliases win.

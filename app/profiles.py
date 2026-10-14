@@ -216,7 +216,7 @@ def byline_articles(conn, kind, ident, resolver=None):
     """Stored articles carrying one byline (an agency) - resolved, so aliases count."""
     resolver = resolver or Resolver()
     rows = conn.execute("""SELECT source, label, published_at, authors FROM articles
-                           WHERE authors IS NOT NULL AND authors != '[]'""").fetchall()
+                           WHERE authors != '[]'""").fetchall()
     return [r for r in rows
             if any(a["kind"] == kind and a["id"] == ident for a in resolver.resolve_all(r["authors"]))]
 

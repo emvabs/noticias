@@ -64,15 +64,12 @@ def test_parse_feed_keeps_bylines():
                              author_from="none")[0]["authors"] == []
 
 
-def test_store_fills_bylines_of_articles_stored_before():
+def test_an_article_without_bylines_stores_an_empty_list():
     conn = db.connect(":memory:")
     now = ingest.iso(ingest.utcnow())
-    art = {"source": "expresso", "title": "Uma notícia", "title_norm": "uma noticia",
-           "summary": "", "url": "https://x/1", "published_at": now, "fetched_at": now}
-    ingest.store(conn, [{**art, "authors": None}])
-    ingest.store(conn, [{**art, "authors": ["Hugo Franco"]}])
-    ingest.store(conn, [{**art, "authors": ["Outra Pessoa"]}])     # a known byline is kept
-    assert conn.execute("SELECT authors FROM articles").fetchone()[0] == '["Hugo Franco"]'
+    ingest.store(conn, [{"source": "expresso", "title": "Uma notícia", "title_norm": "uma noticia",
+                         "summary": "", "url": "https://x/1", "published_at": now, "fetched_at": now}])
+    assert conn.execute("SELECT authors FROM articles").fetchone()[0] == "[]"
 
 
 @pytest.fixture

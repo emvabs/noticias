@@ -198,8 +198,8 @@ def topic_findings(mine, base, base_name, cfg):
 
 def agency_finding(mine, base, cfg):
     """How much of an outlet is agency copy (only articles whose byline is known)."""
-    known = [a for a in mine if a["authors"] not in (None, "[]")]
-    known_base = [a for a in base if a["authors"] not in (None, "[]")]
+    known = [a for a in mine if a["authors"] != "[]"]
+    known_base = [a for a in base if a["authors"] != "[]"]
     if len(known) < cfg["min_articles"]:
         return None
 

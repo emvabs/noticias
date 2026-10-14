@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS articles (
     topics        TEXT NOT NULL DEFAULT '[]', -- JSON list of topic slugs
     search_text   TEXT NOT NULL DEFAULT '',  -- title + summary, lowercase, no accents
     raw_text      TEXT NOT NULL DEFAULT '',  -- same text with capitals/accents (acronyms)
-    authors       TEXT                    -- JSON list of bylines; NULL = unknown (older rows)
+    authors       TEXT DEFAULT '[]'       -- JSON list of bylines; [] = none in the feed
 );
 
 CREATE TABLE IF NOT EXISTS fetch_runs (     -- one row per fetch, from any process
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS topics_cache (   -- current top topics per scope and 
 
 # Stamped into PRAGMA user_version by migrate(). Bump it when migrate() gains a
 # step, so processes started with NOTICIAS_AUTO_MIGRATE=0 refuse an old database.
-SCHEMA_VERSION = 2   # 2: fetch_runs, feed_results
+SCHEMA_VERSION = 3   # 2: fetch_runs, feed_results; 3: no NULL authors
 
 INDEXES = """
 CREATE INDEX IF NOT EXISTS idx_articles_published ON articles(published_at DESC);
@@ -86,6 +86,9 @@ def migrate(conn):
     # the upgrade) and kept in step on every fetch; see app/archive.py.
     from . import archive                 # late: archive -> ownership -> profiles -> config
     conn.executescript(archive.SCHEMA)
+    # Rows stored before bylines were kept had NULL; "no byline" is [] everywhere now.
+    for table in ("articles", "article_archive"):
+        conn.execute(f"UPDATE {table} SET authors = '[]' WHERE authors IS NULL")
     if not conn.execute("SELECT 1 FROM article_archive LIMIT 1").fetchone():
         archive.sync(conn)   # only the first time: every fetch keeps it in step afterwards
     conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")

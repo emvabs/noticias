@@ -162,7 +162,7 @@ def store(conn, articles, scorer=None):
     inserted = 0
     for a in articles:
         score, label, matched = score_article(a, scorer)
-        authors = None if a.get("authors") is None else json.dumps(a["authors"], ensure_ascii=False)
+        authors = json.dumps(a.get("authors") or [], ensure_ascii=False)
         cur = conn.execute(
             """INSERT OR IGNORE INTO articles
                (source, title, title_norm, summary, url, published_at, fetched_at,
@@ -175,10 +175,6 @@ def store(conn, articles, scorer=None):
              search_text(a["title"], a["summary"]),
              raw_text(a["title"], a["summary"]), authors))
         inserted += cur.rowcount
-        if not cur.rowcount and authors is not None:
-            # Articles stored before bylines were kept get theirs the next time the feed lists them.
-            conn.execute("UPDATE articles SET authors = ? WHERE url = ? AND authors IS NULL",
-                         (authors, a["url"]))
     conn.commit()
     return inserted
 
