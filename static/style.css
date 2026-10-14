@@ -631,8 +631,6 @@ main {
 }
 .whois-close:hover { background: var(--border); color: var(--text); }
 .whois-sec + .whois-sec { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-.whois-sec.whois-sub { border-top: 0; margin-top: 4px; padding-top: 0; }
-.whois-sec.whois-sub + .whois-sub { border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 12px; }
 .whois h3 {
   margin: 0 0 4px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .09em;
   text-transform: uppercase; color: var(--accent);

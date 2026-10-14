@@ -45,7 +45,7 @@ def kinds(result):
 
 def test_tone_finding_compares_with_the_other_outlets(conn):
     fill(conn)
-    r = deepdive.dive(conn, "outlet", "publico")
+    r = deepdive.dive(conn, "publico")
     tone = next(f for f in r["findings"] if f["kind"] == "tone")
     assert tone["title"] == "Mais notícias negativas que os outros jornais portugueses"
     assert tone["numbers"]["share"]["negative"] == 80 and tone["numbers"]["baseline"]["negative"] == 20
@@ -54,7 +54,7 @@ def test_tone_finding_compares_with_the_other_outlets(conn):
 
 def test_less_negative_is_a_finding_too(conn):
     fill(conn)   # Expresso 20% negative, the others 40%
-    tone = next(f for f in deepdive.dive(conn, "outlet", "expresso")["findings"] if f["kind"] == "tone")
+    tone = next(f for f in deepdive.dive(conn, "expresso")["findings"] if f["kind"] == "tone")
     assert tone["title"] == "Menos notícias negativas que os outros jornais portugueses"
     assert all(a["label"] != "negative" for a in tone["articles"])
 
@@ -66,14 +66,14 @@ def test_no_tone_finding_below_the_threshold(conn):
             n += 1
             add(conn, n, src, f"Notícia {src} {i}", "negative" if i < 3 else "neutral")
     archive.sync(conn)
-    r = deepdive.dive(conn, "outlet", "publico")
+    r = deepdive.dive(conn, "publico")
     assert "tone" not in kinds(r)
     assert "em linha com a média" in r["summary"]
 
 
 def test_topic_finding_lists_the_headlines_behind_it(conn):
     fill(conn)
-    topic = next(f for f in deepdive.dive(conn, "outlet", "publico")["findings"]
+    topic = next(f for f in deepdive.dive(conn, "publico")["findings"]
                  if f["kind"] == "topic" and "Benfica" in f["title"])
     assert topic["total"] == 6
     assert all("Benfica" in a["title"] for a in topic["articles"])
@@ -82,7 +82,7 @@ def test_topic_finding_lists_the_headlines_behind_it(conn):
 
 def test_agency_share_counts_only_known_bylines(conn):
     fill(conn)
-    agency = next(f for f in deepdive.dive(conn, "outlet", "publico")["findings"]
+    agency = next(f for f in deepdive.dive(conn, "publico")["findings"]
                   if f["kind"] == "agency")
     assert agency["numbers"]["share"] == 30 and agency["numbers"]["baseline"] == 0
     assert "Agência Lusa" in agency["text"]
@@ -91,33 +91,24 @@ def test_agency_share_counts_only_known_bylines(conn):
 def test_owner_finding(conn, monkeypatch):
     monkeypatch.setattr(ownership, "keywords_by_source", lambda: {"publico": ["Benfica"]})
     fill(conn)
-    owner = next(f for f in deepdive.dive(conn, "outlet", "publico")["findings"]
+    owner = next(f for f in deepdive.dive(conn, "publico")["findings"]
                  if f["kind"] == "owner")
     assert owner["total"] == 6
 
 
 def test_few_articles_give_no_data_findings(conn):
-    add(conn, 1, "publico", "Uma notícia", authors=["Ana Sousa"])
+    add(conn, 1, "fumaca", "Uma notícia")
     archive.sync(conn)
-    r = deepdive.dive(conn, "journalist", "ana-sousa")
+    r = deepdive.dive(conn, "fumaca")
     assert not r["enough_data"] and r["articles"] == 1
     assert "poucas para tirar tendências" in r["summary"]
     assert all(f["kind"] == "researched" for f in r["findings"])
 
 
-def test_journalist_is_compared_with_the_rest_of_their_outlet(conn):
-    fill(conn)
-    r = deepdive.dive(conn, "journalist", "rui-costa")
-    assert r["outlets"] == ["Expresso", "Observador", "CNN Portugal"]
-    tone = [f for f in r["findings"] if f["kind"] == "tone"]
-    # Rui Costa writes all of those outlets' pieces: nothing left to compare with
-    assert tone == []
-
-
 def test_researched_findings_need_a_source():
     profile = {"owners": [{"name": "X", "share": 100, "kind": "company"}],   # no source
                "narrative": [{"text": "Crítica", "source": "https://a"}]}
-    found = deepdive.researched_findings(profile, "outlet")
+    found = deepdive.researched_findings(profile)
     assert [f["title"] for f in found] == ["Narrativa e críticas documentadas"]
     assert found[0]["sources"] == ["https://a"]
 
@@ -125,7 +116,7 @@ def test_researched_findings_need_a_source():
 def test_every_finding_has_evidence(conn):
     fill(conn)
     for outlet in ("publico", "expresso", "cnn", "lusa"):
-        for f in deepdive.dive(conn, "outlet", outlet)["findings"]:
+        for f in deepdive.dive(conn, outlet)["findings"]:
             assert f.get("sources") or f.get("total"), f
 
 
@@ -143,7 +134,7 @@ def test_silences_mark_an_outlet_that_skipped_a_widely_covered_topic(conn):
     irao = next(t for t in table["topics"] if t["slug"] == "irao")
     assert irao["label"] == "Irão" and irao["covered_by"] == 3
     assert irao["cells"]["cnn"]["silent"] and not irao["cells"]["publico"]["silent"]
-    finding = next(f for f in deepdive.dive(conn, "outlet", "cnn")["findings"] if f["kind"] == "silence")
+    finding = next(f for f in deepdive.dive(conn, "cnn")["findings"] if f["kind"] == "silence")
     assert finding["title"] == "Pouca cobertura de «Irão»"
     assert finding["total"] == 12 and all(a["source"] != "cnn" for a in finding["articles"])
     assert len(deepdive.silence_articles(conn, "portugal", "irao", "publico")) == 4
@@ -161,16 +152,13 @@ def client(conn, monkeypatch):
 
 
 def test_api_index_and_entity(client):
-    outlets = client.get("/api/deepdive/index?kind=outlet").json()
+    outlets = client.get("/api/deepdive/index").json()
     assert outlets[0]["articles"] >= outlets[-1]["articles"]
     assert any(o["id"] == "lusa" and o["agency"] for o in outlets)
-    people = client.get("/api/deepdive/index?kind=journalist").json()
-    assert [p["id"] for p in people[:2]] == ["rui-costa", "ana-sousa"]
     r = client.get("/api/deepdive/outlet/publico").json()
     assert r["name"] == "Público" and r["findings"]
     assert client.get("/api/deepdive/journalist/ninguem-mesmo").status_code == 404
     assert client.get("/api/deepdive/outlet/..%2Fx").status_code == 404
-    assert client.get("/api/deepdive/index?kind=nada").status_code == 422
 
 
 def test_api_ownership_and_silences(client):

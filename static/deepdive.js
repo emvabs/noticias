@@ -1,12 +1,10 @@
 "use strict";
-// Deep Dive: ownership map, findings per outlet / journalist, silences.
+// Deep Dive: ownership map, findings per outlet or agency, silences.
 // Uses the helpers of app.js ($, el, fullDate, dayMonth, LABELS); no libraries —
 // the two graphs have a natural fixed shape (radial, two columns), drawn in SVG.
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const DD_TABS = ["propriedade", "jornais", "jornalistas", "silencios"];
-const KIND_OF_TAB = { jornais: "outlet", jornalistas: "journalist" };
-const TAB_OF_KIND = { outlet: "jornais", journalist: "jornalistas" };
+const DD_TABS = ["propriedade", "jornais", "silencios"];
 const OWNER_KIND_LABELS = {
   state: "Estado", public: "Entidade pública", company: "Empresa", person: "Pessoa / família",
   fund: "Fundo", cooperative: "Cooperativa", nonprofit: "Sem fins lucrativos", trust: "Fundação / trust",
@@ -109,7 +107,7 @@ function hideTip() { ddTip.hidden = true; }
 // ==========================================================================
 // Routing: #deep-dive[/tab[/id]]
 // ==========================================================================
-const ddState = { tab: null, id: null, index: {}, silenceScope: "portugal" };
+const ddState = { tab: null, id: null, index: null, silenceScope: "portugal" };
 const ddSection = $("#dd");
 const ddToggle = $("#dd-toggle");
 
@@ -139,13 +137,13 @@ async function route() {
     a.classList.toggle("active", selected);
   }
   $("#dd-propriedade").hidden = r.tab !== "propriedade";
-  $("#dd-entidade").hidden = !KIND_OF_TAB[r.tab];
+  $("#dd-entidade").hidden = r.tab !== "jornais";
   $("#dd-silencios").hidden = r.tab !== "silencios";
   const changedTab = r.tab !== ddState.tab;
   ddState.tab = r.tab;
   ddState.id = r.id;
   if (r.tab === "propriedade" && changedTab) await showOwnership();
-  if (KIND_OF_TAB[r.tab]) await showEntityTab(KIND_OF_TAB[r.tab], r.id, changedTab);
+  if (r.tab === "jornais") await showOutletTab(r.id, changedTab);
   if (r.tab === "silencios" && changedTab) await showSilences();
   if (changedTab) window.scrollTo({ top: 0 });
 }
@@ -279,45 +277,40 @@ function showOwner(owner, data) {
 }
 
 // ==========================================================================
-// Outlets / journalists: picker, summary, findings, radial graph
+// Outlets and agencies: picker, summary, findings, radial graph
 // ==========================================================================
 const ddSearch = $("#dd-search");
 const ddList = $("#dd-list");
 const ddResult = $("#dd-result");
 
-async function showEntityTab(kind, id, changedTab) {
-  ddSearch.placeholder = kind === "outlet" ? "Procurar jornal ou agência…" : "Procurar jornalista…";
+async function showOutletTab(id, changedTab) {
+  ddSearch.placeholder = "Procurar jornal ou agência…";
   if (changedTab) {
     ddSearch.value = "";
-    if (!ddState.index[kind]) {
+    if (!ddState.index) {
       ddList.replaceChildren(el("li", { className: "dd-muted" }, "A carregar…"));
-      ddState.index[kind] = await (await fetch(`/api/deepdive/index?kind=${kind}`)).json();
+      ddState.index = await (await fetch("/api/deepdive/index")).json();
     }
   }
-  renderPicker(kind);
-  if (id) await showEntity(kind, id);
-  else {
-    ddResult.replaceChildren(el("p", { className: "dd-empty" },
-      kind === "outlet" ? "Escolha um jornal ou agência na lista."
-        : "Escolha um jornalista na lista. Os que têm perfil investigado estão marcados com ●."));
-  }
+  renderPicker();
+  if (id) await showOutlet(id);
+  else ddResult.replaceChildren(el("p", { className: "dd-empty" }, "Escolha um jornal ou agência na lista."));
 }
 
-function renderPicker(kind) {
+function renderPicker() {
   const q = ddSearch.value.trim().toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
-  const all = ddState.index[kind] || [];
+  const all = ddState.index || [];
   const match = all.filter((e) => !q || e.name.toLowerCase().normalize("NFD")
     .replace(/\p{M}/gu, "").includes(q));
   ddList.replaceChildren();
-  const max = kind === "outlet" ? 40 : 60;
+  const max = 40;
   for (const e of match.slice(0, max)) {
-    const a = el("a", { href: `#deep-dive/${TAB_OF_KIND[kind]}/${e.id}`,
+    const a = el("a", { href: `#deep-dive/jornais/${e.id}`,
       className: e.id === ddState.id ? "active" : "" });
     a.append(el("span", { className: e.has_profile ? "dd-dot on" : "dd-dot",
       title: e.has_profile ? "Tem perfil investigado" : "Sem perfil investigado" }),
       el("span", { className: "dd-name" }, e.name),
       el("span", { className: "dd-count" }, String(e.articles)));
-    if (e.outlets?.length) a.title = e.outlets.join(", ");
     const li = el("li");
     li.append(a);
     ddList.append(li);
@@ -327,11 +320,11 @@ function renderPicker(kind) {
   }
   if (!match.length) ddList.append(el("li", { className: "dd-muted" }, "Nenhum resultado."));
 }
-ddSearch.addEventListener("input", () => renderPicker(KIND_OF_TAB[ddState.tab]));
+ddSearch.addEventListener("input", renderPicker);
 
-async function showEntity(kind, id) {
+async function showOutlet(id) {
   ddResult.replaceChildren(el("p", { className: "dd-muted" }, "A analisar…"));
-  const res = await fetch(`/api/deepdive/${kind}/${encodeURIComponent(id)}`);
+  const res = await fetch(`/api/deepdive/outlet/${encodeURIComponent(id)}`);
   if (!res.ok) {
     ddResult.replaceChildren(el("p", { className: "dd-empty" }, "Sem dados para esta escolha."));
     return;
@@ -359,7 +352,6 @@ function renderEntity(d) {
     stat(`${pct("positive")}%`, "positivas", "pos");
     stat(`${pct("negative")}%`, "negativas", "neg");
   }
-  if (d.kind === "journalist" && d.outlets.length) stat(d.outlets.join(", "), "escreve em", "wide");
   head.append(stats);
   if (d.stale) head.append(el("p", { className: "whois-checked stale" }, "Perfil pode estar desatualizado."));
   ddResult.append(head, el("p", { className: "dd-summary" }, d.summary));

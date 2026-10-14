@@ -395,7 +395,7 @@ function tooltipFor(article) {
   return tip;
 }
 
-// ---------- "who is behind this": outlet and journalist profiles ----------
+// ---------- "who is behind this": outlet profiles and bylines ----------
 // Hover a card (mouse) for a moment, or press its "i" button (touch, keyboard).
 const whois = (() => {
   const box = $("#whois");
@@ -517,33 +517,12 @@ const whois = (() => {
     return sec;
   }
 
-  function journalistSection(data, name) {
-    const sec = el("section", { className: "whois-sec" });
-    sec.append(el("p", { className: "whois-name" }, data?.name || name));
-    if (data?.id) sec.append(deepDiveLink("jornalistas", data.id));
-    const p = data?.profile;
-    if (!p) {
-      sec.append(el("p", { className: "whois-none" }, "Perfil ainda não investigado."));
-    } else {
-      if (p.role) sec.append(el("p", { className: "whois-type" }, p.role));
-      if (p.summary) sec.append(el("p", {}, p.summary));
-      if (p.career?.length) sec.append(list("Percurso", p.career));
-      sec.append(politics(p.political_links, "Sem ligações públicas conhecidas."));
-      sec.append(list("Narrativa e críticas", p.narrative, "Sem padrões documentados."));
-    }
-    const line = statsLine(data?.stats, { outlets: true });
-    if (line) sec.append(line);
-    const c = checked(data);
-    if (c) sec.append(c);
-    return sec;
-  }
-
   async function fill(article) {
     body.replaceChildren(el("p", { className: "whois-loading" }, "A carregar…"));
     const authors = (article.authors || []).filter((a) => !(a.kind === "outlet" && a.id === article.source));
     const [outletData, ...authorData] = await Promise.all([
       profile("outlet", article.source),
-      ...authors.slice(0, 3).map((a) => (a.kind === "other" ? null : profile(a.kind, a.id))),
+      ...authors.slice(0, 3).map((a) => (a.kind === "outlet" ? profile("outlet", a.id) : null)),
     ]);
     if (current?.article !== article) return;    // the pointer moved on meanwhile
 
@@ -563,12 +542,8 @@ const whois = (() => {
     authors.slice(0, 3).forEach((a, i) => {
       if (a.kind === "outlet") {
         frag.append(outletSection(authorData[i] || { id: a.id, name: a.name }, "Agência / redação"));
-      } else if (a.kind === "other") {
-        people.append(el("p", { className: "whois-name" }, a.name));
       } else {
-        const sec = journalistSection(authorData[i], a.name);
-        sec.classList.add("whois-sub");
-        frag.append(sec);
+        people.append(el("p", { className: "whois-name" }, a.name));
       }
     });
     frag.append(el("p", { className: "whois-note" },
@@ -883,7 +858,7 @@ async function poll() {
   } catch { /* server stopped; try again later */ }
 }
 
-// ---------- research to do: journalists without a profile, old profiles ----------
+// ---------- research to do: outlet profiles checked too long ago ----------
 const profilesStatus = $("#profiles-status");
 
 function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
@@ -891,39 +866,20 @@ function plural(n, one, many) { return `${n} ${n === 1 ? one : many}`; }
 async function loadProfilesStatus() {
   let data;
   try { data = await (await fetch("/api/profiles/status")).json(); } catch { return; }
-  const { pending, stale } = data;
-  profilesStatus.hidden = !pending.length && !stale.length;
+  const { stale } = data;
+  profilesStatus.hidden = !stale.length;
   if (profilesStatus.hidden) return;
-
-  const parts = [];
-  if (pending.length) parts.push(plural(pending.length, "jornalista sem perfil", "jornalistas sem perfil"));
-  if (stale.length) parts.push(plural(stale.length, "perfil a rever", "perfis a rever"));
-  profilesStatus.querySelector("summary").textContent = parts.join(" · ");
+  profilesStatus.querySelector("summary").textContent = plural(stale.length, "perfil a rever", "perfis a rever");
 
   const body = profilesStatus.querySelector(".ps-body");
   body.replaceChildren();
-  if (pending.length) {
-    body.append(el("h3", {}, `Sem perfil, com ${data.min_articles} ou mais notícias`));
-    const ul = el("ul");
-    for (const p of pending) {
-      const li = el("li");
-      li.append(el("strong", {}, p.name), ` — ${plural(p.articles, "notícia", "notícias")}`
-        + ` (${p.outlets.join(", ")})`);
-      if (p.suspect) {
-        li.append(" ", el("span", { className: "ps-suspect" },
-          `${p.suspect}: talvez não seja uma pessoa (aliases.txt)`));
-      }
-      ul.append(li);
-    }
-    body.append(ul);
-  }
   if (stale.length) {
     body.append(el("h3", {}, `Verificados há mais de ${data.stale_after_days} dias`));
     const ul = el("ul");
     for (const p of stale) {
       const li = el("li");
       li.append(el("strong", {}, p.name), ` — ${p.last_checked || "sem data"} `,
-        el("code", {}, `profiles/${p.kind === "outlet" ? "outlets" : "journalists"}/${p.id}.yaml`));
+        el("code", {}, `profiles/outlets/${p.id}.yaml`));
       ul.append(li);
     }
     body.append(ul);

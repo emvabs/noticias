@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS articles (
     topics        TEXT NOT NULL DEFAULT '[]', -- JSON list of topic slugs
     search_text   TEXT NOT NULL DEFAULT '',  -- title + summary, lowercase, no accents
     raw_text      TEXT NOT NULL DEFAULT '',  -- same text with capitals/accents (acronyms)
-    authors       TEXT                    -- JSON list of bylines; NULL = not looked up yet
+    authors       TEXT                    -- JSON list of bylines; NULL = unknown (older rows)
 );
 
 CREATE TABLE IF NOT EXISTS fetch_runs (     -- one row per fetch, from any process

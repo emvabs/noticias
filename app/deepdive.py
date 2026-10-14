@@ -1,4 +1,4 @@
-"""Deep Dive: findings about one outlet or journalist, and the silences table.
+"""Deep Dive: findings about one outlet or agency, and the silences table.
 
 Two kinds of finding, never mixed up:
 
@@ -75,10 +75,8 @@ def _signed_by(a, kind, ident):
     return any(b["kind"] == kind and b["id"] == ident for b in a["bylines"])
 
 
-def entity_rows(rows, kind, ident):
-    if kind == "journalist":
-        return [a for a in rows if _signed_by(a, "journalist", ident)]
-    if ident in set(config.source_names()):
+def entity_rows(rows, ident):
+    if ident in config.source_names():
         return [a for a in rows if a["source"] == ident]
     return [a for a in rows if _signed_by(a, "outlet", ident)]        # an agency
 
@@ -105,32 +103,21 @@ def _pct(n, total):
 # --------------------------------------------------------------------------
 # Index: who can be chosen
 # --------------------------------------------------------------------------
-def index(conn, kind):
+def index(conn):
+    """Outlets and agencies that can be chosen, most articles first."""
     rows = load(conn)
     names = config.source_names()
     outlet_files = {p.stem for p in (profiles.PROFILES / "outlets").glob("*.yaml")}
-    if kind == "outlet":
-        counts = Counter(a["source"] for a in rows)
-        for a in rows:
-            for b in a["bylines"]:
-                if b["kind"] == "outlet" and b["id"] in ownership.AGENCIES and b["id"] != a["source"]:
-                    counts[b["id"]] += 1
-        enabled = {s["id"] for s in config.load_sources()}
-        ids = (enabled | ownership.AGENCIES) & (set(counts) | outlet_files | enabled)
-        out = [{"id": i, "name": names.get(i) or profiles.outlet(i).get("name", i),
-                "articles": counts.get(i, 0), "has_profile": i in outlet_files,
-                "agency": i in ownership.AGENCIES} for i in ids]
-    else:
-        counts, first_name, outlets = Counter(), {}, {}
-        for a in rows:
-            for b in a["bylines"]:
-                if b["kind"] == "journalist":
-                    counts[b["id"]] += 1
-                    first_name.setdefault(b["id"], (b["name"], b["has_profile"]))
-                    outlets.setdefault(b["id"], Counter())[a["source"]] += 1
-        out = [{"id": i, "name": first_name[i][0], "articles": n, "has_profile": first_name[i][1],
-                "outlets": [names.get(o, o) for o, _ in outlets[i].most_common()]}
-               for i, n in counts.items()]
+    counts = Counter(a["source"] for a in rows)
+    for a in rows:
+        for b in a["bylines"]:
+            if b["kind"] == "outlet" and b["id"] in ownership.AGENCIES and b["id"] != a["source"]:
+                counts[b["id"]] += 1
+    enabled = {s["id"] for s in config.load_sources()}
+    ids = (enabled | ownership.AGENCIES) & (set(counts) | outlet_files | enabled)
+    out = [{"id": i, "name": names.get(i) or profiles.outlet(i).get("name", i),
+            "articles": counts.get(i, 0), "has_profile": i in outlet_files,
+            "agency": i in ownership.AGENCIES} for i in ids]
     return sorted(out, key=lambda e: (-e["articles"], e["name"].lower()))
 
 
@@ -261,22 +248,18 @@ def _sources(items):
     return urls
 
 
-def researched_findings(profile, kind):
+def researched_findings(profile):
     out = []
-    if kind == "outlet" and profile.get("owners"):
+    if profile.get("owners"):
         owners = profile["owners"]
         text = "; ".join(f"{o['name']}" + (f" ({_num(o['share'])}%)" if o.get("share") else "")
                          + (f" via {o['via']}" if o.get("via") else "") for o in owners)
         out.append({"kind": "researched", "title": "Propriedade", "text": text,
                     "sources": _sources(owners)})
-    if kind == "outlet" and profile.get("funding"):
+    if profile.get("funding"):
         out.append({"kind": "researched", "title": "Financiamento",
                     "text": " ".join(i["text"] for i in profile["funding"][:2]),
                     "sources": _sources(profile["funding"])})
-    if kind == "journalist" and profile.get("career"):
-        out.append({"kind": "researched", "title": "Percurso",
-                    "text": " ".join(i["text"] for i in profile["career"]),
-                    "sources": _sources(profile["career"])})
     links = profile.get("political_links") or {}
     items = [("Oficial: ", i) for i in links.get("official") or []] + \
             [("Reportado: ", i) for i in links.get("reported") or []]
@@ -298,43 +281,30 @@ def _scope_of(rows):
     return Counter(a["scope"] for a in rows).most_common(1)[0][0] if rows else "portugal"
 
 
-def dive(conn, kind, ident):
+def dive(conn, ident):
+    """Findings about one outlet, or an agency (the articles carrying its byline)."""
     cfg = settings()
     rows = load(conn, cfg["window_days"])
     names = config.source_names()
-    mine = entity_rows(rows, kind, ident)
-    profile = profiles.outlet(ident) if kind == "outlet" else profiles.journalist(ident)
+    mine = entity_rows(rows, ident)
+    profile = profiles.outlet(ident)
+    name = names.get(ident) or profile.get("name") or ident
+    scope = _scope_of(mine)
+    if ident in names:
+        base = [a for a in rows if a["scope"] == scope and a["source"] != ident]
+    else:   # an agency: everything else in the scope not carrying its byline
+        base = [a for a in rows if a["scope"] == scope and not _signed_by(a, "outlet", ident)]
+    base_name = OUTLET_BASELINE.get(scope, OUTLET_BASELINE["portugal"])
 
-    if kind == "outlet":
-        name = names.get(ident) or profile.get("name") or ident
-        scope = _scope_of(mine)
-        if ident in set(config.source_names()):
-            base = [a for a in rows if a["scope"] == scope and a["source"] != ident]
-        else:   # an agency: everything else in the scope not carrying its byline
-            base = [a for a in rows if a["scope"] == scope and not _signed_by(a, "outlet", ident)]
-        base_name = OUTLET_BASELINE.get(scope, OUTLET_BASELINE["portugal"])
-        outlets = [name]
-    else:
-        name = profile.get("name") or next(
-            (b["name"] for a in mine for b in a["bylines"] if b["id"] == ident), ident)
-        sources = {a["source"] for a in mine}
-        base = [a for a in rows if a["source"] in sources and not _signed_by(a, "journalist", ident)]
-        outlets = [names.get(s, s) for s, _ in Counter(a["source"] for a in mine).most_common()]
-        # "as restantes notícias de X" avoids "do Expresso" vs "da CNN Portugal"
-        where = outlets[0] if len(outlets) == 1 else "desses jornais"
-        where = where if where.startswith("desses") else f"de {where}"
-        base_name = (f"as restantes notícias {where}", f"nas restantes notícias {where}")
-
-    findings = researched_findings(profile, kind)
+    findings = researched_findings(profile)
     data = []
     for f in (tone_finding(mine, base, base_name, cfg),
               *topic_findings(mine, base, base_name, cfg),
-              agency_finding(mine, base, cfg) if kind == "outlet" and ident not in ownership.AGENCIES else None,
-              owner_finding(mine, [o["name"] for o in profile.get("owners") or []], cfg)
-              if kind == "outlet" else None):
+              agency_finding(mine, base, cfg) if ident not in ownership.AGENCIES else None,
+              owner_finding(mine, [o["name"] for o in profile.get("owners") or []], cfg)):
         if f:
             data.append(f)
-    if kind == "outlet" and ident in set(config.source_names()):
+    if ident in names:
         data += silence_findings(conn, rows, ident, cfg)
     findings += data
     for i, f in enumerate(findings):
@@ -342,22 +312,22 @@ def dive(conn, kind, ident):
 
     counts = Counter(a["label"] for a in mine)
     return {
-        "kind": kind, "id": ident, "name": name, "outlets": outlets,
+        "id": ident, "name": name,
         "has_profile": bool(profile), "stale": bool(profile) and profiles.is_stale(profile),
-        "role": profile.get("role") or profile.get("type"),
+        "role": profile.get("type"),
         "window_days": cfg["window_days"], "min_articles": cfg["min_articles"],
         "articles": len(mine),
         "labels": {k: counts.get(k, 0) for k in LABELS},
         "enough_data": len(mine) >= cfg["min_articles"],
-        "summary": summary(name, kind, profile, mine, data, cfg),
+        "summary": summary(name, profile, mine, data, cfg),
         "findings": findings,
     }
 
 
-def summary(name, kind, profile, mine, data, cfg):
+def summary(name, profile, mine, data, cfg):
     """Two or three plain sentences built from the findings, with their numbers."""
     parts = []
-    if kind == "outlet" and profile.get("owners"):
+    if profile.get("owners"):
         owners = [o["name"] + (f" ({_num(o['share'])}%)" if o.get("share") and o["share"] < 100 else "")
                   for o in profile["owners"]]
         joined = owners[0] if len(owners) == 1 else ", ".join(owners[:-1]) + " e " + owners[-1]

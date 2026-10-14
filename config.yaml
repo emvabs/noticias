@@ -13,8 +13,6 @@ worker: embedded
 fetch:
   interval_minutes: 20      # atualização automática
   timeout_seconds: 20
-  author_pages_per_run: 60  # páginas de artigos lidas por atualização para saber o autor
-                            # (fontes com author_from: page em sources.yaml)
   user_agent: "Noticias/1.0 (+https://github.com/emvabs/noticias)"   # uma fonte pode ter o seu em sources.yaml
 
 storage:
@@ -32,12 +30,11 @@ groups:
       max_topics: 8
       min_articles: 2
 
-# Perfis de jornais e jornalistas (profiles/). Ver: python -m app.profiles
+# Perfis dos jornais e agências (profiles/outlets). Ver: python -m app.profiles
 profiles:
-  pending_min_articles: 3   # avisar de jornalistas sem perfil a partir de N notícias
   stale_after_days: 180     # perfis verificados há mais tempo aparecem como "a rever"
 
-# Deep Dive: tendências por jornal e jornalista, calculadas sobre o arquivo.
+# Deep Dive: tendências por jornal e agência, calculadas sobre o arquivo.
 deepdive:
   window_days: 90             # período analisado
   min_articles: 15            # abaixo disto: "poucas notícias para tendências"

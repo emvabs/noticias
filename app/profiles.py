@@ -1,9 +1,9 @@
-"""Who is behind each article: bylines, outlet and journalist profiles.
+"""Who is behind each article: bylines and outlet profiles.
 
-Bylines are stored as cleaned names (``articles.authors``) and resolved here at
-read time, so editing ``profiles/aliases.txt`` applies to stored articles too.
-Profiles are hand-researched YAML files in ``profiles/outlets`` and
-``profiles/journalists``; nothing is fetched at run time.
+Bylines come from the feeds, are stored as cleaned names (``articles.authors``)
+and resolved here at read time, so editing ``profiles/aliases.txt`` applies to
+stored articles too. Profiles are hand-researched YAML files in
+``profiles/outlets``; nothing is fetched at run time.
 """
 import html
 import json
@@ -83,47 +83,6 @@ def entry_authors(entry):
     return names
 
 
-LD_RE = re.compile(r'<script[^>]+type="application/ld\+json"[^>]*>(.*?)</script>', re.I | re.S)
-META_RE = re.compile(
-    r'<meta[^>]+(?:name|property)="(?:author|article:author|parsely-author)"[^>]*'
-    r'content="([^"]+)"', re.I)
-
-
-def _ld_authors(node, found):
-    if isinstance(node, list):
-        for item in node:
-            _ld_authors(item, found)
-    elif isinstance(node, dict):
-        if "author" in node:
-            authors = node["author"]
-            for a in authors if isinstance(authors, list) else [authors]:
-                if isinstance(a, dict) and a.get("@type") == "Person" and a.get("name"):
-                    found.append(a["name"])
-                elif isinstance(a, str):
-                    found.append(a)
-        for key in ("@graph", "mainEntity"):
-            if key in node:
-                _ld_authors(node[key], found)
-
-
-def page_authors(page):
-    """Bylines from an article page: JSON-LD first, then <meta name="author">."""
-    found = []
-    for block in LD_RE.findall(page or ""):
-        try:
-            _ld_authors(json.loads(block.strip()), found)
-        except ValueError:
-            continue
-    if not found:
-        found = [m for m in META_RE.findall(page or "") if "://" not in m]
-    names = []
-    for raw in found:
-        for name in split_authors(raw):
-            if name not in names:
-                names.append(name)
-    return names
-
-
 # --------------------------------------------------------------------------
 # Resolving names to profiles
 # --------------------------------------------------------------------------
@@ -193,7 +152,6 @@ class Resolver:
         sources = set(config.source_names())
         self.outlet_tokens = sorted(((_tokens(k), v) for k, v in self.outlets.items() if k),
                                     key=lambda tv: (-len(tv[0]), tv[1] in sources))
-        self.journalist_files = {p.stem for p in (PROFILES / "journalists").glob("*.yaml")}
         self.outlet_files = {p.stem for p in (PROFILES / "outlets").glob("*.yaml")}
 
     def resolve(self, name):
@@ -212,8 +170,9 @@ class Resolver:
             return {"name": name, "kind": "other", "id": None, "has_profile": False}
         else:
             kind, ident = "journalist", key
-        files = self.outlet_files if kind == "outlet" else self.journalist_files
-        return {"name": name, "kind": kind, "id": ident, "has_profile": ident in files}
+        # Only outlets and agencies have profiles; a journalist is a name.
+        return {"name": name, "kind": kind, "id": ident,
+                "has_profile": kind == "outlet" and ident in self.outlet_files}
 
     def outlet_in(self, key):
         """The outlet named inside a byline: "Redação CNN Portugal", "Al Jazeera Staff"."""
@@ -238,10 +197,6 @@ def outlet(ident):
     return _read(PROFILES / "outlets" / f"{ident}.yaml") if SLUG_RE.match(ident) else {}
 
 
-def journalist(slug):
-    return _read(PROFILES / "journalists" / f"{slug}.yaml") if SLUG_RE.match(slug) else {}
-
-
 # --------------------------------------------------------------------------
 # Local statistics (what this app has seen, independent of any research)
 # --------------------------------------------------------------------------
@@ -258,16 +213,12 @@ def _stats(rows, names):
 
 
 def byline_articles(conn, kind, ident, resolver=None):
-    """Stored articles signed by one journalist (or agency) - resolved, so aliases count."""
+    """Stored articles carrying one byline (an agency) - resolved, so aliases count."""
     resolver = resolver or Resolver()
     rows = conn.execute("""SELECT source, label, published_at, authors FROM articles
                            WHERE authors IS NOT NULL AND authors != '[]'""").fetchall()
     return [r for r in rows
             if any(a["kind"] == kind and a["id"] == ident for a in resolver.resolve_all(r["authors"]))]
-
-
-def journalist_stats(conn, slug, resolver=None):
-    return _stats(byline_articles(conn, "journalist", slug, resolver), config.source_names())
 
 
 def outlet_stats(conn, ident):
@@ -282,8 +233,7 @@ def outlet_stats(conn, ident):
 
 def settings():
     cfg = config.load_config().get("profiles", {})
-    return {"stale_after_days": cfg.get("stale_after_days", 180),
-            "pending_min_articles": cfg.get("pending_min_articles", 3)}
+    return {"stale_after_days": cfg.get("stale_after_days", 180)}
 
 
 def is_stale(profile, today=None):
@@ -300,69 +250,22 @@ def is_stale(profile, today=None):
 
 
 def stale_profiles(today=None):
-    """Every outlet and journalist profile due for a review, oldest first."""
+    """Every outlet profile due for a review, oldest first."""
     out = []
-    for kind, folder in (("outlet", "outlets"), ("journalist", "journalists")):
-        for path in sorted((PROFILES / folder).glob("*.yaml")):
-            data = _read(path)
-            if is_stale(data, today):
-                out.append({"kind": kind, "id": path.stem, "name": data.get("name", path.stem),
-                            "last_checked": str(data.get("last_checked") or "")})
+    for path in sorted((PROFILES / "outlets").glob("*.yaml")):
+        data = _read(path)
+        if is_stale(data, today):
+            out.append({"id": path.stem, "name": data.get("name", path.stem),
+                        "last_checked": str(data.get("last_checked") or "")})
     return sorted(out, key=lambda p: p["last_checked"])
 
 
-def suspect(name):
-    """Why a byline may not be a person (to add to aliases.txt), or None."""
-    words = name.split()
-    if len(words) == 1:
-        return "uma só palavra"
-    if name.isupper():
-        return "tudo em maiúsculas"
-    return None
-
-
-def pending(conn):
-    """Journalists seen in stored articles without a profile file, most articles first."""
-    resolver = Resolver()
-    outlet_names = config.source_names()
-    counts, names, outlets = Counter(), {}, {}
-    for r in conn.execute("""SELECT source, authors FROM articles
-                             WHERE authors IS NOT NULL AND authors != '[]'"""):
-        for a in resolver.resolve_all(r["authors"]):
-            if a["kind"] == "journalist" and not a["has_profile"]:
-                counts[a["id"]] += 1
-                names.setdefault(a["id"], a["name"])
-                outlets.setdefault(a["id"], set()).add(r["source"])
-    return [{"slug": s, "name": names[s], "articles": n,
-             "outlets": sorted(outlet_names.get(o, o) for o in outlets[s]),
-             "suspect": suspect(names[s])}
-            for s, n in counts.most_common()]
-
-
-def main(argv=None):
-    """What still needs research: python -m app.profiles [--min N]."""
-    import argparse
-    import sqlite3
-
-    parser = argparse.ArgumentParser(prog="python -m app.profiles",
-                                     description="Jornalistas sem perfil e perfis a rever.")
-    parser.add_argument("--min", type=int, default=settings()["pending_min_articles"],
-                        help="mostrar só quem tem pelo menos N notícias (omissão: %(default)s)")
-    args = parser.parse_args(argv)
-
-    db_path = config.path(config.load_config()["storage"]["database"])
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)   # read-only: safe while the server runs
-    conn.row_factory = sqlite3.Row
-    todo = [p for p in pending(conn) if p["articles"] >= args.min]
-    print(f"Jornalistas sem perfil com {args.min}+ notícias: {len(todo)}")
-    for p in todo:
-        flag = f"  <- {p['suspect']}? talvez seja para aliases.txt" if p["suspect"] else ""
-        print(f"{p['articles']:4}  {p['slug']:32} {p['name']}  ({', '.join(p['outlets'])}){flag}")
+def main():
+    """Outlet profiles due for a review: python -m app.profiles"""
     stale = stale_profiles()
-    print(f"\nPerfis por rever há mais de {settings()['stale_after_days']} dias: {len(stale)}")
+    print(f"Perfis por rever há mais de {settings()['stale_after_days']} dias: {len(stale)}")
     for p in stale:
-        folder = "outlets" if p["kind"] == "outlet" else "journalists"
-        print(f"  {p['last_checked'] or 'sem data':10}  profiles/{folder}/{p['id']}.yaml  {p['name']}")
+        print(f"  {p['last_checked'] or 'sem data':10}  profiles/outlets/{p['id']}.yaml  {p['name']}")
 
 
 if __name__ == "__main__":

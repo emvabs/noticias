@@ -1,10 +1,9 @@
 # Assinaturas que não são o nome de um jornalista, ou que têm outra grafia.
 #   Assinatura = outlet:<id>        -> é uma fonte ou agência (profiles/outlets/<id>.yaml)
-#   Assinatura = journalist:<slug>  -> é um jornalista (profiles/journalists/<slug>.yaml)
+#   Assinatura = journalist:<slug>  -> é um jornalista com outra grafia (junta as assinaturas)
 #   Assinatura = -                  -> não é uma pessoa nem tem perfil (secção, marca, "vários")
 # Maiúsculas e acentos não contam. Os nomes das fontes em sources.yaml já são
 # reconhecidos sozinhos (Expresso, oRegiões, The Guardian, …).
-# Veja as assinaturas por resolver com:  .venv/bin/python -m app.profiles
 
 # ---- agências ----
 Agência Lusa = outlet:lusa

@@ -119,11 +119,7 @@ def entry_datetime(entry, fallback):
 
 def parse_feed(content, source_id, now, scope="portugal", language="pt", group="mainstream",
                author_from="feed"):
-    """Turn raw feed bytes into article dicts (unscored).
-
-    ``authors`` is None when the byline is still to be read from the article
-    page (``author_from: page`` in sources.yaml), otherwise a list, maybe empty.
-    """
+    """Turn raw feed bytes into article dicts (unscored), bylines included."""
     parsed = feedparser.parse(content)
     items = []
     for e in parsed.entries:
@@ -138,7 +134,7 @@ def parse_feed(content, source_id, now, scope="portugal", language="pt", group="
         items.append({
             "source": source_id, "title": title, "title_norm": normalize_title(title),
             "summary": summary, "url": url, "scope": scope, "language": language,
-            "group": group, "authors": names or (None if author_from == "page" else []),
+            "group": group, "authors": names,
             "published_at": iso(entry_datetime(e, now)), "fetched_at": iso(now),
         })
     return items
@@ -190,35 +186,6 @@ def store(conn, articles, scorer=None):
 def source_headers(src):
     """Headers for one source's requests: its own User-Agent if sources.yaml sets one."""
     return {"User-Agent": src["user_agent"]} if src.get("user_agent") else None
-
-
-def fill_page_authors(conn, client, limit):
-    """Read bylines from the pages of articles whose feed has none (newest first).
-
-    Capped per run: the backlog after a first start is cleared over a few runs.
-    A page that answers with an error is marked as having no byline, so it is
-    not asked for again; a timeout leaves it for the next run.
-    """
-    page_sources = {s["id"]: s for s in config.load_sources(enabled_only=False)
-                    if s.get("author_from") == "page"}
-    if not page_sources or not limit:
-        return 0
-    rows = conn.execute(
-        f"""SELECT id, source, url FROM articles WHERE authors IS NULL
-            AND source IN ({','.join('?' * len(page_sources))})
-            ORDER BY published_at DESC LIMIT ?""", list(page_sources) + [limit]).fetchall()
-    done = 0
-    for r in rows:
-        try:
-            resp = client.get(r["url"], headers=source_headers(page_sources[r["source"]]))
-            names = profiles.page_authors(resp.text) if resp.is_success else []
-        except httpx.HTTPError:
-            continue
-        conn.execute("UPDATE articles SET authors = ? WHERE id = ?",
-                     (json.dumps(names, ensure_ascii=False), r["id"]))
-        conn.commit()   # never hold the write lock across a network request
-        done += 1
-    return done
 
 
 _rescored_with = None   # sentiment.version() of the last full re-score in this process
@@ -376,7 +343,6 @@ def _fetch_all(conn):
             results[src["id"]] = {"name": src["name"], "scope": src.get("scope", "portugal"),
                                   "group": group, "found": found, "new": new,
                                   "errors": errors, "ok": not errors}
-        bylines = fill_page_authors(conn, client, cfg["fetch"].get("author_pages_per_run", 60))
     rescored = rescore_all(conn)
     topic_counts = {f"{scope}/{group}": len(found)
                     for (scope, group), found in topics.recompute_all(conn).items()}
@@ -389,7 +355,7 @@ def _fetch_all(conn):
     finished = finish_run(conn, run_id, ok=any(r["found"] for r in results.values()))
     if own_conn:
         conn.close()
-    return {"sources": results, "deleted": deleted, "rescored": rescored, "bylines": bylines, "archived": archived,
+    return {"sources": results, "deleted": deleted, "rescored": rescored, "archived": archived,
             "topics": topic_counts, "total": total, "finished_at": finished}
 
 

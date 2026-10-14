@@ -21,7 +21,7 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 .venv/bin/python -m app.worker # fetch on the interval in its own process (worker: separate)
 .venv/bin/python -m app.db migrate   # run the migrations explicitly (production)
 .venv/bin/python -m app.topics # print the current topics per scope and group
-.venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
+.venv/bin/python -m app.profiles   # outlet profiles due for a review
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
 ```
 
@@ -87,15 +87,17 @@ fix wrong labels or noisy topics — prefer them over changing code.
   independent outlets publish a few pieces a month, so they get 120-day
   retention, no ingest date cutoff, and a 14-day topic window.
 
-- **Profiles are researched by hand, never fetched at run time.** Each claim
-  carries its source URL; criticism is attributed, not stated. Journalists get
-  their professional record only, and political links only when documented
-  (party post, candidacy, government job, own public statement) — never
-  inferred from their writing. No claim without a source: when in doubt, leave
-  it out and let the box say "Sem ligações públicas conhecidas".
+- **Outlet profiles are researched by hand, never fetched at run time.** Each
+  claim carries its source URL; criticism is attributed, not stated. No claim
+  without a source: when in doubt, leave it out.
+- **Journalists are names, not profiles.** Journalist profiles, article-page
+  byline scraping and the "jornalistas sem perfil" queue were removed in
+  October 2026: 1,822 journalists seen, 65 with enough articles for findings,
+  335 waiting for research. Bylines come only from feeds.
 - **Bylines are stored as cleaned names and resolved at read time**
-  (`profiles.Resolver`), so editing `aliases.txt` or adding a profile applies
-  to stored articles. `authors` is NULL until looked up, `[]` when there is none.
+  (`profiles.Resolver`), so editing `aliases.txt` applies to stored articles.
+  `authors` is `[]` when the feed has none (NULL only on older rows). Mapping
+  agency bylines to `outlet:<id>` is what the Deep Dive agency finding counts.
   Bylines naming an outlet, or with words such as "Redação"/"Staff"/"Agências"
   (`NON_PERSON_WORDS`), are not people even without an alias; aliases win.
   Guardian bylines carry places and job titles ("X in Kyiv", "X Senior
@@ -185,9 +187,8 @@ fix wrong labels or noisy topics — prefer them over changing code.
   the archive is empty. Keep that import path working: tests import `app.main`
   and then swap `main.conn` for an in-memory database. With
   `NOTICIAS_AUTO_MIGRATE=0` the import raises unless the database was migrated.
-- Never hold a SQLite write transaction across a network request: the page
-  byline lookup commits per article, otherwise it locks the database for the
-  server's own scheduler.
+- Never hold a SQLite write transaction across a network request: it locks
+  the database for the server's own scheduler.
 - Several feeds need care: CNN Portugal double-escapes HTML, WordPress feeds
   append "O conteúdo … apareceu primeiro em …" footers, Divergente's real
   articles are only in `?post_type=trabalho`, and DN sends no summaries.

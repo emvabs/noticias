@@ -2,10 +2,9 @@
 # O "id" é usado na API (?sources=publico,rtp).
 #   scope:    portugal | world   -> separador Portugal / Mundo
 #   language: pt | en            -> escolhe o léxico usado na análise
-#   author_from: feed | page | none  -> onde está o nome do jornalista (omissão: feed).
-#       page = o feed não o traz; lê-se da página do artigo (uma vez por artigo).
+#   author_from: feed | none  -> o feed traz o nome do jornalista (omissão: feed),
+#       ou none quando o que traz não é um nome.
 #   user_agent: "..."  -> só para fontes que recusam o fetch.user_agent de config.yaml
-#       (feed e páginas dessa fonte). Ver: python scripts/compare_user_agents.py
 sources:
   # ---------------- PORTUGAL ----------------
   - id: publico
@@ -14,7 +13,6 @@ sources:
     language: pt
     group: mainstream
     enabled: true
-    author_from: page
     feeds:
       - https://feeds.feedburner.com/PublicoRSS   # ligado a partir de publico.pt (só ~10 itens por pedido)
 
@@ -52,7 +50,6 @@ sources:
     language: pt
     group: mainstream
     enabled: true
-    author_from: page
     feeds:
       - https://cnnportugal.iol.pt/rss.xml   # anunciado no <head> do site
 
@@ -141,7 +138,6 @@ sources:
     language: en
     group: mainstream
     enabled: true
-    author_from: page
     feeds:
       - https://feeds.bbci.co.uk/news/world/rss.xml
 
@@ -160,7 +156,6 @@ sources:
     language: en
     group: mainstream
     enabled: true
-    author_from: page
     feeds:
       - https://rss.dw.com/rdf/rss-en-world
 
@@ -170,7 +165,6 @@ sources:
     language: en
     group: mainstream
     enabled: true
-    author_from: page
     feeds:
       - https://www.euronews.com/rss?level=theme&name=news
 
@@ -180,7 +174,6 @@ sources:
     language: en
     group: mainstream
     enabled: true
-    author_from: page
     feeds:
       - https://www.aljazeera.com/xml/rss/all.xml
 

@@ -1,7 +1,7 @@
 """A lightweight, never-deleted copy of every article, for the Deep Dive.
 
-The feed keeps 14 days (``articles`` is cleaned up); trends about an outlet or
-a journalist need months. The archive keeps the fields those trends use -
+The feed keeps 14 days (``articles`` is cleaned up); trends about an outlet
+need months. The archive keeps the fields those trends use -
 title, bylines, sentiment, topics, owner mentions - but not the summary, so it
 grows by roughly 50 MB a year.
 
@@ -50,8 +50,8 @@ def _merge_topics(old, new):
 def sync(conn):
     """Copy the current articles into the archive (insert new, refresh the rest).
 
-    Label, score and bylines follow the live article (re-scoring and late
-    page bylines apply); topics are unioned. Rows whose article was deleted
+    Label, score and bylines follow the live article (re-scoring applies);
+    topics are unioned. Rows whose article was deleted
     by retention keep their last values.
     """
     keywords = ownership.keywords_by_source()

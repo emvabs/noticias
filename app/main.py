@@ -179,44 +179,27 @@ def outlet_profile(ident: str):
             "stale": bool(profile) and profiles.is_stale(profile), "stats": stats}
 
 
-@app.get("/api/profile/journalist/{slug}")
-def journalist_profile(slug: str):
-    """A journalist's researched profile, if there is one, plus their articles here."""
-    if not profiles.SLUG_RE.match(slug):
-        raise HTTPException(404)
-    profile = profiles.journalist(slug)
-    with _conn_lock:
-        stats = profiles.journalist_stats(conn, slug)
-    if not profile and not stats["articles"]:
-        raise HTTPException(404)
-    return {"id": slug, "name": profile.get("name"), "profile": profile or None,
-            "stale": bool(profile) and profiles.is_stale(profile), "stats": stats}
-
-
 @app.get("/api/profiles/status")
 def profiles_status():
-    """What still needs research: frequent journalists without a profile, old profiles."""
-    cfg = profiles.settings()
-    with _conn_lock:
-        todo = [p for p in profiles.pending(conn) if p["articles"] >= cfg["pending_min_articles"]]
-    return {"min_articles": cfg["pending_min_articles"], "pending": todo,
-            "stale_after_days": cfg["stale_after_days"], "stale": profiles.stale_profiles()}
+    """Outlet profiles checked too long ago, for the footer."""
+    return {"stale_after_days": profiles.settings()["stale_after_days"],
+            "stale": profiles.stale_profiles()}
 
 
 @app.get("/api/deepdive/index")
-def deepdive_index(kind: str = Query("outlet", pattern="^(outlet|journalist)$")):
-    """Outlets or journalists that can be chosen, most articles first."""
+def deepdive_index():
+    """Outlets and agencies that can be chosen, most articles first."""
     with _conn_lock:
-        return deepdive.index(conn, kind)
+        return deepdive.index(conn)
 
 
-@app.get("/api/deepdive/{kind}/{ident}")
-def deepdive_entity(kind: str, ident: str):
+@app.get("/api/deepdive/outlet/{ident}")
+def deepdive_entity(ident: str):
     """Summary, researched and data findings, and the articles behind each one."""
-    if kind not in ("outlet", "journalist") or not profiles.SLUG_RE.match(ident):
+    if not profiles.SLUG_RE.match(ident):
         raise HTTPException(404)
     with _conn_lock:
-        result = deepdive.dive(conn, kind, ident)
+        result = deepdive.dive(conn, ident)
     if not result["articles"] and not result["has_profile"]:
         raise HTTPException(404)
     return result
