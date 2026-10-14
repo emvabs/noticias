@@ -107,7 +107,7 @@ def index(conn):
     """Outlets and agencies that can be chosen, most articles first."""
     rows = load(conn)
     names = config.source_names()
-    outlet_files = {p.stem for p in (profiles.PROFILES / "outlets").glob("*.yaml")}
+    outlet_files = set(profiles.outlet_profiles())
     counts = Counter(a["source"] for a in rows)
     for a in rows:
         for b in a["bylines"]:

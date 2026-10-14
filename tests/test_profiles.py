@@ -1,5 +1,6 @@
 """Bylines, profile resolution and the profile API."""
 import json
+import os
 
 import pytest
 from fastapi.testclient import TestClient
@@ -212,3 +213,15 @@ def test_ownership_graph_merges_shared_owners():
     assert sorted(by_name["Mário Rui André"]["outlets"]) == ["lpp", "shifter"]
     outlet_ids = {o["id"] for o in g["outlets"]}
     assert all(l["outlet"] in outlet_ids for l in g["links"])
+
+
+def test_outlet_profiles_are_read_again_after_an_edit(tmp_path, monkeypatch):
+    (tmp_path / "outlets").mkdir()
+    path = tmp_path / "outlets" / "jornal.yaml"
+    path.write_text("name: Jornal\n", encoding="utf-8")
+    monkeypatch.setattr(profiles, "PROFILES", tmp_path)
+    assert profiles.outlet("jornal") == {"name": "Jornal"}
+    path.write_text("name: Jornal Novo\n", encoding="utf-8")
+    os.utime(path, ns=(path.stat().st_mtime_ns + 10**9,) * 2)
+    assert profiles.outlet("jornal") == {"name": "Jornal Novo"}
+    assert profiles.outlet("outro") == {}

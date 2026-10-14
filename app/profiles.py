@@ -124,12 +124,12 @@ def _contains(tokens, part):
 
 def _outlet_names():
     """Every outlet and agency name (sources.yaml + profiles/outlets) -> id."""
-    names = {slugify(s["name"]): s["id"] for s in config.load_sources(enabled_only=False)}
-    names.update({slugify(s["id"]): s["id"] for s in config.load_sources(enabled_only=False)})
-    for path in sorted((PROFILES / "outlets").glob("*.yaml")):
-        names.setdefault(slugify(path.stem), path.stem)
-        data = _read(path)
-        names.setdefault(slugify(data.get("name", "")), path.stem)
+    sources = config.load_sources(enabled_only=False)
+    names = {slugify(s["name"]): s["id"] for s in sources}
+    names.update({slugify(s["id"]): s["id"] for s in sources})
+    for ident, data in outlet_profiles().items():
+        names.setdefault(slugify(ident), ident)
+        names.setdefault(slugify(data.get("name", "")), ident)
     return names
 
 
@@ -139,6 +139,21 @@ def _read(path):
             return yaml.safe_load(f) or {}
     except FileNotFoundError:
         return {}
+
+
+_outlets = {"key": None, "profiles": {}}
+
+
+def outlet_profiles():
+    """id -> profile of every outlet and agency in profiles/outlets.
+
+    Read again only when a file is added, removed or edited. Treat as read-only.
+    """
+    paths = sorted((PROFILES / "outlets").glob("*.yaml"))
+    key = tuple((p.name, p.stat().st_mtime_ns) for p in paths)
+    if _outlets["key"] != key:
+        _outlets.update(key=key, profiles={p.stem: _read(p) for p in paths})
+    return _outlets["profiles"]
 
 
 class Resolver:
@@ -152,7 +167,7 @@ class Resolver:
         sources = set(config.source_names())
         self.outlet_tokens = sorted(((_tokens(k), v) for k, v in self.outlets.items() if k),
                                     key=lambda tv: (-len(tv[0]), tv[1] in sources))
-        self.outlet_files = {p.stem for p in (PROFILES / "outlets").glob("*.yaml")}
+        self.outlet_files = set(outlet_profiles())
 
     def resolve(self, name):
         name = " ".join(name.split())
@@ -194,7 +209,7 @@ class Resolver:
 
 
 def outlet(ident):
-    return _read(PROFILES / "outlets" / f"{ident}.yaml") if SLUG_RE.match(ident) else {}
+    return outlet_profiles().get(ident, {})
 
 
 # --------------------------------------------------------------------------
@@ -252,10 +267,9 @@ def is_stale(profile, today=None):
 def stale_profiles(today=None):
     """Every outlet profile due for a review, oldest first."""
     out = []
-    for path in sorted((PROFILES / "outlets").glob("*.yaml")):
-        data = _read(path)
+    for ident, data in outlet_profiles().items():
         if is_stale(data, today):
-            out.append({"id": path.stem, "name": data.get("name", path.stem),
+            out.append({"id": ident, "name": data.get("name", ident),
                         "last_checked": str(data.get("last_checked") or "")})
     return sorted(out, key=lambda p: p["last_checked"])
 

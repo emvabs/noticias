@@ -14,14 +14,9 @@ AGENCIES = {"lusa", "efe", "afp", "ap", "reuters"}   # news agencies, not outlet
 OWNER_KINDS = {"state", "public", "company", "person", "fund", "cooperative", "nonprofit", "trust"}
 
 
-def outlet_profiles():
-    """id -> profile of every outlet and agency with a file."""
-    return {p.stem: profiles._read(p) for p in sorted((profiles.PROFILES / "outlets").glob("*.yaml"))}
-
-
 def keywords_by_source():
     return {ident: [k for k in (p.get("owner_keywords") or []) if k]
-            for ident, p in outlet_profiles().items()}
+            for ident, p in profiles.outlet_profiles().items()}
 
 
 def mentions(raw_text, keywords):
@@ -47,7 +42,7 @@ def graph():
     names = {s["id"]: s["name"] for s in config.load_sources(enabled_only=False)}
     enabled = {s["id"] for s in config.load_sources()}
     outlets, owners, links = [], {}, []
-    for ident, p in outlet_profiles().items():
+    for ident, p in profiles.outlet_profiles().items():
         outlets.append({"id": ident, "name": names.get(ident) or p.get("name", ident),
                         "type": p.get("type", ""), "in_app": ident in enabled,
                         "agency": ident in AGENCIES})

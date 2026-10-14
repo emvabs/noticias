@@ -140,7 +140,7 @@ def sources(scope: str | None = None, group: str | None = None):
         errors = ingest.latest_errors(conn)
     stats = {r["source"]: (r["n"], r["last"]) for r in rows}
     owners = {ident: [o["name"] for o in p.get("owners") or []]
-              for ident, p in ownership.outlet_profiles().items()}
+              for ident, p in profiles.outlet_profiles().items()}
     out = []
     for s in config.load_sources(enabled_only=False):
         if scope and s["scope"] != scope:
