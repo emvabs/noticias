@@ -17,6 +17,7 @@ except ImportError:   # Windows: only the in-process lock applies
 
 from . import archive, config, db, profiles, topics
 from .search import raw_searchable, searchable
+from . import sentiment
 from .sentiment import get_scorer, normalize
 
 TAG_RE = re.compile(r"<[^>]+>")
@@ -220,14 +221,26 @@ def fill_page_authors(conn, client, limit):
     return done
 
 
+_rescored_with = None   # sentiment.version() of the last full re-score in this process
+
+
 def rescore_all(conn):
-    """Re-apply the current lexicons to every stored article (cheap: a few hundred rows)."""
+    """Re-apply the current lexicons to every stored article, when they changed.
+
+    New articles are scored on the way in, so a full pass is only needed once
+    per process and after a word list, rule file or setting changes.
+    """
+    global _rescored_with
+    version = sentiment.version()
+    if version == _rescored_with:
+        return 0
     rows = conn.execute("SELECT id, title, summary, language FROM articles").fetchall()
     for r in rows:
         score, label, matched = score_article(dict(r))
         conn.execute("UPDATE articles SET score=?, label=?, matched_words=? WHERE id=?",
                      (score, label, matched, r["id"]))
     conn.commit()
+    _rescored_with = version
     return len(rows)
 
 
@@ -365,11 +378,13 @@ def _fetch_all(conn):
                                   "errors": errors, "ok": not errors}
         bylines = fill_page_authors(conn, client, cfg["fetch"].get("author_pages_per_run", 60))
     rescored = rescore_all(conn)
-    archive.sync(conn)               # before cleanup: the archive keeps what it deletes
-    deleted = cleanup(conn, retention)
     topic_counts = {f"{scope}/{group}": len(found)
                     for (scope, group), found in topics.recompute_all(conn).items()}
-    archived = archive.sync(conn)    # again, to keep the topics just computed
+    # After topics, so the archive keeps the ones just computed; before cleanup,
+    # so it keeps what retention is about to delete. Topics only read the last
+    # few days, so the articles cleanup removes do not change them.
+    archived = archive.sync(conn)
+    deleted = cleanup(conn, retention)
     total = conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
     finished = finish_run(conn, run_id, ok=any(r["found"] for r in results.values()))
     if own_conn:

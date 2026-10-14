@@ -89,3 +89,17 @@ def test_each_run_and_feed_result_is_recorded(lock_file, monkeypatch):
     assert feeds["https://broken/feed"][0] == 0
     assert feeds["https://broken/feed"][1].startswith("HTTPStatusError")
     assert ingest.last_finished(conn, ok_only=True) == result["finished_at"]
+
+
+def test_rescore_runs_only_when_the_lexicons_change(monkeypatch):
+    conn = db.connect(":memory:")
+    ingest.store(conn, [{"source": "publico", "title": "Vitória histórica", "title_norm": "vitoria historica",
+                         "summary": "", "url": "https://x/1", "published_at": "2026-10-01T10:00:00Z",
+                         "fetched_at": "2026-10-01T10:00:00Z"}])
+    version = ["v1"]
+    monkeypatch.setattr(ingest.sentiment, "version", lambda: version[0])
+    monkeypatch.setattr(ingest, "_rescored_with", None)
+    assert ingest.rescore_all(conn) == 1
+    assert ingest.rescore_all(conn) == 0          # nothing changed
+    version[0] = "v2"                              # a word list was edited
+    assert ingest.rescore_all(conn) == 1

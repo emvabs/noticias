@@ -272,12 +272,25 @@ def language_config(language):
     return cfg, lang_cfg
 
 
+def _key(language):
+    """What a scorer is built from: the lexicon files, sources.yaml (outlet names)
+    and the sentiment settings. A scorer is rebuilt when this changes."""
+    cfg, lang_cfg = language_config(language)
+    paths = [config.path(p) for p in (lang_cfg.get("base_lexicon"), lang_cfg.get("custom"),
+                                      lang_cfg.get("rules")) if p] + [config.path("sources.yaml")]
+    return (tuple((str(p), p.stat().st_mtime) for p in paths if p.exists()), repr(cfg))
+
+
+def version():
+    """Changes whenever any language's scorer would score differently."""
+    languages = config.load_config().get("sentiment", {}).get("languages", {})
+    return tuple(_key(language) for language in sorted(languages))
+
+
 def get_scorer(language=DEFAULT_LANGUAGE):
     """Build the scorer for a language; rebuilt automatically when a lexicon file changes."""
     cfg, lang_cfg = language_config(language)
-    paths = [config.path(p) for p in (lang_cfg.get("base_lexicon"), lang_cfg.get("custom"),
-                                      lang_cfg.get("rules")) if p]
-    key = (tuple((str(p), p.stat().st_mtime) for p in paths if p.exists()), repr(cfg))
+    key = _key(language)
     if _cache.get(language, {}).get("key") == key:
         return _cache[language]["scorer"]
 

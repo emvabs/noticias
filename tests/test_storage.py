@@ -26,26 +26,14 @@ def test_cleanup_removes_articles_older_than_retention():
     assert [r[0] for r in conn.execute("SELECT title FROM articles")] == ["Nova"]
 
 
-def test_migration_adds_scope_and_language_to_old_rows():
-    """An existing v1 database (no scope/language) is upgraded and backfilled."""
-    import sqlite3
-
-    from app import db as dbmod
-
-    conn = sqlite3.connect(":memory:")
-    conn.row_factory = sqlite3.Row
-    conn.execute("""CREATE TABLE articles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, title TEXT NOT NULL,
-        title_norm TEXT NOT NULL UNIQUE, summary TEXT NOT NULL DEFAULT '', url TEXT NOT NULL UNIQUE,
-        published_at TEXT NOT NULL, fetched_at TEXT NOT NULL, score REAL, label TEXT, matched_words TEXT)""")
-    conn.execute("""INSERT INTO articles (source, title, title_norm, url, published_at, fetched_at)
-                    VALUES ('publico', 'Velha', 'velha', 'https://a/1', '2026-09-21T10:00:00Z', '2026-09-21T10:00:00Z')""")
-    conn.execute("""INSERT INTO articles (source, title, title_norm, url, published_at, fetched_at)
-                    VALUES ('bbc', 'Old', 'old', 'https://a/2', '2026-09-21T10:00:00Z', '2026-09-21T10:00:00Z')""")
-    dbmod.migrate(conn)
-
-    rows = {r["source"]: (r["scope"], r["language"]) for r in conn.execute("SELECT * FROM articles")}
-    assert rows == {"publico": ("portugal", "pt"), "bbc": ("world", "en")}
+def test_migration_resyncs_scope_and_language_from_sources_yaml():
+    """Editing sources.yaml applies to stored articles on the next start."""
+    conn = db.connect(":memory:")
+    ingest.store(conn, [article("https://bbc/1", "Old")])          # stored as portugal/pt
+    conn.execute("UPDATE articles SET source = 'bbc'")
+    db.migrate(conn)
+    row = conn.execute("SELECT scope, language FROM articles").fetchone()
+    assert (row["scope"], row["language"]) == ("world", "en")
 
 
 def test_articles_are_stored_with_scope_and_language():

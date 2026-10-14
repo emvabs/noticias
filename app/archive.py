@@ -75,11 +75,9 @@ def sync(conn):
           json.dumps(ownership.mentions(r["raw_text"], keywords.get(r["source"], [])),
                      ensure_ascii=False))
          for r in rows])
-    has_cache = conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'topics_cache'").fetchone()
-    if has_cache:   # absent only while an old database is being migrated
-        conn.execute("""INSERT INTO topic_labels (scope, slug, label)
-                        SELECT scope, slug, label FROM topics_cache WHERE true
-                        ON CONFLICT(scope, slug) DO UPDATE SET label = excluded.label""")
+    conn.execute("""INSERT INTO topic_labels (scope, slug, label)
+                    SELECT scope, slug, label FROM topics_cache WHERE true
+                    ON CONFLICT(scope, slug) DO UPDATE SET label = excluded.label""")
     conn.commit()
     return len(rows)
 

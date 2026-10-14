@@ -15,7 +15,7 @@ fetch:
   timeout_seconds: 20
   author_pages_per_run: 60  # páginas de artigos lidas por atualização para saber o autor
                             # (fontes com author_from: page em sources.yaml)
-  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
+  user_agent: "Noticias/1.0 (+https://github.com/emvabs/noticias)"   # uma fonte pode ter o seu em sources.yaml
 
 storage:
   database: data/news.db

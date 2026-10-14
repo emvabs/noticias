@@ -69,25 +69,8 @@ CREATE INDEX IF NOT EXISTS idx_feed_results_url ON feed_results(url, run_id);
 
 
 def migrate(conn):
-    """Create the schema and add what came after the first version, backfilling from sources.yaml."""
+    """Create the schema and re-sync scope, language and group from sources.yaml."""
     conn.executescript(SCHEMA)
-    # topics_cache gained a "group" column; it is a cache, so rebuilding beats migrating
-    cached = {row["name"] for row in conn.execute("PRAGMA table_info(topics_cache)")}
-    if cached and "group" not in cached:
-        conn.execute("DROP TABLE topics_cache")
-        conn.executescript(SCHEMA)
-    existing = {row["name"] for row in conn.execute("PRAGMA table_info(articles)")}
-    added = []
-    for column, declaration in (("scope", "TEXT NOT NULL DEFAULT 'portugal'"),
-                                ("language", "TEXT NOT NULL DEFAULT 'pt'"),
-                                ("topics", "TEXT NOT NULL DEFAULT '[]'"),
-                                ("search_text", "TEXT NOT NULL DEFAULT ''"),
-                                ("raw_text", "TEXT NOT NULL DEFAULT ''"),
-                                ('"group"', "TEXT NOT NULL DEFAULT 'mainstream'"),
-                                ("authors", "TEXT")):
-        if column.strip('"') not in existing:
-            conn.execute(f"ALTER TABLE articles ADD COLUMN {column} {declaration}")
-            added.append(column)
     # Always keep scope/language/group in step with sources.yaml: editing the file
     # (or moving an outlet between groups) then applies to the articles already stored.
     for src in config.load_sources(enabled_only=False):
@@ -97,18 +80,6 @@ def migrate(conn):
                       src.get("group", "mainstream"), src["id"],
                       src.get("scope", "portugal"), src.get("language", "pt"),
                       src.get("group", "mainstream")))
-    # Rebuild rows that are empty or stored in the older, unpadded format.
-    # The padding (" palavra ") is what makes whole-word search possible.
-    stale = conn.execute(
-        """SELECT id, title, summary FROM articles
-           WHERE search_text = '' OR search_text NOT LIKE ' %' OR raw_text = ''"""
-    ).fetchall()
-    if stale:
-        from .search import raw_searchable, searchable   # late: search imports config only
-        for row in stale:
-            text = f"{row['title']} {row['summary']}"
-            conn.execute("UPDATE articles SET search_text = ?, raw_text = ? WHERE id = ?",
-                         (searchable(text), raw_searchable(text), row["id"]))
     conn.executescript(INDEXES)
     conn.commit()
     # The archive is filled from the articles already stored (first start after

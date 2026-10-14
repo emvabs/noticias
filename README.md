@@ -256,7 +256,7 @@ python scripts/evaluate.py en       # only English
 python scripts/evaluate.py --all    # also lists correct ones
 ```
 
-The test headlines are in `eval/headlines.csv` (Portuguese, 43) and `eval/headlines_en.csv` (English, 37), and you can add your own. Current accuracy: **98%** and **100%** — optimistic, since both lists were tuned against those same headlines. Clicking **Atualizar** (or restarting) re-scores every stored article with the current lists.
+The test headlines are in `eval/headlines.csv` (Portuguese, 43) and `eval/headlines_en.csv` (English, 37), and you can add your own. Current accuracy: **98%** and **100%** — optimistic, since both lists were tuned against those same headlines. After you edit a list, the next update (**Atualizar**, the 20-minute one, or a restart) re-scores every stored article with it.
 
 ### Who is behind the news
 
@@ -380,13 +380,7 @@ python -m pytest
 
 To add an outlet, add a block to `sources.yaml` (with `scope` and `language`) and restart.
 
-Requests carry the `fetch.user_agent` from `config.yaml`. An outlet that refuses it can get its own `user_agent:` in `sources.yaml`. To see which outlets answer differently to two User-Agents (by default the browser-like one and `Noticias/1.0 (+https://github.com/emvabs/noticias)`):
-
-```bash
-python scripts/compare_user_agents.py
-```
-
-It prints status and item count per feed (and bylines found on one article page for `author_from: page` outlets), and the `sources.yaml` lines for any outlet that gets less with the new one.
+Requests identify themselves as `Noticias/1.0 (+https://github.com/emvabs/noticias)` (`fetch.user_agent` in `config.yaml`). Every outlet above answered it exactly as it answers a browser (checked 2026-10-14). An outlet that later refuses it can get its own `user_agent:` in `sources.yaml`.
 
 ## Licenses
 

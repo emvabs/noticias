@@ -23,7 +23,6 @@ UI text is **Portuguese**. Code, comments and docs are **English**.
 .venv/bin/python -m app.topics # print the current topics per scope and group
 .venv/bin/python -m app.profiles   # research to do: journalists without a profile, old profiles
 .venv/bin/python scripts/evaluate.py   # sentiment accuracy, both languages
-.venv/bin/python scripts/compare_user_agents.py  # per-feed items: browser UA vs honest UA
 ```
 
 The Python here is the python.org build, whose SSL has no CA certificates: use
@@ -104,8 +103,8 @@ fix wrong labels or noisy topics — prefer them over changing code.
   names ("Pedro Adão e Silva" is one person).
 
 - **The Deep Dive reads the archive, the feed reads `articles`.** `archive.sync`
-  runs twice per fetch (before cleanup, after topics) and unions topics, because
-  `articles.topics` is reset on every recompute. Findings are either researched
+  runs once per fetch, after topics and before cleanup, and unions topics,
+  because `articles.topics` is reset on every recompute. Findings are either researched
   (profile + source URL) or data (archive + supporting articles); one with
   neither is dropped. Wording is "tendência", never "viés".
 - **Graphs are hand-drawn SVG, no D3.** Both have a fixed natural shape (radial;
@@ -194,11 +193,10 @@ fix wrong labels or noisy topics — prefer them over changing code.
   articles are only in `?post_type=trabalho`, and DN sends no summaries.
 - **User-Agent is a setting per fetch and per source.** `fetch.user_agent` is
   the default; a source in `sources.yaml` can set its own `user_agent` (feed
-  and article pages). The default is still the browser-like string: the switch
-  to an honest `Noticias/1.0 (+https://github.com/emvabs/noticias)` waits on
-  `scripts/compare_user_agents.py` run from a network that reaches the outlets
-  (the cloud sandbox where this was written could not). Give any source it
-  flags its own browser-like `user_agent`, then change the default.
+  and article pages). The default is the honest `Noticias/1.0
+  (+https://github.com/emvabs/noticias)`: on 2026-10-14 every enabled feed
+  and article page answered it exactly as it answers a browser. A source
+  that starts refusing it gets its own browser-like `user_agent`.
 - SIC Notícias, Jornal de Notícias, Reuters and Associated Press have no working
   public feed (checked September 2026). They sit in `sources.yaml` with
   `enabled: false` and a comment. Do not scrape them.

@@ -10,7 +10,7 @@ import json
 import re
 from datetime import timedelta
 
-from . import config
+from . import config, sentiment
 from .sentiment import normalize
 
 WINDOW_HOURS = 48
@@ -56,13 +56,8 @@ def _normalized(words):
 
 def outlet_words():
     """Outlets talk about themselves ("CNN", "LPP"), which is not a topic."""
-    words = set()
-    for src in config.load_sources(enabled_only=False):
-        for word in normalize(src["name"]).split():
-            if len(word) > 2:
-                words.add(word)
-        words.add(normalize(src["id"]))      # "lpp", "oregioes"
-    return words
+    ids = {normalize(src["id"]) for src in config.load_sources(enabled_only=False)}  # "lpp", "oregioes"
+    return sentiment.outlet_words() | ids
 
 
 def load_stoplist():
@@ -74,6 +69,11 @@ def load_stoplist():
             if word:
                 words.add(word)
     return words
+
+
+def stopwords_all():
+    """Every word that is never a topic: stopwords, config/stoplist.txt, outlet names."""
+    return _normalized(STOPWORDS_PT | STOPWORDS_EN) | load_stoplist() | outlet_words()
 
 
 def slugify(label):
@@ -178,7 +178,7 @@ def extract(window_rows, background_rows, stopwords=None,
             max_topics=MAX_TOPICS, min_articles=MIN_ARTICLES):
     """Return a ranked list of topics: {slug, label, count, score, article_ids}."""
     if stopwords is None:
-        stopwords = _normalized(STOPWORDS_PT | STOPWORDS_EN) | load_stoplist() | outlet_words()
+        stopwords = stopwords_all()
     if not window_rows:
         return []
 

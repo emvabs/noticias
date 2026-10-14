@@ -64,10 +64,6 @@ DEFAULT_SCOPE = "portugal"
 DEFAULT_GROUP = "mainstream"
 
 
-def source_names():
-    return {s["id"]: s["name"] for s in config.load_sources(enabled_only=False)}
-
-
 def pool(label_clause, scope, group, sources, topic_slugs, query, limit):
     if sources is not None and not sources:
         return []
@@ -117,7 +113,7 @@ def feed(positive_pct: float = Query(50, ge=0, le=100),
     non_positive = pool("label != 'positive'", scope, group, source_list, topic_list, q, limit)
     articles, stats = mix(positive, non_positive, positive_pct, limit)
 
-    names = source_names()
+    names = config.source_names()
     resolver = profiles.Resolver()
     owner_keywords = ownership.keywords_by_source()
     for a in articles:
@@ -174,7 +170,7 @@ def outlet_profile(ident: str):
     if not profiles.SLUG_RE.match(ident):
         raise HTTPException(404)
     profile = profiles.outlet(ident)
-    name = profile.get("name") or source_names().get(ident)
+    name = profile.get("name") or config.source_names().get(ident)
     with _conn_lock:
         stats = profiles.outlet_stats(conn, ident)
     if not name and not stats["articles"]:

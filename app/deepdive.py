@@ -19,7 +19,6 @@ from . import archive, config, ownership, profiles
 from . import topics as topics_module
 from .ingest import iso, utcnow
 
-AGENCIES = ownership.AGENCIES
 LABELS = {"positive": "positivas", "neutral": "neutras", "negative": "negativas"}
 # How the baseline reads in a sentence: (after "que", after "contra X%")
 OUTLET_BASELINE = {"portugal": ("os outros jornais portugueses", "nos outros jornais portugueses"),
@@ -56,7 +55,7 @@ def load(conn, window_days=None, now=None):
            FROM article_archive WHERE published_at >= ? ORDER BY published_at DESC""",
         (since,)).fetchall()
     resolver = profiles.Resolver()
-    names = _source_names()
+    names = config.source_names()
     cache = {}
     out = []
     for r in rows:
@@ -79,17 +78,9 @@ def _signed_by(a, kind, ident):
 def entity_rows(rows, kind, ident):
     if kind == "journalist":
         return [a for a in rows if _signed_by(a, "journalist", ident)]
-    if ident in _source_ids():
+    if ident in set(config.source_names()):
         return [a for a in rows if a["source"] == ident]
     return [a for a in rows if _signed_by(a, "outlet", ident)]        # an agency
-
-
-def _source_ids():
-    return {s["id"] for s in config.load_sources(enabled_only=False)}
-
-
-def _source_names():
-    return {s["id"]: s["name"] for s in config.load_sources(enabled_only=False)}
 
 
 def _brief(a):
@@ -116,19 +107,19 @@ def _pct(n, total):
 # --------------------------------------------------------------------------
 def index(conn, kind):
     rows = load(conn)
-    names = _source_names()
+    names = config.source_names()
     outlet_files = {p.stem for p in (profiles.PROFILES / "outlets").glob("*.yaml")}
     if kind == "outlet":
         counts = Counter(a["source"] for a in rows)
         for a in rows:
             for b in a["bylines"]:
-                if b["kind"] == "outlet" and b["id"] in AGENCIES and b["id"] != a["source"]:
+                if b["kind"] == "outlet" and b["id"] in ownership.AGENCIES and b["id"] != a["source"]:
                     counts[b["id"]] += 1
         enabled = {s["id"] for s in config.load_sources()}
-        ids = (enabled | AGENCIES) & (set(counts) | outlet_files | enabled)
+        ids = (enabled | ownership.AGENCIES) & (set(counts) | outlet_files | enabled)
         out = [{"id": i, "name": names.get(i) or profiles.outlet(i).get("name", i),
                 "articles": counts.get(i, 0), "has_profile": i in outlet_files,
-                "agency": i in AGENCIES} for i in ids]
+                "agency": i in ownership.AGENCIES} for i in ids]
     else:
         counts, first_name, outlets = Counter(), {}, {}
         for a in rows:
@@ -165,7 +156,7 @@ def tone_finding(mine, base, base_name, cfg):
     text = (f"{share[label]}% das {n} notícias são {word}, contra {base_share[label]}% "
             f"{in_} ({nb} notícias): {abs(diffs[label])} pontos de diferença.")
     supporting = [a for a in mine if (a["label"] == label) == more]
-    return {"kind": "tone", "icon": "📊", "title": title, "text": text,
+    return {"kind": "tone", "title": title, "text": text,
             "numbers": {"share": share, "baseline": base_share, "n": n, "n_baseline": nb},
             **_evidence(supporting, cfg["articles_per_finding"])}
 
@@ -185,8 +176,7 @@ def topic_findings(mine, base, base_name, cfg):
     n, nb = len(mine), len(base)
     if n < cfg["min_articles"] or nb < cfg["min_articles"]:
         return []
-    stopwords = (topics_module._normalized(topics_module.STOPWORDS_PT | topics_module.STOPWORDS_EN)
-                 | topics_module.load_stoplist() | topics_module.outlet_words())
+    stopwords = topics_module.stopwords_all()
     postings, labels, kinds = _terms(mine, stopwords)
     base_postings, _, _ = _terms(base, stopwords)
     scored = []
@@ -208,7 +198,7 @@ def topic_findings(mine, base, base_name, cfg):
     for t in kept:
         supporting = [mine[i] for i in sorted(t["article_ids"])]
         out.append({
-            "kind": "topic", "icon": "📊",
+            "kind": "topic",
             "title": f"Destaca «{t['label']}»",
             "text": (f"Aparece em {t['count']} de {n} títulos ({_pct(t['count'], n)}%), "
                      f"{_num(round(t['lift'], 1))}× mais do que {base_name[1]} "
@@ -227,7 +217,7 @@ def agency_finding(mine, base, cfg):
         return None
 
     def from_agency(a):
-        return any(b["kind"] == "outlet" and b["id"] in AGENCIES for b in a["bylines"])
+        return any(b["kind"] == "outlet" and b["id"] in ownership.AGENCIES for b in a["bylines"])
 
     agency = [a for a in known if from_agency(a)]
     if not agency:
@@ -235,8 +225,8 @@ def agency_finding(mine, base, cfg):
     share = _pct(len(agency), len(known))
     base_share = _pct(sum(from_agency(a) for a in known_base), len(known_base))
     names = Counter(b["name"] for a in agency for b in a["bylines"]
-                    if b["kind"] == "outlet" and b["id"] in AGENCIES)
-    return {"kind": "agency", "icon": "📊",
+                    if b["kind"] == "outlet" and b["id"] in ownership.AGENCIES)
+    return {"kind": "agency",
             "title": f"{share}% das notícias assinadas são de agência",
             "text": (f"{len(agency)} de {len(known)} notícias com autor conhecido vêm de agências "
                      f"({', '.join(n for n, _ in names.most_common(3))}); "
@@ -250,7 +240,7 @@ def owner_finding(mine, owners, cfg):
     if not flagged:
         return None
     named = Counter(k for a in flagged for k in a["owner_mentions"])
-    return {"kind": "owner", "icon": "⚠️",
+    return {"kind": "owner",
             "title": f"Menciona o próprio dono ou grupo em {len(flagged)} notícias",
             "text": (f"Nomes encontrados: {', '.join(f'{k} ({n})' for k, n in named.most_common(5))}. "
                      + (f"Donos: {'; '.join(owners)}." if owners else "")),
@@ -277,25 +267,25 @@ def researched_findings(profile, kind):
         owners = profile["owners"]
         text = "; ".join(f"{o['name']}" + (f" ({_num(o['share'])}%)" if o.get("share") else "")
                          + (f" via {o['via']}" if o.get("via") else "") for o in owners)
-        out.append({"kind": "researched", "icon": "📋", "title": "Propriedade", "text": text,
+        out.append({"kind": "researched", "title": "Propriedade", "text": text,
                     "sources": _sources(owners)})
     if kind == "outlet" and profile.get("funding"):
-        out.append({"kind": "researched", "icon": "📋", "title": "Financiamento",
+        out.append({"kind": "researched", "title": "Financiamento",
                     "text": " ".join(i["text"] for i in profile["funding"][:2]),
                     "sources": _sources(profile["funding"])})
     if kind == "journalist" and profile.get("career"):
-        out.append({"kind": "researched", "icon": "📋", "title": "Percurso",
+        out.append({"kind": "researched", "title": "Percurso",
                     "text": " ".join(i["text"] for i in profile["career"]),
                     "sources": _sources(profile["career"])})
     links = profile.get("political_links") or {}
     items = [("Oficial: ", i) for i in links.get("official") or []] + \
             [("Reportado: ", i) for i in links.get("reported") or []]
     if items:
-        out.append({"kind": "researched", "icon": "📋", "title": "Ligações políticas",
+        out.append({"kind": "researched", "title": "Ligações políticas",
                     "text": " ".join(prefix + i["text"] for prefix, i in items),
                     "sources": _sources([i for _, i in items])})
     if profile.get("narrative"):
-        out.append({"kind": "researched", "icon": "📋", "title": "Narrativa e críticas documentadas",
+        out.append({"kind": "researched", "title": "Narrativa e críticas documentadas",
                     "text": " ".join(i["text"] for i in profile["narrative"]),
                     "sources": _sources(profile["narrative"])})
     return [f for f in out if f["sources"]]      # no source, no finding
@@ -311,14 +301,14 @@ def _scope_of(rows):
 def dive(conn, kind, ident):
     cfg = settings()
     rows = load(conn, cfg["window_days"])
-    names = _source_names()
+    names = config.source_names()
     mine = entity_rows(rows, kind, ident)
     profile = profiles.outlet(ident) if kind == "outlet" else profiles.journalist(ident)
 
     if kind == "outlet":
         name = names.get(ident) or profile.get("name") or ident
         scope = _scope_of(mine)
-        if ident in _source_ids():
+        if ident in set(config.source_names()):
             base = [a for a in rows if a["scope"] == scope and a["source"] != ident]
         else:   # an agency: everything else in the scope not carrying its byline
             base = [a for a in rows if a["scope"] == scope and not _signed_by(a, "outlet", ident)]
@@ -339,12 +329,12 @@ def dive(conn, kind, ident):
     data = []
     for f in (tone_finding(mine, base, base_name, cfg),
               *topic_findings(mine, base, base_name, cfg),
-              agency_finding(mine, base, cfg) if kind == "outlet" and ident not in AGENCIES else None,
+              agency_finding(mine, base, cfg) if kind == "outlet" and ident not in ownership.AGENCIES else None,
               owner_finding(mine, [o["name"] for o in profile.get("owners") or []], cfg)
               if kind == "outlet" else None):
         if f:
             data.append(f)
-    if kind == "outlet" and ident in _source_ids():
+    if kind == "outlet" and ident in set(config.source_names()):
         data += silence_findings(conn, rows, ident, cfg)
     findings += data
     for i, f in enumerate(findings):
@@ -404,7 +394,7 @@ def silences(conn, scope, rows=None, cfg=None):
     # Mainstream only: a regional or independent outlet not covering a national
     # story is its editorial choice, not a silence.
     rows = [a for a in rows if a["scope"] == scope and a["group"] == "mainstream"]
-    names = _source_names()
+    names = config.source_names()
     per_outlet = Counter(a["source"] for a in rows)
     outlets = [o for o, n in per_outlet.most_common() if n >= cfg["silence_min_outlet_articles"]]
     total = sum(per_outlet[o] for o in outlets)
@@ -461,7 +451,7 @@ def silence_findings(conn, rows, ident, cfg):
             continue
         others = [a for a in rows if a["scope"] == scope and t["slug"] in a["topics"]
                   and a["source"] != ident]
-        out.append({"kind": "silence", "icon": "🔇", "slug": t["slug"],
+        out.append({"kind": "silence", "slug": t["slug"],
                     "title": f"Pouca cobertura de «{t['label']}»",
                     "text": (f"{cell['count']} notícias, quando o seu volume faria esperar "
                              f"~{cell['expected']:.0f}; {t['covered_by']} de {n_outlets} jornais "

@@ -190,7 +190,7 @@ class Resolver:
         self.outlets = _outlet_names()
         # Longest names first, so "Redação CNN Portugal" is CNN Portugal, not an outlet
         # whose name is a single word of it; agencies win ties ("Lusa/Reuters").
-        sources = source_ids()
+        sources = set(config.source_names())
         self.outlet_tokens = sorted(((_tokens(k), v) for k, v in self.outlets.items() if k),
                                     key=lambda tv: (-len(tv[0]), tv[1] in sources))
         self.journalist_files = {p.stem for p in (PROFILES / "journalists").glob("*.yaml")}
@@ -266,26 +266,18 @@ def byline_articles(conn, kind, ident, resolver=None):
             if any(a["kind"] == kind and a["id"] == ident for a in resolver.resolve_all(r["authors"]))]
 
 
-def source_names():
-    return {s["id"]: s["name"] for s in config.load_sources(enabled_only=False)}
-
-
-def source_ids():
-    return set(source_names())
-
-
 def journalist_stats(conn, slug, resolver=None):
-    return _stats(byline_articles(conn, "journalist", slug, resolver), source_names())
+    return _stats(byline_articles(conn, "journalist", slug, resolver), config.source_names())
 
 
 def outlet_stats(conn, ident):
     """Articles published by an outlet - or, for an agency, articles carrying its byline."""
-    if ident in source_names():
+    if ident in config.source_names():
         rows = conn.execute("SELECT source, label, published_at FROM articles WHERE source = ?",
                             (ident,)).fetchall()
     else:
         rows = byline_articles(conn, "outlet", ident)
-    return _stats(rows, source_names())
+    return _stats(rows, config.source_names())
 
 
 def settings():
@@ -332,7 +324,7 @@ def suspect(name):
 def pending(conn):
     """Journalists seen in stored articles without a profile file, most articles first."""
     resolver = Resolver()
-    outlet_names = source_names()
+    outlet_names = config.source_names()
     counts, names, outlets = Counter(), {}, {}
     for r in conn.execute("""SELECT source, authors FROM articles
                              WHERE authors IS NOT NULL AND authors != '[]'"""):

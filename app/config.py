@@ -92,6 +92,11 @@ def load_sources(enabled_only=True):
     return sources
 
 
+def source_names():
+    """id -> display name of every outlet in sources.yaml, enabled or not."""
+    return {s["id"]: s["name"] for s in load_sources(enabled_only=False)}
+
+
 def group_settings(group, *keys, default=None):
     """A per-group setting from config.yaml, falling back to the general value.
 
