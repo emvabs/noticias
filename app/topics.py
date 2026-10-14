@@ -273,7 +273,7 @@ def settings_for(group):
             get("max_topics", MAX_TOPICS), get("min_articles", MIN_ARTICLES))
 
 
-def compute_for_scope(conn, scope, group="mainstream", now=None):
+def compute_for_scope(conn, scope, group=config.DEFAULT_GROUP, now=None):
     """Extract topics for one scope+group, store them and tag the articles."""
     from .ingest import iso, utcnow
     now = now or utcnow()
@@ -321,7 +321,7 @@ def recompute_all(conn, now=None):
             for scope, group in scopes(conn)}
 
 
-def current(conn, scope, group="mainstream"):
+def current(conn, scope, group=config.DEFAULT_GROUP):
     rows = conn.execute(
         """SELECT slug, label, count, computed_at FROM topics_cache
            WHERE scope = ? AND "group" = ? ORDER BY rank""", (scope, group)).fetchall()

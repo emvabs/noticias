@@ -74,12 +74,10 @@ def migrate(conn):
     # Always keep scope/language/group in step with sources.yaml: editing the file
     # (or moving an outlet between groups) then applies to the articles already stored.
     for src in config.load_sources(enabled_only=False):
+        values = (src["scope"], src["language"], src["group"])
         conn.execute("""UPDATE articles SET scope = ?, language = ?, "group" = ?
-                        WHERE source = ? AND (scope != ? OR language != ? OR "group" != ?)""",
-                     (src.get("scope", "portugal"), src.get("language", "pt"),
-                      src.get("group", "mainstream"), src["id"],
-                      src.get("scope", "portugal"), src.get("language", "pt"),
-                      src.get("group", "mainstream")))
+                        WHERE source = ? AND (scope, language, "group") != (?, ?, ?)""",
+                     (*values, src["id"], *values))
     conn.executescript(INDEXES)
     conn.commit()
     # The archive is filled from the articles already stored (first start after

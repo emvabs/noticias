@@ -278,7 +278,7 @@ def researched_findings(profile):
 # One entity
 # --------------------------------------------------------------------------
 def _scope_of(rows):
-    return Counter(a["scope"] for a in rows).most_common(1)[0][0] if rows else "portugal"
+    return Counter(a["scope"] for a in rows).most_common(1)[0][0] if rows else config.DEFAULT_SCOPE
 
 
 def dive(conn, ident):
@@ -294,7 +294,7 @@ def dive(conn, ident):
         base = [a for a in rows if a["scope"] == scope and a["source"] != ident]
     else:   # an agency: everything else in the scope not carrying its byline
         base = [a for a in rows if a["scope"] == scope and not _signed_by(a, "outlet", ident)]
-    base_name = OUTLET_BASELINE.get(scope, OUTLET_BASELINE["portugal"])
+    base_name = OUTLET_BASELINE.get(scope, OUTLET_BASELINE[config.DEFAULT_SCOPE])
 
     findings = researched_findings(profile)
     data = []

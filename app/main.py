@@ -60,8 +60,8 @@ async def always_revalidate(request, call_next):
     return response
 
 
-DEFAULT_SCOPE = "portugal"
-DEFAULT_GROUP = "mainstream"
+DEFAULT_SCOPE = config.DEFAULT_SCOPE
+DEFAULT_GROUP = config.DEFAULT_GROUP
 
 
 def pool(label_clause, scope, group, sources, topic_slugs, query, limit):
@@ -143,14 +143,14 @@ def sources(scope: str | None = None, group: str | None = None):
               for ident, p in ownership.outlet_profiles().items()}
     out = []
     for s in config.load_sources(enabled_only=False):
-        if scope and s.get("scope", DEFAULT_SCOPE) != scope:
+        if scope and s["scope"] != scope:
             continue
-        if group and s.get("group", DEFAULT_GROUP) != group:
+        if group and s["group"] != group:
             continue
         count, last = stats.get(s["id"], (0, None))
         enabled = bool(s.get("enabled", True) and s.get("feeds"))
-        out.append({"id": s["id"], "name": s["name"], "scope": s.get("scope", DEFAULT_SCOPE),
-                    "language": s.get("language", "pt"), "group": s.get("group", DEFAULT_GROUP),
+        out.append({"id": s["id"], "name": s["name"], "scope": s["scope"],
+                    "language": s["language"], "group": s["group"],
                     "enabled": enabled, "articles": count, "last_published": last,
                     "errors": errors.get(s["id"], []) if enabled else [],
                     "owners": owners.get(s["id"], [])})

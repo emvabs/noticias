@@ -50,3 +50,13 @@ def test_the_database_path_reaches_connect(tmp_path, monkeypatch):
     monkeypatch.setenv("NOTICIAS_DB", str(path))
     db.connect().close()
     assert path.exists()
+
+
+def test_sources_come_with_their_defaults(monkeypatch):
+    monkeypatch.setattr(config, "_load", lambda name: {"sources": [
+        {"id": "a", "name": "A", "feeds": ["https://a"]},
+        {"id": "b", "name": "B", "feeds": ["https://b"], "scope": "world", "language": "en"}]})
+    a, b = config.load_sources()
+    assert (a["scope"], a["language"], a["group"], a["author_from"]) == (
+        "portugal", "pt", "mainstream", "feed")
+    assert (b["scope"], b["language"], b["group"]) == ("world", "en", "mainstream")

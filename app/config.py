@@ -85,8 +85,17 @@ def worker_mode():
     return mode
 
 
+# What a source in sources.yaml is when it does not say.
+SOURCE_DEFAULTS = {"scope": "portugal", "language": "pt", "group": "mainstream",
+                   "author_from": "feed"}
+DEFAULT_SCOPE = SOURCE_DEFAULTS["scope"]
+DEFAULT_GROUP = SOURCE_DEFAULTS["group"]
+DEFAULT_LANGUAGE = SOURCE_DEFAULTS["language"]
+
+
 def load_sources(enabled_only=True):
-    sources = _load("sources.yaml").get("sources", [])
+    """The outlets in sources.yaml, with SOURCE_DEFAULTS filled in."""
+    sources = [{**SOURCE_DEFAULTS, **s} for s in _load("sources.yaml").get("sources", [])]
     if enabled_only:
         sources = [s for s in sources if s.get("enabled", True) and s.get("feeds")]
     return sources

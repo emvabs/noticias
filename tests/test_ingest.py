@@ -6,12 +6,8 @@ import pytest
 
 from app import db, ingest
 
-
-@pytest.fixture
-def lock_file(tmp_path, monkeypatch):
-    path = tmp_path / "news.db.fetch.lock"
-    monkeypatch.setattr(ingest, "lock_path", lambda: path)
-    return path
+# What config.load_sources() fills in, with bylines off (the test feed has none).
+DEFAULTS = {**ingest.config.SOURCE_DEFAULTS, "author_from": "none"}
 
 
 def held_by_another_process(path):
@@ -59,8 +55,8 @@ def test_a_source_can_send_its_own_user_agent(lock_file, monkeypatch):
     monkeypatch.setattr(ingest.httpx, "Client",
                         lambda **kw: real_client(transport=httpx.MockTransport(answer), **kw))
     monkeypatch.setattr(ingest.config, "load_sources", lambda enabled_only=True: [
-        {"id": "a", "name": "A", "feeds": ["https://a/feed"], "author_from": "none"},
-        {"id": "b", "name": "B", "feeds": ["https://b/feed"], "author_from": "none",
+        {**DEFAULTS, "id": "a", "name": "A", "feeds": ["https://a/feed"]},
+        {**DEFAULTS, "id": "b", "name": "B", "feeds": ["https://b/feed"],
          "user_agent": "Browser/1.0"}])
     ingest.fetch_all(db.connect(":memory:"))
     default = ingest.config.load_config()["fetch"]["user_agent"]
@@ -77,8 +73,7 @@ def test_each_run_and_feed_result_is_recorded(lock_file, monkeypatch):
     monkeypatch.setattr(ingest.httpx, "Client",
                         lambda **kw: real_client(transport=httpx.MockTransport(answer), **kw))
     monkeypatch.setattr(ingest.config, "load_sources", lambda enabled_only=True: [
-        {"id": "a", "name": "A", "feeds": ["https://a/feed", "https://broken/feed"],
-         "author_from": "none"}])
+        {**DEFAULTS, "id": "a", "name": "A", "feeds": ["https://a/feed", "https://broken/feed"]}])
     conn = db.connect(":memory:")
     result = ingest.fetch_all(conn)
     runs = conn.execute("SELECT * FROM fetch_runs").fetchall()

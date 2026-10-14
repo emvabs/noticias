@@ -117,9 +117,11 @@ def entry_datetime(entry, fallback):
     return fallback
 
 
-def parse_feed(content, source_id, now, scope="portugal", language="pt", group="mainstream",
-               author_from="feed"):
-    """Turn raw feed bytes into article dicts (unscored), bylines included."""
+def parse_feed(content, source_id, now, author_from="feed"):
+    """Turn raw feed bytes into article dicts (unscored), bylines included.
+
+    Scope, language and group are the source's; ``store`` fills in the defaults.
+    """
     parsed = feedparser.parse(content)
     items = []
     for e in parsed.entries:
@@ -133,8 +135,7 @@ def parse_feed(content, source_id, now, scope="portugal", language="pt", group="
         names = [] if author_from == "none" else profiles.entry_authors(e)
         items.append({
             "source": source_id, "title": title, "title_norm": normalize_title(title),
-            "summary": summary, "url": url, "scope": scope, "language": language,
-            "group": group, "authors": names,
+            "summary": summary, "url": url, "authors": names,
             "published_at": iso(entry_datetime(e, now)), "fetched_at": iso(now),
         })
     return items
@@ -152,7 +153,7 @@ def raw_text(title, summary):
 
 def score_article(art, scorer=None):
     """Score one article with the lexicon of its own language."""
-    scorer = scorer or get_scorer(art.get("language") or "pt")
+    scorer = scorer or get_scorer(art.get("language") or config.DEFAULT_LANGUAGE)
     score, label, matched = scorer.score(f"{art['title']}. {art['summary']}")
     return score, label, json.dumps(matched, ensure_ascii=False)
 
@@ -161,6 +162,7 @@ def store(conn, articles, scorer=None):
     """Insert articles, skipping duplicate URLs / normalized titles. Returns count inserted."""
     inserted = 0
     for a in articles:
+        a = {**config.SOURCE_DEFAULTS, **a}
         score, label, matched = score_article(a, scorer)
         authors = json.dumps(a.get("authors") or [], ensure_ascii=False)
         cur = conn.execute(
@@ -170,8 +172,8 @@ def store(conn, articles, scorer=None):
                 authors)
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (a["source"], a["title"], a["title_norm"], a["summary"], a["url"],
-             a["published_at"], a["fetched_at"], a.get("scope", "portugal"),
-             a.get("language", "pt"), a.get("group", "mainstream"), score, label, matched,
+             a["published_at"], a["fetched_at"], a["scope"],
+             a["language"], a["group"], score, label, matched,
              search_text(a["title"], a["summary"]),
              raw_text(a["title"], a["summary"]), authors))
         inserted += cur.rowcount
@@ -309,7 +311,7 @@ def _fetch_all(conn):
         for src in config.load_sources():
             found = new = 0
             errors = []
-            group = src.get("group", "mainstream")
+            group = src["group"]
             # 0 (or missing) means "no date cutoff": take whatever the feed
             # offers, which is what the slow independent outlets need.
             window_days = config.group_settings(group, "ingest_window_days",
@@ -322,10 +324,9 @@ def _fetch_all(conn):
                     resp = client.get(url, headers=source_headers(src))
                     resp.raise_for_status()
                     now = utcnow()
-                    items = [a for a in parse_feed(resp.content, src["id"], now,
-                                                   src.get("scope", "portugal"),
-                                                   src.get("language", "pt"), group,
-                                                   src.get("author_from", "feed"))
+                    items = [{**a, "scope": src["scope"], "language": src["language"],
+                              "group": group}
+                             for a in parse_feed(resp.content, src["id"], now, src["author_from"])
                              if a["published_at"] >= cutoff]
                     if not items:
                         error = "feed vazio"
@@ -336,7 +337,7 @@ def _fetch_all(conn):
                 if error:
                     errors.append(f"{url}: {error}")
                 record_feed(conn, run_id, src["id"], url, len(items), error)
-            results[src["id"]] = {"name": src["name"], "scope": src.get("scope", "portugal"),
+            results[src["id"]] = {"name": src["name"], "scope": src["scope"],
                                   "group": group, "found": found, "new": new,
                                   "errors": errors, "ok": not errors}
     rescored = rescore_all(conn)

@@ -261,7 +261,7 @@ class Scorer:
         return round(score, 4), self.label_for(score, matched), matched
 
 
-DEFAULT_LANGUAGE = "pt"
+DEFAULT_LANGUAGE = config.DEFAULT_LANGUAGE
 _cache = {}
 
 
