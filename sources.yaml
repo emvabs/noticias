@@ -40,7 +40,7 @@ sources:
     language: pt
     group: mainstream
     enabled: true
-    author_from: none   # nem o feed nem as páginas indicam o jornalista
+    author_from: none   # o feed não indica o jornalista
     feeds:
       - https://www.rtp.pt/noticias/rss
 

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS articles (
     fetched_at    TEXT NOT NULL,
     scope         TEXT NOT NULL DEFAULT 'portugal',  -- portugal / world
     "group"       TEXT NOT NULL DEFAULT 'mainstream', -- mainstream / independent
-    language      TEXT NOT NULL DEFAULT 'pt',        -- escolhe o léxico
+    language      TEXT NOT NULL DEFAULT 'pt',        -- picks the lexicon
     score         REAL,
     label         TEXT,                   -- positive / neutral / negative
     matched_words TEXT,                   -- JSON list, for debugging

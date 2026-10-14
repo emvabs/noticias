@@ -9,7 +9,7 @@ const OWNER_KIND_LABELS = {
   state: "Estado", public: "Entidade pública", company: "Empresa", person: "Pessoa / família",
   fund: "Fundo", cooperative: "Cooperativa", nonprofit: "Sem fins lucrativos", trust: "Fundação / trust",
 };
-// The backend sends an emoji per finding; the page draws a line icon per kind instead.
+// A line icon per finding kind.
 const FINDING_ICON = {
   researched: "doc", tone: "gauge", topic: "hash", agency: "wire", owner: "building", silence: "mute",
 };

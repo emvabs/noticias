@@ -121,8 +121,8 @@ fix wrong labels or noisy topics — prefer them over changing code.
   `static/style.css` (surfaces, ink, meaning colours, shadows, radii, type
   scale, motion) with a dark-mode set; add tokens rather than raw values.
   Icons are line SVGs from `icon()` in `static/app.js` (CSS masks for
-  pseudo-elements) — no emoji in the UI. The backend's finding `icon` field is
-  ignored by the page, which maps each kind to a line icon.
+  pseudo-elements) — no emoji in the UI. The page maps each finding kind to
+  a line icon; the backend sends no icon.
 
 - **One scheduler, wherever it runs.** `worker: embedded` (default) keeps the
   APScheduler job in the web server's lifespan, as `run.py` always did.
@@ -193,10 +193,10 @@ fix wrong labels or noisy topics — prefer them over changing code.
   append "O conteúdo … apareceu primeiro em …" footers, Divergente's real
   articles are only in `?post_type=trabalho`, and DN sends no summaries.
 - **User-Agent is a setting per fetch and per source.** `fetch.user_agent` is
-  the default; a source in `sources.yaml` can set its own `user_agent` (feed
-  and article pages). The default is the honest `Noticias/1.0
-  (+https://github.com/emvabs/noticias)`: on 2026-10-14 every enabled feed
-  and article page answered it exactly as it answers a browser. A source
+  the default; a source in `sources.yaml` can set its own `user_agent`. The
+  default is the honest `Noticias/1.0 (+https://github.com/emvabs/noticias)`:
+  on 2026-10-14 every enabled feed answered it exactly as it answers a
+  browser. A source
   that starts refusing it gets its own browser-like `user_agent`.
 - SIC Notícias, Jornal de Notícias, Reuters and Associated Press have no working
   public feed (checked September 2026). They sit in `sources.yaml` with

@@ -369,12 +369,6 @@ button, select, input { font: inherit; color: inherit; }
 .search-hint { flex: 1 1 100%; margin: -2px 0 0; font-size: var(--fs-xs); color: var(--muted); }
 .search-hint b { font-weight: 600; color: var(--text-2); }
 
-.active-filter {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  margin: 0 0 14px; font-size: var(--fs-sm); color: var(--muted);
-}
-.active-filter b { color: var(--text); font-weight: 650; }
-
 /* outlet chips: quiet pills, the outlet's colour as a dot; a tick when it is on */
 .chip, .topic-chip {
   flex: none; cursor: pointer; white-space: nowrap;
@@ -444,7 +438,6 @@ button, select, input { font: inherit; color: inherit; }
   padding: 1px 6px; border-radius: 999px; background: var(--bg-tint); color: var(--muted);
 }
 .topic-chip[aria-pressed="true"] .count { background: color-mix(in srgb, var(--bg) 20%, transparent); color: var(--bg); }
-.topic-clear { background: transparent; color: var(--accent); border-style: dashed; box-shadow: none; }
 .topics-empty { font-size: var(--fs-xs); color: var(--muted); margin: 0; padding: 4px 0; }
 
 @media (max-width: 680px) {
@@ -703,7 +696,6 @@ main {
   font-size: var(--fs-2xs); overflow-wrap: anywhere; background: var(--surface-3);
   padding: 1px 5px; border-radius: 4px;
 }
-.ps-suspect { color: var(--neg); }
 .ps-how { margin: 6px 0 2px; color: var(--muted); }
 
 /* ============================================================
@@ -1016,7 +1008,6 @@ body.dd-mode main, body.dd-mode .profiles-status { display: none !important; }
   line-height: 1.1; margin: 0;
 }
 .dd-role { margin: 6px 0 0; color: var(--muted); font-style: italic; font-family: var(--serif); font-size: 1.02rem; }
-.dd-meta { margin: 10px 0 0; color: var(--muted); font-size: var(--fs-sm); }
 .dd-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
 .dd-stat {
   display: flex; flex-direction: column; min-width: 96px;

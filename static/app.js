@@ -872,18 +872,14 @@ async function loadProfilesStatus() {
   profilesStatus.querySelector("summary").textContent = plural(stale.length, "perfil a rever", "perfis a rever");
 
   const body = profilesStatus.querySelector(".ps-body");
-  body.replaceChildren();
-  if (stale.length) {
-    body.append(el("h3", {}, `Verificados há mais de ${data.stale_after_days} dias`));
-    const ul = el("ul");
-    for (const p of stale) {
-      const li = el("li");
-      li.append(el("strong", {}, p.name), ` — ${p.last_checked || "sem data"} `,
-        el("code", {}, `profiles/outlets/${p.id}.yaml`));
-      ul.append(li);
-    }
-    body.append(ul);
+  const ul = el("ul");
+  for (const p of stale) {
+    const li = el("li");
+    li.append(el("strong", {}, p.name), ` — ${p.last_checked || "sem data"} `,
+      el("code", {}, `profiles/outlets/${p.id}.yaml`));
+    ul.append(li);
   }
+  body.replaceChildren(el("h3", {}, `Verificados há mais de ${data.stale_after_days} dias`), ul);
   const how = el("p", { className: "ps-how" }, "Para ver esta lista no terminal: ");
   how.append(el("code", {}, ".venv/bin/python -m app.profiles"), " — como investigar está no README.");
   body.append(how);
