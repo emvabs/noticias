@@ -2,7 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app import ingest, main
+from app import access, ingest, main
 
 TOKEN = "s3cret-token"
 
@@ -59,8 +59,8 @@ def test_with_no_token_configured_no_token_works():
 
 def test_the_token_is_compared_in_constant_time(monkeypatch):
     seen = []
-    real = main.hmac.compare_digest
-    monkeypatch.setattr(main.hmac, "compare_digest", lambda a, b: seen.append(1) or real(a, b))
+    real = access.secrets.compare_digest
+    monkeypatch.setattr(access.secrets, "compare_digest", lambda a, b: seen.append(1) or real(a, b))
     monkeypatch.setenv("NOTICIAS_ADMIN_TOKEN", TOKEN)
     client("203.0.113.9").post("/api/refresh", headers={"Authorization": f"Bearer {TOKEN}"})
     assert seen

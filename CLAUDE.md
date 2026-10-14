@@ -144,7 +144,7 @@ fix wrong labels or noisy topics — prefer them over changing code.
   it comes from a loopback address *and* carries no `X-Forwarded-For`,
   `Forwarded` or `X-Real-IP`: behind a reverse proxy on the same machine every
   visitor arrives from 127.0.0.1. Otherwise it needs `Authorization: Bearer
-  <NOTICIAS_ADMIN_TOKEN>` (compared with `hmac.compare_digest`); no token set
+  <NOTICIAS_ADMIN_TOKEN>` (`access.has_admin_token`, constant-time); no token set
   means localhost only. The page says "Atualização não permitida aqui" on a
   403 from the button, and stays quiet for the automatic refresh on a scope
   switch.

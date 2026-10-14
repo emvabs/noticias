@@ -71,6 +71,15 @@ def password_matches(authorization, expected):
     return bool(sep) and secrets.compare_digest(given.encode(), expected.encode())
 
 
+def has_admin_token(headers):
+    """A ``Bearer`` header carrying NOTICIAS_ADMIN_TOKEN; never true when it is unset."""
+    token = config.admin_token()
+    scheme, _, given = headers.get("authorization", "").partition(" ")
+    if not token or scheme.lower() != "bearer":
+        return False
+    return secrets.compare_digest(given.strip().encode(), token.encode())
+
+
 def allowed(client_host, headers):
     expected = password()
     if expected is None or is_local(client_host, headers):

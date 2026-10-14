@@ -1,5 +1,4 @@
 """FastAPI app: JSON API + the single-page frontend."""
-import hmac
 import json
 import threading
 from contextlib import asynccontextmanager
@@ -258,19 +257,11 @@ def healthz():
         "running": ingest.is_running(), "empty_feeds_24h": empty})
 
 
-def has_admin_token(request):
-    token = config.admin_token()
-    scheme, _, given = request.headers.get("authorization", "").partition(" ")
-    if not token or scheme.lower() != "bearer":
-        return False
-    return hmac.compare_digest(given.strip().encode(), token.encode())
-
-
 @app.post("/api/refresh")
 def refresh(request: Request):
     """Fetch every outlet now: from this machine, or with NOTICIAS_ADMIN_TOKEN."""
     host = request.client.host if request.client else ""
-    if not (access.is_local(host, request.headers) or has_admin_token(request)):
+    if not (access.is_local(host, request.headers) or access.has_admin_token(request.headers)):
         raise HTTPException(403, "refresh is limited to localhost or the admin token")
     # Runs in the request thread (FastAPI threadpool); takes a couple of seconds.
     result = ingest.fetch_all()
