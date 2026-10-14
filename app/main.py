@@ -163,21 +163,6 @@ def topics_endpoint(scope: str = DEFAULT_SCOPE, group: str = DEFAULT_GROUP):
         return topics_module.current(conn, scope, group)
 
 
-@app.get("/api/profile/outlet/{ident}")
-def outlet_profile(ident: str):
-    """Who owns and funds an outlet (researched file) plus what this app has seen of it."""
-    if not profiles.SLUG_RE.match(ident):
-        raise HTTPException(404)
-    profile = profiles.outlet(ident)
-    name = profile.get("name") or config.source_names().get(ident)
-    with _conn_lock:
-        stats = profiles.outlet_stats(conn, ident)
-    if not name and not stats["articles"]:
-        raise HTTPException(404)
-    return {"id": ident, "name": name, "profile": profile or None,
-            "stale": bool(profile) and profiles.is_stale(profile), "stats": stats}
-
-
 @app.get("/api/profiles/status")
 def profiles_status():
     """Outlet profiles checked too long ago, for the footer."""

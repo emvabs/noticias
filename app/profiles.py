@@ -8,7 +8,6 @@ stored articles too. Profiles are hand-researched YAML files in
 import html
 import json
 import re
-from collections import Counter
 from datetime import date, timedelta
 
 import yaml
@@ -209,37 +208,6 @@ def outlet(ident):
 # --------------------------------------------------------------------------
 # Local statistics (what this app has seen, independent of any research)
 # --------------------------------------------------------------------------
-def _stats(rows, names):
-    labels = Counter(r["label"] for r in rows)
-    total = len(rows)
-    return {
-        "articles": total,
-        "outlets": [names.get(s, s) for s, _ in Counter(r["source"] for r in rows).most_common()],
-        "labels": {k: labels.get(k, 0) for k in ("positive", "neutral", "negative")},
-        "first": min((r["published_at"] for r in rows), default=None),
-        "last": max((r["published_at"] for r in rows), default=None),
-    }
-
-
-def byline_articles(conn, kind, ident, resolver=None):
-    """Stored articles carrying one byline (an agency) - resolved, so aliases count."""
-    resolver = resolver or Resolver()
-    rows = conn.execute("""SELECT source, label, published_at, authors FROM articles
-                           WHERE authors != '[]'""").fetchall()
-    return [r for r in rows
-            if any(a["kind"] == kind and a["id"] == ident for a in resolver.resolve_all(r["authors"]))]
-
-
-def outlet_stats(conn, ident):
-    """Articles published by an outlet - or, for an agency, articles carrying its byline."""
-    if ident in config.source_names():
-        rows = conn.execute("SELECT source, label, published_at FROM articles WHERE source = ?",
-                            (ident,)).fetchall()
-    else:
-        rows = byline_articles(conn, "outlet", ident)
-    return _stats(rows, config.source_names())
-
-
 def settings():
     cfg = config.load_config().get("profiles", {})
     return {"stale_after_days": cfg.get("stale_after_days", 180)}

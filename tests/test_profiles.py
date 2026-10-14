@@ -97,18 +97,6 @@ def test_feed_articles_carry_resolved_authors(client):
     assert by_title["Greve dos comboios afeta o país"][0]["kind"] == "outlet"
 
 
-def test_agency_stats_count_bylines_across_outlets(client):
-    data = client.get("/api/profile/outlet/lusa").json()
-    assert data["stats"]["articles"] == 2
-    assert sorted(data["stats"]["outlets"]) == ["Diário de Notícias", "Observador"]
-
-
-def test_outlet_profile_of_a_source(client):
-    data = client.get("/api/profile/outlet/expresso").json()
-    assert data["name"] == "Expresso" and data["stats"]["articles"] == 1
-    assert client.get("/api/profile/outlet/nao-existe").status_code == 404
-
-
 def claims(profile):
     for key in ("funding", "narrative"):
         yield from profile.get(key) or []
@@ -173,11 +161,6 @@ def test_journalists_are_names_without_a_profile(client):
     assert client.get("/api/profile/journalist/hugo-franco").status_code == 404
     hugo = profiles.Resolver().resolve("Hugo Franco")
     assert (hugo["kind"], hugo["has_profile"]) == ("journalist", False)
-
-
-def test_profile_responses_say_when_stale(client, monkeypatch):
-    monkeypatch.setattr(profiles, "is_stale", lambda p, today=None: True)
-    assert client.get("/api/profile/outlet/expresso").json()["stale"] is True
 
 
 GENERIC_WORDS = {"Governo", "Estado", "Government", "State", "Presidente", "President",

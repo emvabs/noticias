@@ -260,7 +260,7 @@ The test headlines are in `eval/headlines.csv` (Portuguese, 43) and `eval/headli
 
 ### Who is behind the news
 
-Hover a card for a moment (or press its **i** button on a phone or with the keyboard) to see who owns and funds the outlet, and the byline when the feed gives one. Each line cites its source, and every profile shows the date it was checked. The box also shows what this app has seen: how many articles by that outlet (or agency), and how many were positive or negative.
+Each card's **i** link opens the outlet's page in the Deep Dive (below): who owns and funds it, what this app has seen of it, and the articles behind each finding. Each researched line cites its source, and a profile not checked for a while says so.
 
 **Bylines come from the feeds.** Expresso, Observador, DN, the Guardian and the independents put the journalist's name in each RSS item; the other outlets do not, so their cards have no byline. RTP, SIC and JN have `author_from: none` in `sources.yaml` (no usable byline in their feeds). Journalists are names only: there are no journalist profiles.
 
@@ -288,7 +288,7 @@ Re-check the claims, fix what changed, update `last_checked`; until then the box
 
 ### Deep Dive
 
-The **Deep Dive** button in the header (or "Ver deep dive →" in the hover box) opens a view with three tabs. The address follows the tab (`#deep-dive/jornais/publico`), so the browser's back button and bookmarks work.
+The **Deep Dive** button in the header (or a card's **i** link, straight to that outlet) opens a view with three tabs. The address follows the tab (`#deep-dive/jornais/publico`), so the browser's back button and bookmarks work.
 
 - **Propriedade** — who owns each outlet and agency, as a two-column map (owners → outlets, with the share on each line). Shared owners are one node: the Portuguese State links RTP and Lusa. Click an outlet for its Deep Dive, an owner for what it holds and the sources.
 - **Jornais** — pick an outlet or agency; you get a short summary, the **findings**, and a radial map with the selection in the centre, the findings around it and, around each finding, the articles (coloured by tone) or research sources behind it. Drag to pan, wheel or +/− to zoom, click a finding to highlight it, click an article to open it. Each finding card also lists its articles, which is the view to use on a phone.

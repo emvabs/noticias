@@ -2,7 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app import archive, db, deepdive, ingest, main, ownership
+from app import archive, db, deepdive, ingest, main, ownership, profiles
 
 CFG = {**deepdive.settings(), "min_articles": 5, "topic_min_articles": 3,
        "silence_min_outlet_articles": 5, "silence_min_expected": 1}
@@ -173,3 +173,8 @@ def test_silences_leave_independent_outlets_out(conn):
         add(conn, i, "oregioes", f"Notícia regional {i}", group="independent")
     archive.sync(conn)
     assert all(o["id"] != "oregioes" for o in deepdive.silences(conn, "portugal")["outlets"])
+
+
+def test_api_entity_says_when_the_profile_is_stale(client, monkeypatch):
+    monkeypatch.setattr(profiles, "is_stale", lambda p, today=None: True)
+    assert client.get("/api/deepdive/outlet/publico").json()["stale"] is True

@@ -576,104 +576,34 @@ main {
 }
 .owner-flag[hidden] { display: none; }
 .owner-flag:not([hidden]) { margin-left: auto; }
-.owner-flag:not([hidden]) + .whois-btn { margin-left: 0; }
+.owner-flag:not([hidden]) + .card-dive { margin-left: 0; }
 .owner-flag:hover .tip, .owner-flag:focus .tip, .owner-flag:focus-visible .tip,
 .owner-flag:active .tip { opacity: 1; transform: none; }
 
-/* "who is behind this": a quiet icon button */
-.whois-btn {
+/* the outlet's deep dive: a quiet icon link */
+.card-dive {
   margin-left: auto; flex: none;
   width: 26px; height: 26px; border-radius: 50%; padding: 0;
   display: inline-grid; place-items: center;
   border: 1px solid var(--border); background: var(--surface);
-  color: var(--muted); font: italic 700 .8rem/1 var(--serif); cursor: pointer;
-  transition: opacity var(--fast), color var(--fast), border-color var(--fast), background-color var(--fast);
+  color: var(--muted); font: italic 700 .8rem/1 var(--serif); text-decoration: none;
+  transition: color var(--fast), border-color var(--fast), background-color var(--fast);
 }
-.whois-btn + .badge { margin-left: 0; }
-.whois-btn:hover, .whois-btn:focus-visible, .whois-btn[aria-expanded="true"] {
+.card-dive + .badge { margin-left: 0; }
+.card-dive:hover, .card-dive:focus-visible {
   color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft);
 }
-@media (hover: hover) {
-  .whois-btn { opacity: 0; }
-  .card:hover .whois-btn, .whois-btn:focus-visible, .whois-btn[aria-expanded="true"] { opacity: 1; }
-}
 
-/* ============================================================
-   "who is behind this" box
-   ============================================================ */
-.whois {
-  position: absolute; z-index: 60; left: 0; top: 0;
-  width: min(390px, calc(100vw - 32px));
-  max-height: min(74vh, 640px); overflow-y: auto; overscroll-behavior: contain;
-  background: var(--surface); color: var(--text);
-  border: 1px solid var(--border); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 16px 18px 14px;
-  font-size: var(--fs-sm); line-height: 1.55;
-  animation: pop .18s var(--ease) both;
-  scrollbar-width: thin;
-}
-@keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.985); } to { opacity: 1; transform: none; } }
-.whois[hidden] { display: none; }
-.whois-close {
-  position: sticky; top: 0; float: right; margin: -4px -6px 0 8px; z-index: 1;
-  width: 30px; height: 30px; border: 0; border-radius: 50%;
-  display: grid; place-items: center;
-  background: var(--surface-2); color: var(--muted); font-size: 1.15rem; line-height: 1; cursor: pointer;
-  transition: background-color var(--fast), color var(--fast);
-}
-.whois-close:hover { background: var(--border); color: var(--text); }
-.whois-sec + .whois-sec { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-.whois h3 {
-  margin: 0 0 4px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .09em;
-  text-transform: uppercase; color: var(--accent);
-}
-.whois h4 {
-  margin: 12px 0 4px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--muted);
-}
-.whois p { margin: 4px 0; color: var(--text-2); }
-.whois ul { margin: 0; padding-left: 0; list-style: none; }
-.whois li { margin: 5px 0; padding-left: 14px; position: relative; color: var(--text-2); }
-.whois li::before {
-  content: ""; position: absolute; left: 2px; top: .62em; width: 5px; height: 5px;
-  border-radius: 50%; background: var(--border-strong);
-}
-.whois li b { font-weight: 650; color: var(--text); }
-.whois-name { font-family: var(--serif); font-size: 1.2rem; font-weight: 700; letter-spacing: -.01em; color: var(--text) !important; margin: 0 0 2px !important; }
-.whois-type { color: var(--muted) !important; font-style: italic; }
-.whois-none, .whois-loading { color: var(--muted) !important; }
-.whois-src {
+/* source links and the stale note on the deep dive */
+.dd-src {
   display: inline-block; font-size: var(--fs-2xs); font-weight: 600; color: var(--accent);
   text-decoration: none; white-space: nowrap; vertical-align: 1px;
   background: var(--accent-soft); border-radius: 999px; padding: 1px 7px;
   transition: background-color var(--fast);
 }
-.whois-src:hover { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
-.whois-stats {
-  margin-top: 10px !important; font-size: var(--fs-xs); color: var(--text-2) !important;
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px;
-}
-.whois-checked { font-size: var(--fs-2xs); color: var(--faint) !important; }
-.whois-checked.stale { color: var(--neg) !important; font-weight: 600; }
-.whois-note {
-  margin: 14px -18px -14px !important; padding: 10px 18px;
-  background: var(--surface-2); border-top: 1px solid var(--border);
-  font-size: var(--fs-2xs); color: var(--muted) !important;
-}
-.whois-dd {
-  display: inline-flex; align-items: center; gap: 4px; margin: 2px 0 4px;
-  font-size: var(--fs-xs); font-weight: 650; color: var(--accent); text-decoration: none;
-}
-.whois-dd:hover { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
-
-/* phones: a sheet pinned to the bottom of the screen */
-.whois.sheet {
-  position: fixed; left: 8px; right: 8px; top: auto; bottom: 8px;
-  width: auto; max-height: 72vh; border-radius: 22px;
-  padding-bottom: calc(14px + env(safe-area-inset-bottom));
-}
-.whois.sheet .whois-note { margin-bottom: calc(-14px - env(safe-area-inset-bottom)) !important; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+.dd-src:hover { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+.dd-checked { font-size: var(--fs-2xs); color: var(--faint) !important; }
+.dd-checked.stale { color: var(--neg) !important; font-weight: 600; }
 
 /* ============================================================
    research still to do, at the foot of the feed
@@ -828,7 +758,7 @@ main {
   .chip, .topic-chip { padding: 9px 14px; }
   .chips { gap: 8px; }
   .badge { padding: 5px 10px 5px 9px; }
-  .whois-btn { width: 30px; height: 30px; }
+  .card-dive { width: 30px; height: 30px; }
   .card { padding-top: 16px; padding-bottom: 16px; }
 }
 
@@ -1053,7 +983,7 @@ body.dd-mode main, body.dd-mode .profiles-status { display: none !important; }
   list-style-position: inside;
 }
 .dd-sources { font-size: var(--fs-xs); color: var(--muted); }
-.dd-sources .whois-src { margin: 2px 2px 0 0; }
+.dd-sources .dd-src { margin: 2px 2px 0 0; }
 .f-researched { --fc: var(--accent); } .f-tone { --fc: var(--neg-line); } .f-topic { --fc: #8b5cf6; }
 .f-agency { --fc: var(--neu-line); } .f-owner { --fc: #d49a1a; } .f-silence { --fc: var(--muted); }
 .dd-articles { list-style: none; margin: 8px 0 0; padding: 0; }
@@ -1132,7 +1062,7 @@ svg.focusing .on { opacity: 1 !important; }
 
 /* --- printing --- */
 @media print {
-  .topbar, .card-topics, .badge, .whois-btn, .whois, .profiles-status, .dd-zoom, .dd-picker { display: none !important; }
+  .topbar, .card-topics, .badge, .card-dive, .profiles-status, .dd-zoom, .dd-picker { display: none !important; }
   body { background: #fff; color: #000; }
   .card { break-inside: avoid; box-shadow: none; border-color: #ccc; }
   .card-title a { color: #000; }

@@ -129,8 +129,7 @@ async function route() {
   // on phones only the icon shows
   ddToggle.setAttribute("aria-label", on ? "Voltar às notícias" : "Deep Dive: quem está por trás das notícias");
   ddToggle.title = ddToggle.getAttribute("aria-label");
-  if (!on) { whois.close(); return; }
-  whois.close();
+  if (!on) return;
   for (const a of document.querySelectorAll(".dd-tab")) {
     const selected = a.dataset.tab === r.tab;
     a.setAttribute("aria-selected", String(selected));
@@ -267,7 +266,7 @@ function showOwner(owner, data) {
     li.append(a, l.share ? ` — ${String(l.share).replace(".", ",")}%` : "", l.via ? ` (via ${l.via})` : "");
     if (l.source) {
       li.append(" ", el("a", { href: l.source, target: "_blank", rel: "noopener noreferrer",
-        className: "whois-src" }, hostOf(l.source)));
+        className: "dd-src" }, hostOf(l.source)));
     }
     ul.append(li);
   }
@@ -353,7 +352,7 @@ function renderEntity(d) {
     stat(`${pct("negative")}%`, "negativas", "neg");
   }
   head.append(stats);
-  if (d.stale) head.append(el("p", { className: "whois-checked stale" }, "Perfil pode estar desatualizado."));
+  if (d.stale) head.append(el("p", { className: "dd-checked stale" }, "Perfil pode estar desatualizado."));
   ddResult.append(head, el("p", { className: "dd-summary" }, d.summary));
 
   if (!d.findings.length) {
@@ -385,7 +384,7 @@ function renderEntity(d) {
     if (f.sources?.length) {
       const src = el("p", { className: "dd-sources" }, "Fontes: ");
       f.sources.forEach((u) => src.append(el("a", { href: u, target: "_blank", rel: "noopener noreferrer",
-        className: "whois-src" }, hostOf(u)), " "));
+        className: "dd-src" }, hostOf(u)), " "));
       card.append(src);
     }
     if (f.total) {
