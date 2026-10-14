@@ -98,3 +98,25 @@ def test_rescore_runs_only_when_the_lexicons_change(monkeypatch):
     assert ingest.rescore_all(conn) == 0          # nothing changed
     version[0] = "v2"                              # a word list was edited
     assert ingest.rescore_all(conn) == 1
+
+
+GOOGLE_NEWS = """<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
+<item><title>Greve fecha estações do Metro - SIC Notícias</title>
+<link>https://news.google.com/rss/articles/abc</link>
+<description>&lt;a href="https://news.google.com/rss/articles/abc"&gt;Greve fecha estações do Metro&lt;/a&gt;&amp;nbsp;&amp;nbsp;&lt;font color="#6f6f6f"&gt;SIC Notícias&lt;/font&gt;</description>
+<source url="https://sicnoticias.pt">SIC Notícias</source></item>
+<item><title>Benfica - Sporting</title><link>https://x/2</link></item>
+</channel></rss>""".encode()
+
+
+def test_google_news_items_keep_the_headline_only():
+    now = ingest.utcnow()
+    first, derby = ingest.parse_feed(GOOGLE_NEWS, "sic", now, "none", summary_from="none")
+    assert first["title"] == "Greve fecha estações do Metro"   # " - SIC Notícias" dropped
+    assert first["summary"] == ""
+    assert derby["title"] == "Benfica - Sporting"   # no <source>: a " - " is left alone
+
+
+def test_summaries_are_kept_by_default():
+    item, _ = ingest.parse_feed(GOOGLE_NEWS, "sic", ingest.utcnow())
+    assert item["summary"]

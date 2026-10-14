@@ -198,9 +198,16 @@ fix wrong labels or noisy topics — prefer them over changing code.
   on 2026-10-14 every enabled feed answered it exactly as it answers a
   browser. A source
   that starts refusing it gets its own browser-like `user_agent`.
-- SIC Notícias, Jornal de Notícias, Reuters and Associated Press have no working
-  public feed (checked September 2026). They sit in `sources.yaml` with
-  `enabled: false` and a comment. Do not scrape them.
+- Reuters and Associated Press have no working public feed (checked September
+  2026). They sit in `sources.yaml` with `enabled: false` and a comment. Do
+  not scrape them.
+- **SIC Notícias and Jornal de Notícias come through Google News RSS**
+  (`site:… when:1d`), headline, date and Google link only (`summary_from:
+  none`, `author_from: none`). Never fetch their article pages: SIC sits
+  behind DataDome and blocks bots, JN's robots.txt forbids automated
+  browsing. `parse_feed` strips the " - Publisher" suffix when the item has a
+  `<source>`. `when:1d` still lets a few old JN tag pages through; the ingest
+  date cutoff drops them.
 
 ## Conventions
 

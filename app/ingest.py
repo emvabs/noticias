@@ -110,19 +110,35 @@ def entry_datetime(entry, fallback):
     return fallback
 
 
-def parse_feed(content, source_id, now, author_from="feed"):
+def strip_publisher(title, entry):
+    """Drop the " - Publisher" that aggregators (Google News) append to titles.
+
+    Only when the item names its publisher in <source>, so a headline that
+    happens to contain " - " is left alone.
+    """
+    publisher = (entry.get("source") or {}).get("title", "").strip()
+    suffix = f" - {publisher}"
+    if publisher and title.endswith(suffix):
+        return title[:-len(suffix)].strip()
+    return title
+
+
+def parse_feed(content, source_id, now, author_from="feed", summary_from="feed"):
     """Turn raw feed bytes into article dicts (unscored), bylines included.
 
     Scope, language and group are the source's; ``store`` fills in the defaults.
+    ``summary_from: none`` keeps headlines only, for feeds whose summary is not
+    the article's (Google News sends a link back to itself).
     """
     parsed = feedparser.parse(content)
     items = []
     for e in parsed.entries:
-        title = clean_text(e.get("title"), 300)
+        title = strip_publisher(clean_text(e.get("title"), 300), e)
         url = (e.get("link") or "").strip()
         if not title or not url:
             continue
-        summary = clean_text(e.get("summary") or e.get("description"))
+        summary = ("" if summary_from == "none"
+                   else clean_text(e.get("summary") or e.get("description")))
         if normalize_title(summary) == normalize_title(title):
             summary = ""
         names = [] if author_from == "none" else profiles.entry_authors(e)
@@ -319,7 +335,8 @@ def _fetch_all(conn):
                     now = utcnow()
                     items = [{**a, "scope": src["scope"], "language": src["language"],
                               "group": group}
-                             for a in parse_feed(resp.content, src["id"], now, src["author_from"])
+                             for a in parse_feed(resp.content, src["id"], now, src["author_from"],
+                                           src["summary_from"])
                              if a["published_at"] >= cutoff]
                     if not items:
                         error = "feed vazio"

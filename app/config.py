@@ -87,7 +87,7 @@ def worker_mode():
 
 # What a source in sources.yaml is when it does not say.
 SOURCE_DEFAULTS = {"scope": "portugal", "language": "pt", "group": "mainstream",
-                   "author_from": "feed"}
+                   "author_from": "feed", "summary_from": "feed"}
 DEFAULT_SCOPE = SOURCE_DEFAULTS["scope"]
 DEFAULT_GROUP = SOURCE_DEFAULTS["group"]
 DEFAULT_LANGUAGE = SOURCE_DEFAULTS["language"]

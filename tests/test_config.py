@@ -57,6 +57,6 @@ def test_sources_come_with_their_defaults(monkeypatch):
         {"id": "a", "name": "A", "feeds": ["https://a"]},
         {"id": "b", "name": "B", "feeds": ["https://b"], "scope": "world", "language": "en"}]})
     a, b = config.load_sources()
-    assert (a["scope"], a["language"], a["group"], a["author_from"]) == (
-        "portugal", "pt", "mainstream", "feed")
+    assert (a["scope"], a["language"], a["group"], a["author_from"], a["summary_from"]) == (
+        "portugal", "pt", "mainstream", "feed", "feed")
     assert (b["scope"], b["language"], b["group"]) == ("world", "en", "mainstream")

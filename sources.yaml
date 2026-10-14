@@ -5,6 +5,8 @@
 #   author_from: feed | none  -> o feed traz o nome do jornalista (omissão: feed),
 #       ou none quando o que traz não é um nome.
 #   user_agent: "..."  -> só para fontes que recusam o fetch.user_agent de config.yaml
+#   summary_from: feed | none -> none guarda só o título, quando o resumo do feed
+#       não é o do artigo (Google News).
 sources:
   # ---------------- PORTUGAL ----------------
   - id: publico
@@ -62,25 +64,32 @@ sources:
     feeds:
       - https://www.dn.pt/stories.rss   # destino de dn.pt/feed (sem resumos)
 
-  # Sem RSS a funcionar (verificado em 2026-09-21):
-  # SIC Notícias: site protegido por DataDome (403 a pedidos automáticos), sem feed conhecido.
+  # SIC e JN não têm RSS próprio (verificado em 2026-09-21): a SIC está protegida
+  # por DataDome e bloqueia bots; o feed antigo do JN parou em 2023 e o robots.txt
+  # proíbe navegação automática. Entram pelo RSS público do Google News: só título,
+  # data e link (via Google). Não abrir as páginas dos artigos. Sem jornalista nem
+  # resumo; "when:1d" evita páginas antigas (verificado em 2026-10-14).
   - id: sic
     name: SIC Notícias
     scope: portugal
     language: pt
     group: mainstream
-    enabled: false
-    feeds: []
+    enabled: true
+    author_from: none
+    summary_from: none
+    feeds:
+      - https://news.google.com/rss/search?q=site:sicnoticias.pt+when:1d&hl=pt-PT&gl=PT&ceid=PT:pt-150
 
-  # Jornal de Notícias: feeds.jn.pt/JN-Ultimas parou em 2023; jn.pt/feed entra em
-  # ciclo de redirecionamentos; o site atual não anuncia RSS.
   - id: jn
     name: Jornal de Notícias
     scope: portugal
     language: pt
     group: mainstream
-    enabled: false
-    feeds: []
+    enabled: true
+    author_from: none
+    summary_from: none
+    feeds:
+      - https://news.google.com/rss/search?q=site:jn.pt+when:1d&hl=pt-PT&gl=PT&ceid=PT:pt-150
 
   # ---------------- INDEPENDENTES (Portugal) ----------------
   # Publicam poucas peças por semana — ver "groups.independent" em config.yaml.

@@ -262,7 +262,7 @@ The test headlines are in `eval/headlines.csv` (Portuguese, 43) and `eval/headli
 
 Hover a card for a moment (or press its **i** button on a phone or with the keyboard) to see who owns and funds the outlet, and the byline when the feed gives one. Each line cites its source, and every profile shows the date it was checked. The box also shows what this app has seen: how many articles by that outlet (or agency), and how many were positive or negative.
 
-**Bylines come from the feeds.** Expresso, Observador, DN, the Guardian and the independents put the journalist's name in each RSS item; the other outlets do not, so their cards have no byline. RTP has `author_from: none` in `sources.yaml` (its feed has no usable byline). Journalists are names only: there are no journalist profiles.
+**Bylines come from the feeds.** Expresso, Observador, DN, the Guardian and the independents put the journalist's name in each RSS item; the other outlets do not, so their cards have no byline. RTP, SIC and JN have `author_from: none` in `sources.yaml` (no usable byline in their feeds). Journalists are names only: there are no journalist profiles.
 
 **The profiles** are plain YAML files you can edit:
 
@@ -338,8 +338,8 @@ python -m pytest
 | RTP Notícias | `rtp.pt/noticias/rss` | ✅ |
 | CNN Portugal | `cnnportugal.iol.pt/rss.xml` (declared in the site's `<head>`) | ✅ |
 | Diário de Notícias | `dn.pt/stories.rss` (where `dn.pt/feed` redirects) | ✅ titles only, no summaries |
-| SIC Notícias | none | ❌ site protected by DataDome (403), no RSS found |
-| Jornal de Notícias | none | ❌ `feeds.jn.pt` stopped in 2023, `jn.pt/feed` loops on redirects |
+| SIC Notícias | Google News RSS, `site:sicnoticias.pt when:1d` | ✅ headlines only (2026-10-14): no own RSS, site protected by DataDome |
+| Jornal de Notícias | Google News RSS, `site:jn.pt when:1d` | ✅ headlines only (2026-10-14): `feeds.jn.pt` stopped in 2023, robots.txt forbids crawling |
 
 ### World (checked 2026-09-23)
 
